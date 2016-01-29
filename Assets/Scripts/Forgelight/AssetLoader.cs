@@ -1,44 +1,37 @@
 ﻿using System;
 using System.IO;
-using UnityEditor;
 
 public class AssetLoader
 {
     public static string OpenAssetFolder()
     {
-        string path;
-
-        do
-        {
-            path = EditorUtility.OpenFolderPanel(
-            "Select folder containing Forgelight pack files.",
-            "",
-            "");
-
-            if (path.Length == 0)
-            {
-                return null;
-            }
-
-        } while (!CheckGivenAssetDirectory(path));
+        string path = DialogUtils.OpenDirectory(
+        "Select folder containing Forgelight pack files.",
+        "",
+        "", CheckGivenAssetDirectory);
 
         return path;
     }
 
-    private static bool CheckGivenAssetDirectory(string path)
+    private static ValidationResult CheckGivenAssetDirectory(string path)
     {
+        ValidationResult validationResult = new ValidationResult();
+
         String[] files = Directory.GetFiles(path);
 
         foreach (string fileName in files)
         {
             if (fileName.EndsWith(".pack"))
             {
-                return true;
+                validationResult.result = true;
+                return validationResult;
             }
         }
 
-        EditorUtility.DisplayDialog("Invalid Asset Directory", "The folder provided does not contain any valid .pack files. Please make sure you have selected the correct assets folder.", "OK");
+        validationResult.result = false;
+        validationResult.errorTitle = "Invalid Asset Directory";
+        validationResult.errorDesc = "The folder provided does not contain any valid .pack files. Please make sure you have selected the correct assets folder.";
 
-        return false;
+        return validationResult;
     }
 }

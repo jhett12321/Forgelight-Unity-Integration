@@ -84,10 +84,10 @@ public class ForgelightEditor : Editor
         Forgelight.Instance.ZoneExporter.ExportZoneFile();
     }
 
-    [MenuItem("Forgelight/Export/Create Pack File")]
+    [MenuItem("Forgelight/Export/Create Pack File...")]
     public static void CreatePackFile()
     {
-        throw new NotImplementedException();
+        PackCreator.CreatePackFromDirectory();
     }
 
     #region Forgelight/Load Terrain Data

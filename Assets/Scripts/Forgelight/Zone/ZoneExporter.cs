@@ -11,23 +11,18 @@ public class ZoneExporter
     {
         if (Forgelight.Instance.ZoneLoader.loadedZone != null)
         {
-            var path = EditorUtility.SaveFilePanel(
+            var path = DialogUtils.SaveFile(
                 "Save zone file",
                 Forgelight.Instance.ZoneLoader.loadedZonePath,
                 Path.GetFileNameWithoutExtension(Forgelight.Instance.ZoneLoader.loadedZonePath),
                 "json");
 
-            if (path.Length == 0)
-            {
-                return;
-            }
-
             SaveZone(path);
         }
         else
         {
-            EditorUtility.DisplayDialog("Cannot save zone",
-                "An existing zone file needs to be loaded first. Please import a zone file, then try again", "Ok");
+            DialogUtils.DisplayDialog("Cannot save zone",
+                "An existing zone file needs to be loaded first. Please import a zone file, then try again");
         }
     }
 

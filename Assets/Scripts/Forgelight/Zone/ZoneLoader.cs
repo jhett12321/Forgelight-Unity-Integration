@@ -16,15 +16,10 @@ public class ZoneLoader
 
     public void LoadZoneFile()
     {
-        var path = EditorUtility.OpenFilePanel(
+        var path = DialogUtils.OpenFile(
             "Select converted zone file...",
             "",
             "json");
-
-        if (path.Length == 0)
-        {
-            return;
-        }
 
         LoadZone(path);
     }
