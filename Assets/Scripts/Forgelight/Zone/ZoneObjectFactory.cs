@@ -69,7 +69,7 @@ namespace ForgelightInteg.Zone
             //By default, the actor definitions are appended with the .adr extension.
             //TODO if we implement our own conversion for the models, we shouldn't need to add the "_LOD0" to the file name.
             string modelName = Path.GetFileNameWithoutExtension(actorDef) + "_LOD0";
-            string baseModelDir = "Models/" + modelName;
+            string baseModelDir = "Models";
             string modelPath = baseModelDir + "/" + modelName;
 
             var resourceObj = Resources.Load(modelPath);
@@ -97,7 +97,7 @@ namespace ForgelightInteg.Zone
                 }
 
                 //Set our shader to the specular material.
-                baseActorRenderer.sharedMaterial.shader = Shader.Find("Standard (Specular setup)");
+                //baseActorRenderer.sharedMaterial.shader = Shader.Find("Standard (Specular setup)");
 
                 //Load our textures. This shouldn't be necessary with the correct directory layout.
                 //object[] textures = Resources.LoadAll(baseModelDir);
