@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using System.IO;
 using System.Linq;
-using ForgelightInteg.Util;
+using Forgelight.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 
-namespace ForgelightInteg.Zone
+namespace Forgelight.Zone
 {
     public class ZoneLoader
     {
@@ -43,7 +43,7 @@ namespace ForgelightInteg.Zone
                     totalObjects += zoneObject["instances"].Count();
                 }
 
-                ZoneObjectFactory ZoneObjectFactory = Forgelight.Instance.ZoneObjectFactory;
+                ZoneObjectFactory ZoneObjectFactory = ForgelightExtension.Instance.ZoneObjectFactory;
 
                 //Begin processing the file
                 foreach (JObject zoneObject in zoneData["objects"])
@@ -65,7 +65,8 @@ namespace ForgelightInteg.Zone
                             byte unknownByte1 = (byte)instanceData["unknownByte1"];
                             long id = (long)instanceData["id"];
 
-                            ZoneObjectFactory.CreateForgelightObject(actorDefinition, position, rotation, scale, renderDistance, unknownFloat1, unknownByte1, id);
+                            //TODO Implement alias'
+                            //ZoneObjectFactory.CreateForgelightObject(actorDefinition, position, rotation, scale, renderDistance, unknownFloat1, unknownByte1, id);
                             objectsProcessed++;
                         }
                     }

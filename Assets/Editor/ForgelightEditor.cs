@@ -1,22 +1,15 @@
-﻿using ForgelightInteg;
-using ForgeLight.Pack;
+﻿using Forgelight;
+using Forgelight.Pack;
 using UnityEditor;
 using UnityEngine;
 
-[CustomEditor(typeof(Forgelight))]
+[CustomEditor(typeof(ForgelightExtension))]
 public class ForgelightEditor : Editor
 {
-    public static string forgeLightFilePath = null;
-
-    [MenuItem("Forgelight/Select Asset Directory")]
-    public static void SelectAssetDirectory()
+    [MenuItem("Forgelight/Load Forgelight Game Data...")]
+    public static void SelectGameDirectory()
     {
-        string path = AssetLoader.OpenAssetFolder();
-
-        if (path != null)
-        {
-            forgeLightFilePath = path;
-        }
+        ForgelightExtension.Instance.AssetLoader.OpenAssetFolder();
     }
 
     #region Validate editor
@@ -47,14 +40,15 @@ public class ForgelightEditor : Editor
     [MenuItem("Forgelight/Create/New Object")]
     public static void CreateZoneObject()
     {
-        GameObject newObject = Forgelight.Instance.ZoneObjectFactory.CreateForgelightObject("default", Forgelight.Instance.lastCameraPos, Quaternion.identity);
-        Selection.activeGameObject = newObject;
+        //TODO Implement alias'
+        //GameObject newObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject("default", ForgelightExtension.Instance.lastCameraPos, Quaternion.identity);
+        //Selection.activeGameObject = newObject;
     }
 
     [MenuItem("Forgelight/Load Zone File...")]
     public static void LoadZoneFile()
     {
-        Forgelight.Instance.ZoneLoader.LoadZoneFile();
+        ForgelightExtension.Instance.ZoneLoader.LoadZoneFile();
     }
 
     [MenuItem("Forgelight/Delete/Terrain")]
@@ -82,7 +76,7 @@ public class ForgelightEditor : Editor
     [MenuItem("Forgelight/Export/Export Current Scene to Zone File...")]
     public static void SaveZoneFile()
     {
-        Forgelight.Instance.ZoneExporter.ExportZoneFile();
+        ForgelightExtension.Instance.ZoneExporter.ExportZoneFile();
     }
 
     [MenuItem("Forgelight/Export/Create Pack File...")]
@@ -95,49 +89,49 @@ public class ForgelightEditor : Editor
     [MenuItem("Forgelight/Load Terrain Data/Indar")]
     public static void LoadIndarTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("Indar");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Indar");
     }
 
     [MenuItem("Forgelight/Load Terrain Data/Hossin")]
     public static void LoadHossinTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("Hossin");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Hossin");
     }
 
     [MenuItem("Forgelight/Load Terrain Data/Amerish")]
     public static void LoadAmerishTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("Amerish");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Amerish");
     }
 
     [MenuItem("Forgelight/Load Terrain Data/Esamir")]
     public static void LoadEsamirTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("Esamir");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Esamir");
     }
 
     [MenuItem("Forgelight/Load Terrain Data/Tutorial")]
     public static void LoadTutorialTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("Tutorial");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Tutorial");
     }
 
     [MenuItem("Forgelight/Load Terrain Data/VR")]
     public static void LoadVRTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("VR");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("VR");
     }
 
     [MenuItem("Forgelight/Load Terrain Data/Koltyr (quickload)")]
     public static void LoadQuickLoadTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("quickload");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("quickload");
     }
 
     [MenuItem("Forgelight/Load Terrain Data/Nexus")]
     public static void LoadNexusTerrainData()
     {
-        Forgelight.Instance.TerrainLoader.LoadTerrain("nexus");
+        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("nexus");
     }
     #endregion
 }

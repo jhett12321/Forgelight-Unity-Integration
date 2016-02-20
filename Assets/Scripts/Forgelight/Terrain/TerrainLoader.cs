@@ -1,11 +1,11 @@
 ﻿
 using System;
 using System.IO;
-using ForgelightInteg.Zone;
+using Forgelight.Zone;
 using UnityEditor;
 using UnityEngine;
 
-namespace ForgelightInteg.Chunk
+namespace Forgelight.Terrain
 {
     public class TerrainLoader
     {
@@ -15,6 +15,8 @@ namespace ForgelightInteg.Chunk
         private int totalResources = 0;
         private int resourcesProcessed = 0;
         private string currentChunk = "";
+
+        //TODO Implement game alias'
 
         /// <summary>
         /// Loads Terrain data, using the default terrain directory. (Assets/Resources/Terrain)

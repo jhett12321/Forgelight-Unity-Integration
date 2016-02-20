@@ -2,21 +2,21 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace ForgelightInteg.Zone
+namespace Forgelight.Zone
 {
     public class ZoneObjectFactory : MonoBehaviour
     {
         private List<long> usedIDs = new List<long>();
         private Dictionary<string, GameObject> cachedActors = new Dictionary<string, GameObject>();
 
-        public GameObject CreateForgelightObject(string actorDefinition, Vector3 position, Quaternion rotation)
+        public GameObject CreateForgelightObject(string gameAlias, string actorDefinition, Vector3 position, Quaternion rotation)
         {
             long randID = GenerateUID();
 
-            return CreateForgelightObject(actorDefinition, position, rotation, Vector3.one, 1000, 1.0f, 0, randID);
+            return CreateForgelightObject(gameAlias, actorDefinition, position, rotation, Vector3.one, 1000, 1.0f, 0, randID);
         }
 
-        public GameObject CreateForgelightObject(string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, int renderDistance, float lodMultiplier, byte notCastShadows, long id)
+        public GameObject CreateForgelightObject(string gameAlias, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, int renderDistance, float lodMultiplier, byte notCastShadows, long id)
         {
             GameObject baseActor;
             GameObject instance = null;
@@ -26,13 +26,21 @@ namespace ForgelightInteg.Zone
                 baseActor = InitializeBaseActor(actorDefinition);
 
                 instance = baseActor;
-                cachedActors.Add(actorDefinition, baseActor);
+                cachedActors[actorDefinition] = baseActor;
             }
             else
             {
                 baseActor = cachedActors[actorDefinition];
 
-                if (baseActor != null)
+                if (baseActor == null)
+                {
+                    baseActor = InitializeBaseActor(actorDefinition);
+
+                    instance = baseActor;
+                    cachedActors[actorDefinition] = baseActor;
+                }
+
+                else
                 {
                     instance = Instantiate(baseActor) as GameObject;
                 }
@@ -95,63 +103,6 @@ namespace ForgelightInteg.Zone
 
                     return null;
                 }
-
-                //Set our shader to the specular material.
-                //baseActorRenderer.sharedMaterial.shader = Shader.Find("Standard (Specular setup)");
-
-                //Load our textures. This shouldn't be necessary with the correct directory layout.
-                //object[] textures = Resources.LoadAll(baseModelDir);
-
-                //object resourceAlbedo = null;
-                //object resourceNormal = null;
-                //object resourceSpecular = null;
-
-                //if (textures != null)
-                //{
-                //    foreach (object file in textures)
-                //    {
-                //        Texture2D texture = file as Texture2D;
-                //        if (texture != null)
-                //        {
-                //            if (texture.name.EndsWith("_C"))
-                //            {
-                //                resourceAlbedo = texture;
-                //            }
-
-                //            else if (texture.name.EndsWith("_N"))
-                //            {
-                //                resourceNormal = texture;
-                //            }
-
-                //            //else if (texture.name.Contains("_S"))
-                //            //{
-                //            //resourceSpecular = texture;
-                //            //}
-                //        }
-                //    }
-                //}
-
-                //if (resourceAlbedo != null)
-                //{
-                //    baseActorRenderer.sharedMaterial.color = Color.white;
-                //    baseActorRenderer.sharedMaterial.mainTexture = (Texture2D)resourceAlbedo;
-                //}
-
-                //else
-                //{
-                //    //Make us magenta to indicate that we are missing a texture.
-                //    baseActorRenderer.sharedMaterial.color = Color.magenta;
-                //}
-
-                //if (resourceNormal != null)
-                //{
-                //    baseActorRenderer.sharedMaterial.SetTexture("_BumpMap", (Texture2D)resourceNormal);
-                //}
-
-                //if (resourceSpecular != null)
-                //{
-                //    baseActorRenderer.sharedMaterial.SetTexture("_SpecGlossMap", (Texture2D)resourceSpecular);
-                //}
             }
 
             else

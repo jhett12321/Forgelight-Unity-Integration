@@ -1,22 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using ForgelightInteg.Util;
+using Forgelight.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace ForgelightInteg.Zone
+namespace Forgelight.Zone
 {
     public class ZoneExporter
     {
         public void ExportZoneFile()
         {
-            if (Forgelight.Instance.ZoneLoader.loadedZone != null)
+            if (ForgelightExtension.Instance.ZoneLoader.loadedZone != null)
             {
                 var path = DialogUtils.SaveFile(
                     "Save zone file",
-                    Forgelight.Instance.ZoneLoader.loadedZonePath,
-                    Path.GetFileNameWithoutExtension(Forgelight.Instance.ZoneLoader.loadedZonePath),
+                    ForgelightExtension.Instance.ZoneLoader.loadedZonePath,
+                    Path.GetFileNameWithoutExtension(ForgelightExtension.Instance.ZoneLoader.loadedZonePath),
                     "json");
 
                 SaveZone(path);
@@ -30,14 +30,14 @@ namespace ForgelightInteg.Zone
 
         private void SaveZone(string path)
         {
-            JObject zoneData = Forgelight.Instance.ZoneLoader.loadedZone;
+            JObject zoneData = ForgelightExtension.Instance.ZoneLoader.loadedZone;
 
             Dictionary<string, List<ZoneObject>> actorInstances = new Dictionary<string, List<ZoneObject>>();
 
             //One final check to make sure we don't have duplicate ID's
-            Forgelight.Instance.ZoneObjectFactory.ValidateObjectUIDs();
+            ForgelightExtension.Instance.ZoneObjectFactory.ValidateObjectUIDs();
 
-            foreach (ZoneObject zoneObject in Forgelight.Instance.ZoneObjectFactory.GetComponentsInChildren<ZoneObject>())
+            foreach (ZoneObject zoneObject in ForgelightExtension.Instance.ZoneObjectFactory.GetComponentsInChildren<ZoneObject>())
             {
                 string actorDef = zoneObject.actorDefinition;
                 if (!actorInstances.ContainsKey(actorDef))

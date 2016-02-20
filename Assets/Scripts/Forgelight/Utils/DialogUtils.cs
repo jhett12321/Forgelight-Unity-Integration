@@ -1,16 +1,17 @@
 ﻿using System.IO;
 using UnityEditor;
 
-namespace ForgelightInteg.Util
+namespace Forgelight.Utils
 {
     public class ValidationResult
     {
         public bool result;
         public string errorTitle;
         public string errorDesc;
+        public string path;
     }
 
-    class DialogUtils
+    public class DialogUtils
     {
         public delegate ValidationResult Validate(string path);
 
@@ -43,6 +44,7 @@ namespace ForgelightInteg.Util
             if (files.Length > 0)
             {
                 validationResult.result = true;
+                validationResult.path = path;
             }
             else
             {
@@ -67,7 +69,7 @@ namespace ForgelightInteg.Util
 
                 else
                 {
-                    valResult = new ValidationResult { result = true };
+                    valResult = new ValidationResult { result = true, path = path};
                 }
             }
 
@@ -87,7 +89,7 @@ namespace ForgelightInteg.Util
 
             if (valResult.result)
             {
-                return path;
+                return valResult.path;
             }
 
             string errTitle = "Invalid Directory";
@@ -117,7 +119,7 @@ namespace ForgelightInteg.Util
 
             if (valResult.result)
             {
-                return path;
+                return valResult.path;
             }
 
             string errTitle = "Invalid Directory";
@@ -147,7 +149,7 @@ namespace ForgelightInteg.Util
 
             if (valResult.result)
             {
-                return path;
+                return valResult.path;
             }
 
             string errTitle = "Invalid Directory";
@@ -177,7 +179,7 @@ namespace ForgelightInteg.Util
 
             if (valResult.result)
             {
-                return path;
+                return valResult.path;
             }
 
             string errTitle = "Invalid File Path";

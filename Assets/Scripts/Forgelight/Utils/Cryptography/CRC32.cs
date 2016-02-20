@@ -6,7 +6,7 @@
 using System;
 using System.Security.Cryptography;
 
-namespace ForgelightInteg.Util
+namespace Forgelight.Utils.Cryptography
 {
     public class Crc32 : HashAlgorithm
     {

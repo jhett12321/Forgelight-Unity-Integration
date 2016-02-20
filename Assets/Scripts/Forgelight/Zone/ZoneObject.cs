@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-namespace ForgelightInteg.Zone
+namespace Forgelight.Zone
 {
     [ExecuteInEditMode]
     public class ZoneObject : MonoBehaviour
@@ -37,7 +37,7 @@ namespace ForgelightInteg.Zone
             {
                 if (currentActorDef != null)
                 {
-                    //Forgelight.Instance.ZoneObjectFactory.UpdateForgelightObject(this, actorDefinition);
+                    //ForgelightExtension.Instance.ZoneObjectFactory.UpdateForgelightObject(this, actorDefinition);
                 }
 
                 currentActorDef = actorDefinition;
@@ -46,7 +46,7 @@ namespace ForgelightInteg.Zone
 
         private void OnRenderObject()
         {
-            float distance = Vector3.Distance(Forgelight.Instance.lastCameraPos, transform.position);
+            float distance = Vector3.Distance(ForgelightExtension.Instance.lastCameraPos, transform.position);
 
             if (distance > renderDistance && visible)
             {

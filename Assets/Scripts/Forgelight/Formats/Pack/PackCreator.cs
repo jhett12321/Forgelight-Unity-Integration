@@ -7,11 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
-using ForgelightInteg.Util;
+using Forgelight.Utils;
+using Forgelight.Utils.Cryptography;
 using MiscUtil.IO;
 using MiscUtil.Conversion;
 
-namespace ForgeLight.Pack
+namespace Forgelight.Pack
 {
     class FileHeader
     {
@@ -63,6 +64,11 @@ namespace ForgeLight.Pack
                 "",
                 "", DialogUtils.DirectoryIsEmpty);
 
+            if (sourceFolder == null)
+            {
+                return;
+            }
+
             string[] files = Directory.GetFiles(sourceFolder);
 
             var destinationFile = DialogUtils.SaveFile(
@@ -71,9 +77,11 @@ namespace ForgeLight.Pack
                 "Assets_256",
                 "pack");
 
-            CreatePackFromFiles(files, destinationFile);
-
-            DialogUtils.DisplayDialog("Export Successful", "Successfully packed and saved " + files.Length + " assets to " + destinationFile);
+            if (destinationFile != null)
+            {
+                CreatePackFromFiles(files, destinationFile);
+                DialogUtils.DisplayDialog("Export Successful", "Successfully packed and saved " + files.Length + " assets to " + destinationFile);
+            }
         }
 
         private static void CreatePackFromFiles(string[] files, string savePath)
