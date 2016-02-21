@@ -9,7 +9,7 @@ public class ForgelightEditor : Editor
     [MenuItem("Forgelight/Load Forgelight Game Data...")]
     public static void SelectGameDirectory()
     {
-        ForgelightExtension.Instance.AssetLoader.OpenAssetFolder();
+        ForgelightExtension.Instance.ForgelightGameFactory.OpenForgelightGameFolder();
     }
 
     #region Validate editor

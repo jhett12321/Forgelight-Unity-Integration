@@ -879,7 +879,7 @@ namespace System
         }
         object IConvertible.ToType(Type conversionType, IFormatProvider provider)
         {
-            return (((float)this) as IConvertible).ToType(conversionType, provider);
+            return ((IConvertible) ((float)this)).ToType(conversionType, provider);
         }
         ushort IConvertible.ToUInt16(IFormatProvider provider)
         {

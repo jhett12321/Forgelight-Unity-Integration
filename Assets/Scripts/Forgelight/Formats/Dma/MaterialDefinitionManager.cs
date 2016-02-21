@@ -8,15 +8,15 @@ namespace Forgelight.Formats.Dma
 {
     public class MaterialDefinitionManager
     {
-        #region Singleton
+        public Dictionary<UInt32, MaterialDefinition> MaterialDefinitions { get; private set; }
+        public Dictionary<UInt32, VertexLayout> VertexLayouts { get; private set; }
 
-        private static MaterialDefinitionManager instance = null;
-
-        public static void CreateInstance()
+        public MaterialDefinitionManager(ForgelightGame forgelightGame)
         {
-            instance = new MaterialDefinitionManager();
+            MaterialDefinitions = new Dictionary<UInt32, MaterialDefinition>();
+            VertexLayouts = new Dictionary<UInt32, VertexLayout>();
 
-            using (MemoryStream materialsXML = AssetManager.Instance.CreateAssetMemoryStreamByName("materials_3.xml"))
+            using (MemoryStream materialsXML = forgelightGame.CreateAssetMemoryStreamByName("materials_3.xml"))
             {
                 materialsXML.Position = 0;
 
@@ -26,34 +26,13 @@ namespace Forgelight.Formats.Dma
 
                     using (StringReader stringReader = new StringReader(xmlDoc))
                     {
-                        instance.loadFromStringReader(stringReader);
+                        LoadFromStringReader(stringReader);
                     }
                 }
             }
         }
 
-        public static void DeleteInstance()
-        {
-            instance = null;
-        }
-
-        public static MaterialDefinitionManager Instance
-        {
-            get { return instance; }
-        }
-
-        #endregion
-
-        public Dictionary<UInt32, MaterialDefinition> MaterialDefinitions { get; private set; }
-        public Dictionary<UInt32, VertexLayout> VertexLayouts { get; private set; }
-
-        MaterialDefinitionManager()
-        {
-            MaterialDefinitions = new Dictionary<UInt32, MaterialDefinition>();
-            VertexLayouts = new Dictionary<UInt32, VertexLayout>();
-        }
-
-        private void loadFromStringReader(StringReader stringReader)
+        private void LoadFromStringReader(StringReader stringReader)
         {
             if (stringReader == null)
                 return;
@@ -72,15 +51,15 @@ namespace Forgelight.Formats.Dma
             XPathNavigator navigator = document.CreateNavigator();
 
             //vertex layouts
-            loadVertexLayoutsByXPathNavigator(navigator.Clone());
+            LoadVertexLayoutsByXPathNavigator(navigator.Clone());
 
             //TODO: parameter groups
 
             //material definitions
-            loadMaterialDefinitionsByXPathNavigator(navigator.Clone());
+            LoadMaterialDefinitionsByXPathNavigator(navigator.Clone());
         }
 
-        private void loadMaterialDefinitionsByXPathNavigator(XPathNavigator navigator)
+        private void LoadMaterialDefinitionsByXPathNavigator(XPathNavigator navigator)
         {
             XPathNodeIterator materialDefinitions = null;
 
@@ -106,7 +85,7 @@ namespace Forgelight.Formats.Dma
             }
         }
 
-        private void loadVertexLayoutsByXPathNavigator(XPathNavigator navigator)
+        private void LoadVertexLayoutsByXPathNavigator(XPathNavigator navigator)
         {
             //material definitions
             XPathNodeIterator vertexLayouts = null;

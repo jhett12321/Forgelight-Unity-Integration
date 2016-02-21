@@ -9,7 +9,7 @@ namespace Forgelight.Formats.Dme
 {
     public class ModelExporter
     {
-        public static void ExportModel(Model model, string directory)
+        public static void ExportModel(ForgelightGame forgelightGame, Model model, string directory)
         {
             //TODO: Figure out what to do with non-version 4 models.
             if (model == null || model.Version != 4)
@@ -23,7 +23,7 @@ namespace Forgelight.Formats.Dme
                 Mesh mesh = model.Meshes[i];
 
                 if (
-                    !MaterialDefinitionManager.Instance.MaterialDefinitions.ContainsKey(
+                    !forgelightGame.MaterialDefinitionManager.MaterialDefinitions.ContainsKey(
                         model.Materials[(Int32) mesh.MaterialIndex].MaterialDefinitionHash))
                     return;
             }
@@ -58,7 +58,7 @@ namespace Forgelight.Formats.Dme
             foreach (string textureString in usedTextures)
             {
                 using (
-                    MemoryStream textureMemoryStream = AssetManager.Instance.CreateAssetMemoryStreamByName(textureString)
+                    MemoryStream textureMemoryStream = forgelightGame.CreateAssetMemoryStreamByName(textureString)
                     )
                 {
                     if (textureMemoryStream == null)
@@ -135,10 +135,10 @@ namespace Forgelight.Formats.Dme
                         Mesh mesh = model.Meshes[i];
 
                         MaterialDefinition materialDefinition =
-                            MaterialDefinitionManager.Instance.MaterialDefinitions[
+                            forgelightGame.MaterialDefinitionManager.MaterialDefinitions[
                                 model.Materials[(Int32) mesh.MaterialIndex].MaterialDefinitionHash];
                         VertexLayout vertexLayout =
-                            MaterialDefinitionManager.Instance.VertexLayouts[
+                            forgelightGame.MaterialDefinitionManager.VertexLayouts[
                                 materialDefinition.DrawStyles[0].VertexLayoutNameHash];
 
                         //position

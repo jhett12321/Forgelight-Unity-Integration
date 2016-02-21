@@ -1,4 +1,5 @@
-﻿using Forgelight.Terrain;
+﻿using System.IO;
+using Forgelight.Terrain;
 using Forgelight.Zone;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -23,8 +24,6 @@ namespace Forgelight
                         instance = new GameObject("Forgelight Editor").AddComponent<ForgelightExtension>();
                     }
 
-                    EditorApplication.update += instance.EditorUpdate;
-
                     instance.Initialize();
                 }
 
@@ -32,8 +31,15 @@ namespace Forgelight
             }
         }
 
+        public static string StatePath
+        {
+            get { return Application.dataPath + "/Forgelight/state.json"; }
+        }
+
+        private JObject extensionState;
+
         //Asset Cache/Loading
-        public AssetLoader AssetLoader { get; private set; }
+        public ForgelightGameFactory ForgelightGameFactory { get; private set; }
 
         //Terrain Importing
         public TerrainLoader TerrainLoader { get; private set; }
@@ -67,10 +73,11 @@ namespace Forgelight
 
         private void Initialize()
         {
+            EditorApplication.update += instance.EditorUpdate;
             instance = this;
 
             //Create objects
-            AssetLoader = new AssetLoader();
+            ForgelightGameFactory = new ForgelightGameFactory();
             TerrainLoader = new TerrainLoader();
             ZoneLoader = new ZoneLoader();
             ZoneExporter = new ZoneExporter();
@@ -96,7 +103,55 @@ namespace Forgelight
             }
 
             //Load saved state information. Create a new state file if it currently does not exist.
-            JObject state = new JObject();
+
+            extensionState = null;
+            if (!File.Exists(StatePath))
+            {
+                extensionState = GetDefaultState();
+                WriteStateToDisk();
+            }
+
+            if (extensionState == null)
+            {
+                extensionState = JObject.Parse(File.ReadAllText(@StatePath));
+            }
+
+            ForgelightGameFactory.Initialize((JArray)extensionState["forgelight_games"]);
+        }
+
+        private JObject GetDefaultState()
+        {
+            JObject retval = new JObject();
+
+            JObject extension = new JObject();
+            extension.Add("version", "1.0");
+            extension.Add("update_url", "http://blackfeatherproductions.com/version.txt");
+
+            retval.Add("extension", extension);
+
+            JArray forgelight_games = new JArray();
+            retval.Add("forgelight_games", forgelight_games);
+
+            return retval;
+        }
+
+        public void SaveNewForgelightGame(ForgelightGame forgelightGame)
+        {
+            JObject gameElement = new JObject();
+
+            gameElement.Add("alias", forgelightGame.Alias);
+            gameElement.Add("pack_directory", forgelightGame.PackDirectory);
+            gameElement.Add("resource_directory", forgelightGame.ResourceDirectory);
+            gameElement.Add("load", true);
+
+            ((JArray) extensionState["forgelight_games"]).Add(gameElement);
+
+            WriteStateToDisk();
+        }
+
+        public void WriteStateToDisk()
+        {
+            File.WriteAllText(@StatePath, extensionState.ToString());
         }
     }
 }

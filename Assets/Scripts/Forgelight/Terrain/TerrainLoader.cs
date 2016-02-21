@@ -91,7 +91,7 @@ namespace Forgelight.Terrain
                     int chunkPosX = -(Convert.ToInt32(nameElements[2]) * chunkPosOffset);
                     int chunkPosZ = (Convert.ToInt32(nameElements[1]) * chunkPosOffset);
 
-                    GameObject instance = GameObject.Instantiate(chunk, new Vector3(chunkPosX, 0, chunkPosZ), Quaternion.identity) as GameObject;
+                    GameObject instance = (GameObject) GameObject.Instantiate(chunk, new Vector3(chunkPosX, 0, chunkPosZ), Quaternion.identity);
 
                     instance.transform.parent = terrainParent;
 

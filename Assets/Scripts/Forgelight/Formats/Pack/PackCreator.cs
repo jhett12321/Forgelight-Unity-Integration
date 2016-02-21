@@ -31,7 +31,7 @@ namespace Forgelight.Pack
             wr.Write(length);
             wr.Write(crc32);
 
-            return (wr.BaseStream as MemoryStream).ToArray();
+            return ((MemoryStream)wr.BaseStream).ToArray();
         }
     }
 
@@ -51,7 +51,7 @@ namespace Forgelight.Pack
                 wr.Write(h.Encode());
             }
 
-            return (wr.BaseStream as MemoryStream).ToArray();
+            return ((MemoryStream)wr.BaseStream).ToArray();
         }
     }
 

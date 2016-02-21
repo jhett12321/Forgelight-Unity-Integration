@@ -7,42 +7,48 @@ namespace Forgelight.Zone
     public class ZoneObjectFactory : MonoBehaviour
     {
         private List<long> usedIDs = new List<long>();
-        private Dictionary<string, GameObject> cachedActors = new Dictionary<string, GameObject>();
+        private Dictionary<ForgelightGame, Dictionary<string, GameObject>> cachedActors = new Dictionary<ForgelightGame, Dictionary<string, GameObject>>();
 
-        public GameObject CreateForgelightObject(string gameAlias, string actorDefinition, Vector3 position, Quaternion rotation)
+        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation)
         {
             long randID = GenerateUID();
 
-            return CreateForgelightObject(gameAlias, actorDefinition, position, rotation, Vector3.one, 1000, 1.0f, 0, randID);
+            return CreateForgelightObject(forgelightGame, actorDefinition, position, rotation, Vector3.one, 1000, 1.0f, 0, randID);
         }
 
-        public GameObject CreateForgelightObject(string gameAlias, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, int renderDistance, float lodMultiplier, byte notCastShadows, long id)
+        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, int renderDistance, float lodMultiplier, byte notCastShadows, long id)
         {
             GameObject baseActor;
             GameObject instance = null;
 
-            if (!cachedActors.ContainsKey(actorDefinition))
+            if (!cachedActors.ContainsKey(forgelightGame))
             {
-                baseActor = InitializeBaseActor(actorDefinition);
+                cachedActors[forgelightGame] = new Dictionary<string, GameObject>();
+            }
+
+            if (!cachedActors[forgelightGame].ContainsKey(actorDefinition))
+            {
+                baseActor = InitializeBaseActor(forgelightGame, actorDefinition);
 
                 instance = baseActor;
-                cachedActors[actorDefinition] = baseActor;
+                cachedActors[forgelightGame][actorDefinition] = baseActor;
             }
+
             else
             {
-                baseActor = cachedActors[actorDefinition];
+                baseActor = cachedActors[forgelightGame][actorDefinition];
 
                 if (baseActor == null)
                 {
-                    baseActor = InitializeBaseActor(actorDefinition);
+                    baseActor = InitializeBaseActor(forgelightGame, actorDefinition);
 
                     instance = baseActor;
-                    cachedActors[actorDefinition] = baseActor;
+                    cachedActors[forgelightGame][actorDefinition] = baseActor;
                 }
 
                 else
                 {
-                    instance = Instantiate(baseActor) as GameObject;
+                    instance = Instantiate(baseActor);
                 }
             }
 
@@ -54,9 +60,9 @@ namespace Forgelight.Zone
             return instance;
         }
 
-        public void UpdateForgelightObject(ZoneObject forgeLightObject, string newActorDefinition)
+        public void UpdateForgelightObject(ForgelightGame forgelightGame, ZoneObject forgeLightObject, string newActorDefinition)
         {
-            GameObject baseActor = InitializeBaseActor(newActorDefinition);
+            GameObject baseActor = InitializeBaseActor(forgelightGame, newActorDefinition);
 
             foreach (Transform child in forgeLightObject.transform)
             {
@@ -65,19 +71,18 @@ namespace Forgelight.Zone
 
             foreach (Transform child in baseActor.transform)
             {
-                GameObject mesh = Instantiate(child.gameObject, child.position, child.rotation) as GameObject;
+                GameObject mesh = (GameObject) Instantiate(child.gameObject, child.position, child.rotation);
                 mesh.transform.SetParent(forgeLightObject.transform, false);
             }
 
             forgeLightObject.name = baseActor.name;
         }
 
-        private GameObject InitializeBaseActor(string actorDef)
+        private GameObject InitializeBaseActor(ForgelightGame forgelightGame, string actorDef)
         {
             //By default, the actor definitions are appended with the .adr extension.
-            //TODO if we implement our own conversion for the models, we shouldn't need to add the "_LOD0" to the file name.
             string modelName = Path.GetFileNameWithoutExtension(actorDef) + "_LOD0";
-            string baseModelDir = "Models";
+            string baseModelDir = forgelightGame.Alias + "/Models";
             string modelPath = baseModelDir + "/" + modelName;
 
             var resourceObj = Resources.Load(modelPath);
@@ -86,7 +91,7 @@ namespace Forgelight.Zone
             Renderer baseActorRenderer;
             if (resourceObj != null)
             {
-                baseActor = Instantiate(resourceObj) as GameObject;
+                baseActor = (GameObject) Instantiate(resourceObj);
 
                 if (baseActor == null)
                 {

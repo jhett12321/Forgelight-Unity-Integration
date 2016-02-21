@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Forgelight.Utils.Cryptography;
+using UnityEngine;
 
 namespace Forgelight.Formats.Dme
 {
@@ -19,6 +20,13 @@ namespace Forgelight.Formats.Dme
         public String Name { get; private set; }
 
         public List<Dma.Material> Materials { get; private set; }
+
+        //Bounding Box
+        private Vector3 min;
+        public Vector3 Min { get { return min; } }
+        private Vector3 max;
+        public Vector3 Max { get { return max; } }
+
         public Mesh[] Meshes { get; private set; }
         public List<String> TextureStrings { get; private set; }
         public BoneMap[] BoneMaps { get; private set; }
@@ -54,6 +62,15 @@ namespace Forgelight.Formats.Dme
             model.TextureStrings = new List<String>();
             model.Materials = new List<Dma.Material>();
             Dma.Dma.LoadFromStream(binaryReader.BaseStream, model.TextureStrings, model.Materials);
+
+            //Bounding Box
+            model.min.x = binaryReader.ReadSingle();
+            model.min.y = binaryReader.ReadSingle();
+            model.min.z = binaryReader.ReadSingle();
+
+            model.max.x = binaryReader.ReadSingle();
+            model.max.y = binaryReader.ReadSingle();
+            model.max.z = binaryReader.ReadSingle();
 
             //meshes
             UInt32 meshCount = binaryReader.ReadUInt32();

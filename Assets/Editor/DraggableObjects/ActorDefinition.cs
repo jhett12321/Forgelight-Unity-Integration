@@ -5,7 +5,7 @@ namespace Forgelight.Editor.DraggableObjects
 {
     public class ActorDefinition
     {
-        public string gameAlias;
+        public ForgelightGame forgelightGame;
         public string actorDefinition;
 
         public GameObject instantiatedGameObject;

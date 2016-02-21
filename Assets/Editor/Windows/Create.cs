@@ -10,7 +10,7 @@ public class Create : EditorWindow
     private const float objectCreationDistance = 20.0f;
 
     private string searchString = "";
-    private Dictionary<string, bool> openElements = new Dictionary<string, bool>();
+    private Dictionary<ForgelightGame, bool> openElements = new Dictionary<ForgelightGame, bool>();
     private Vector2 scroll;
 
     [MenuItem("Forgelight/Windows/Create")]
@@ -40,16 +40,6 @@ public class Create : EditorWindow
             DragAndDrop.AcceptDrag();
         }
 
-        //Actors
-        Dictionary<string, List<string>> availableActors = ForgelightExtension.Instance.AssetLoader.availableActors;
-
-        //Debug
-        List<string> testActors = new List<string>();
-        testActors.Add("anActor.adr");
-        testActors.Add("constructionProp.adr");
-
-        availableActors["Debug Test"] = testActors;
-
         //Search Box
         GUILayout.BeginHorizontal(EditorStyles.toolbar);
         GUILayout.FlexibleSpace();
@@ -61,16 +51,16 @@ public class Create : EditorWindow
         //Actor List
         EditorGUILayout.BeginHorizontal();
         {
-            scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Width(300), GUILayout.Height(800));
+            scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(500));
             {
-                foreach (KeyValuePair<string, List<string>> actors in availableActors)
+                foreach (ForgelightGame forgelightGame in ForgelightExtension.Instance.ForgelightGameFactory.forgelightGames.Values)
                 {
-                    if (!openElements.ContainsKey(actors.Key))
+                    if (!openElements.ContainsKey(forgelightGame))
                     {
-                        openElements[actors.Key] = false;
+                        openElements[forgelightGame] = false;
                     }
 
-                    ShowAlias(actors.Key, actors.Value);
+                    ShowAlias(forgelightGame, forgelightGame.AvailableActors);
                 }
             }
             EditorGUILayout.EndScrollView();
@@ -90,7 +80,7 @@ public class Create : EditorWindow
         {
             if (DragAndDrop.GetGenericData("ActorDefinition") != null)
             {
-                ActorDefinition draggedObj = DragAndDrop.GetGenericData("ActorDefinition") as ActorDefinition;
+                ActorDefinition draggedObj = (ActorDefinition) DragAndDrop.GetGenericData("ActorDefinition");
 
                 DragAndDrop.visualMode = DragAndDropVisualMode.Copy; // show a drag-add icon on the mouse cursor
 
@@ -99,7 +89,7 @@ public class Create : EditorWindow
                 //We have entered the scene. Create the forgelight object at our current position.
                 if (draggedObj.instantiatedGameObject == null)
                 {
-                    draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject(draggedObj.gameAlias,
+                    draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject(draggedObj.forgelightGame,
                         draggedObj.actorDefinition, ray.GetPoint(objectCreationDistance), Quaternion.identity);
                 }
 
@@ -118,18 +108,18 @@ public class Create : EditorWindow
         }
     }
 
-    private void ShowAlias(string alias, List<string> availableActors)
+    private void ShowAlias(ForgelightGame forgelightGame, List<string> availableActors)
     {
         // Show entry for parent object
-        openElements[alias] = EditorGUILayout.Foldout(openElements[alias], alias);
+        openElements[forgelightGame] = EditorGUILayout.Foldout(openElements[forgelightGame], forgelightGame.Alias);
 
-        if (openElements[alias])
+        if (openElements[forgelightGame])
         {
-            ShowAvailableActors(alias, availableActors);
+            ShowAvailableActors(forgelightGame, availableActors);
         }
     }
 
-    private void ShowAvailableActors(string alias, List<string> availableActors)
+    private void ShowAvailableActors(ForgelightGame forgelightGame, List<string> availableActors)
     {
         foreach (string actor in availableActors)
         {
@@ -143,22 +133,27 @@ public class Create : EditorWindow
                 {
                     if (position.Contains(Event.current.mousePosition))
                     {
-                        BeginDrag(alias, actor);
+                        BeginDrag(forgelightGame, actor);
                     }
                 }
 
-                EditorGUI.Foldout(position, false, actor, true, EditorStyles.label);
+                GUIStyle style = EditorStyles.label;
+                style.fixedWidth = 0;
+                style.stretchWidth = true;
+                style.clipping = TextClipping.Overflow;
+
+                EditorGUI.Foldout(position, false, actor, true, style);
 
                 EditorGUI.indentLevel -= indent;
             }
         }
     }
 
-    private void BeginDrag(string alias, string actor)
+    private void BeginDrag(ForgelightGame forgelightGame, string actor)
     {
         ActorDefinition actorDefinition = new ActorDefinition
         {
-            gameAlias = alias,
+            forgelightGame = forgelightGame,
             actorDefinition = actor
         };
 
