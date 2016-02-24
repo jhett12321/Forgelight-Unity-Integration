@@ -4,21 +4,55 @@ using UnityEngine;
 
 public class ObjectImportSettingsOverride : AssetPostprocessor
 {
+    private const string bumpMatch = "bump ";
+    private const string specMatch = "map_Ns ";
+
     public void OnPostprocessModel(GameObject gameObject)
     {
         foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
         {
-            Material material = renderer.sharedMaterial;
-            renderer.material.shader = Shader.Find("Standard (Specular setup)");
+            Material sharedMaterial = renderer.sharedMaterial;
+            sharedMaterial.shader = Shader.Find("Custom/Forgelight");
 
-            if (material.GetFloat("_Mode") != 1.0f)
+            string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(sharedMaterial.mainTexture.name) + ".mtl");
+
+            if (File.Exists(mtlFilePath))
             {
-                material.SetFloat("_Mode", 1.0f);
+                string[] mtlDefs = File.ReadAllLines(mtlFilePath);
+
+                foreach (string mtlDef in mtlDefs)
+                {
+                    ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
+                }
             }
+        }
+    }
 
-            if (material.GetFloat("_Glossiness") != 0.3f)
+    private void ProcessMaterialDef(string basePath, Material sharedMaterial, string mtlDef)
+    {
+        if (mtlDef.Contains(bumpMatch))
+        {
+            string bumpMap = mtlDef.Replace(bumpMatch, "");
+            string path = basePath + bumpMap;
+
+            Texture texture = (Texture)AssetDatabase.LoadAssetAtPath(path, typeof(Texture));
+
+            if (texture != null)
             {
-                material.SetFloat("_Glossiness", 0.3f);
+                sharedMaterial.SetTexture("_BumpMap", texture);
+            }
+        }
+
+        else if (mtlDef.Contains(specMatch))
+        {
+            string packedSpec = mtlDef.Replace(specMatch, "");
+            string path = basePath + packedSpec;
+
+            Texture texture = (Texture)AssetDatabase.LoadAssetAtPath(path, typeof(Texture));
+
+            if (texture != null)
+            {
+                sharedMaterial.SetTexture("_PackedSpecular", texture);
             }
         }
     }
