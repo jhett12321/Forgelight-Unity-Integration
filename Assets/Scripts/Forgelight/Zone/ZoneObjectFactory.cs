@@ -11,12 +11,12 @@ namespace Forgelight.Zone
 
         public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation)
         {
-            long randID = GenerateUID();
+            uint randID = GenerateUID();
 
-            return CreateForgelightObject(forgelightGame, actorDefinition, position, rotation, Vector3.one, 1000, 1.0f, 0, randID);
+            return CreateForgelightObject(forgelightGame, actorDefinition, position, rotation, Vector3.one, 1000, 1.0f, false, randID);
         }
 
-        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, int renderDistance, float lodMultiplier, byte notCastShadows, long id)
+        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, float renderDistance, float lodMultiplier, bool dontCastShadows, uint id)
         {
             GameObject baseActor;
             GameObject instance = null;
@@ -54,7 +54,7 @@ namespace Forgelight.Zone
 
             if (instance != null)
             {
-                InitializeInstance(instance, position, rotation, scale, actorDefinition, renderDistance, lodMultiplier, notCastShadows, id);
+                InitializeInstance(instance, position, rotation, scale, actorDefinition, renderDistance, lodMultiplier, dontCastShadows, id);
             }
 
             return instance;
@@ -122,7 +122,7 @@ namespace Forgelight.Zone
             return baseActor;
         }
 
-        private void InitializeInstance(GameObject instance, Vector3 position, Quaternion rotation, Vector3 scale, string actorDef, int renderDistance, float unknownFloat1, byte unknownByte1, long id)
+        private void InitializeInstance(GameObject instance, Vector3 position, Quaternion rotation, Vector3 scale, string actorDef, float renderDistance, float lodBias, bool dontCastShadows, long id)
         {
             //Set our position, scale and rotation values to the ones defined in the zone file.
             instance.transform.position = position;
@@ -141,8 +141,8 @@ namespace Forgelight.Zone
 
             zoneObject.actorDefinition = actorDef;
             zoneObject.renderDistance = renderDistance;
-            zoneObject.lodMultiplier = unknownFloat1;
-            zoneObject.notCastShadows = unknownByte1;
+            zoneObject.lodMultiplier = lodBias;
+            zoneObject.DontCastShadows = dontCastShadows;
             zoneObject.id = id;
 
             //Add the ID to our used list.
@@ -168,13 +168,13 @@ namespace Forgelight.Zone
             }
         }
 
-        private long GenerateUID()
+        private uint GenerateUID()
         {
-            long randID;
+            uint randID;
 
             do
             {
-                randID = Random.Range(0, int.MaxValue);
+                randID = (uint) Random.Range(0, uint.MaxValue);
             }
             while (usedIDs.Contains(randID));
 

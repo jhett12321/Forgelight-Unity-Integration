@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using Forgelight.Formats.Dma;
 using Forgelight.Formats.Dme;
@@ -19,7 +18,7 @@ namespace Forgelight
 
         //Available Assets
         public List<string> AvailableActors { get; private set; }
-        public List<string> AvailableZones { get; private set; }
+        public Dictionary<string, Formats.Zone.Zone> AvailableZones { get; private set; }
 
         //Data
         public List<Pack.Pack> Packs { get; private set; }
@@ -36,7 +35,7 @@ namespace Forgelight
             ResourceDirectory = resourceDirectory;
 
             AvailableActors = new List<string>();
-            AvailableZones = new List<string>();
+            AvailableZones = new Dictionary<string, Formats.Zone.Zone>();
 
             Packs = new List<Pack.Pack>();
             AssetsByType = new Dictionary<Asset.Types, List<Asset>>();
@@ -130,10 +129,22 @@ namespace Forgelight
             AvailableActors.Sort();
         }
 
-        //TODO Zone Listing
         public void UpdateZones(float progress0, float progress100)
         {
+            AvailableZones.Clear();
+            ProgressBar(progress0, "Updating Zones...");
 
+            List<Asset> zones = AssetsByType[Asset.Types.ZONE];
+
+            for (int i = 0; i < zones.Count; ++i)
+            {
+                ProgressBar(MathUtils.Remap((float)i / (float)zones.Count, 0.0f, 1.0f, progress0, progress100), "Converting Zone: " + zones[i].Name);
+
+                MemoryStream memoryStream = CreateAssetMemoryStreamByName(zones[i].Name);
+                Formats.Zone.Zone zone = Formats.Zone.Zone.LoadFromStream(memoryStream);
+
+                AvailableZones.Add(Path.GetFileNameWithoutExtension(zones[i].Name), zone);
+            }
         }
 
         public void ExportModels(float progress0, float progress100)

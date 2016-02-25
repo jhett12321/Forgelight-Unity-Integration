@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 namespace Forgelight.Zone
 {
@@ -8,13 +9,37 @@ namespace Forgelight.Zone
     {
         private string currentActorDef = null;
 
+        public ForgelightGame forgelightGame;
         public string actorDefinition;
-        public int renderDistance;
+        public float renderDistance;
 
         /// <summary>
         /// Indicates whether an object should cast shadows. We mostly turn this on (on indicates don't cast shadows, oddly) when an object is indoors (being indoors, shadows don't really matter).
         /// </summary>
-        public byte notCastShadows;
+        private bool dontCastShadows;
+        public bool DontCastShadows
+        {
+            get
+            {
+                return dontCastShadows;
+            }
+            set
+            {
+                foreach (Renderer renderer in renderers)
+                {
+                    if (value)
+                    {
+                        renderer.shadowCastingMode = ShadowCastingMode.Off;
+                    }
+                    else
+                    {
+                        renderer.shadowCastingMode = ShadowCastingMode.On;
+                    }
+                }
+
+                dontCastShadows = value;
+            }
+        }
 
         /// <summary>
         /// LOD multiplier. Basically allows the designers bias the LOD distance farther or closer on a per-object basis. We generally try to avoid using it and leave it at the default 1.
@@ -28,8 +53,12 @@ namespace Forgelight.Zone
         private bool visible = false;
 
         private Renderer[] renderers;
-
         private List<GameObject> objectsToDestroy = new List<GameObject>();
+
+        private void Start()
+        {
+            renderers = GetComponentsInChildren<Renderer>();
+        }
 
         private void OnValidate()
         {
@@ -37,7 +66,7 @@ namespace Forgelight.Zone
             {
                 if (currentActorDef != null)
                 {
-                    //ForgelightExtension.Instance.ZoneObjectFactory.UpdateForgelightObject(this, actorDefinition);
+                    ForgelightExtension.Instance.ZoneObjectFactory.UpdateForgelightObject(forgelightGame, this, actorDefinition);
                 }
 
                 currentActorDef = actorDefinition;
@@ -60,6 +89,7 @@ namespace Forgelight.Zone
 
             foreach (Transform child in transform)
             {
+                //Check to see if the user has accidentally moved a child object and not the parent.
                 if (child.transform.localPosition != Vector3.zero)
                 {
                     child.transform.localPosition = Vector3.zero;

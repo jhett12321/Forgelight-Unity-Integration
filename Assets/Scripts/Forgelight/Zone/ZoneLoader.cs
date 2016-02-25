@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
-using System.IO;
 using System.Linq;
 using Forgelight.Utils;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
+using Object = Forgelight.Formats.Zone.Object;
 
 namespace Forgelight.Zone
 {
@@ -24,63 +23,47 @@ namespace Forgelight.Zone
                 "",
                 "json");
 
-            LoadZone(path);
+
+
+            //LoadZone(path);
         }
 
-        public void LoadZone(string path)
+        public void LoadZone(ForgelightGame forgelightGame, Formats.Zone.Zone zone)
         {
             running = true;
 
-            using (StreamReader reader = File.OpenText(@path))
+            //Calculate the total objects we need to process.
+            foreach (Object zoneObject in zone.Objects)
             {
-                JObject zoneData = (JObject)JToken.ReadFrom(new JsonTextReader(reader));
-                loadedZone = zoneData;
-                loadedZonePath = path;
-
-                //Calculate the total objects we need to process.
-                foreach (JObject zoneObject in zoneData["objects"])
-                {
-                    totalObjects += zoneObject["instances"].Count();
-                }
-
-                ZoneObjectFactory ZoneObjectFactory = ForgelightExtension.Instance.ZoneObjectFactory;
-
-                //Begin processing the file
-                foreach (JObject zoneObject in zoneData["objects"])
-                {
-                    if (running && zoneObject["instances"].Count() > 0)
-                    {
-                        string actorDefinition = (string)zoneObject["actorDefinition"];
-                        int renderDistance = (int)zoneObject["renderDistance"];
-
-                        for (int i = 0; i < zoneObject["instances"].Count(); i++)
-                        {
-                            JObject instanceData = (JObject)zoneObject["instances"][i];
-
-                            Vector3 position = GetPositionFromInstance(instanceData);
-                            Quaternion rotation = GetRotationFromInstance(instanceData);
-                            Vector3 scale = GetScaleFromInstance(instanceData);
-
-                            float unknownFloat1 = (float)instanceData["unknownFloat1"];
-                            byte unknownByte1 = (byte)instanceData["unknownByte1"];
-                            long id = (long)instanceData["id"];
-
-                            //TODO Implement alias'
-                            //ZoneObjectFactory.CreateForgelightObject(actorDefinition, position, rotation, scale, renderDistance, unknownFloat1, unknownByte1, id);
-                            objectsProcessed++;
-                        }
-                    }
-
-                    else
-                    {
-                        OnLoadComplete(false);
-                    }
-
-                    ProgressBar();
-                }
-
-                ZoneObjectFactory.transform.localScale = new Vector3(-1, 1, 1);
+                totalObjects += zoneObject.Instances.Count();
             }
+
+            ZoneObjectFactory ZoneObjectFactory = ForgelightExtension.Instance.ZoneObjectFactory;
+
+            //Begin processing the file
+            foreach (Object zoneObject in zone.Objects)
+            {
+                if (running && zoneObject.Instances.Count() > 0)
+                {
+                    string actorDefinition = zoneObject.ActorDefinition;
+                    float renderDistance = zoneObject.RenderDistance;
+
+                    foreach (Object.Instance instance in zoneObject.Instances)
+                    {
+                        ZoneObjectFactory.CreateForgelightObject(forgelightGame, zoneObject.ActorDefinition, ConvertForgelightPosition(instance.Position), ConvertForgelightRotation(instance.Rotation), ConvertForgelightScale(instance.Scale), renderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
+                        objectsProcessed++;
+                    }
+                }
+
+                else
+                {
+                    OnLoadComplete(false);
+                }
+
+                ProgressBar();
+            }
+
+            ZoneObjectFactory.transform.localScale = new Vector3(-1, 1, 1);
 
             //Unload any unused assets.
             Resources.UnloadUnusedAssets();
@@ -114,31 +97,19 @@ namespace Forgelight.Zone
             }
         }
 
-        private Vector3 GetPositionFromInstance(JObject instance)
+        private Vector3 ConvertForgelightPosition(Vector4 fPos)
         {
-            float posX = (float)instance["position"][0];
-            float posY = (float)instance["position"][1];
-            float posZ = (float)instance["position"][2];
-
-            return new Vector3(posX, posY, posZ);
+            return new Vector3(fPos.x, fPos.y, fPos.z);
         }
 
-        private Quaternion GetRotationFromInstance(JObject instance)
+        private Quaternion ConvertForgelightRotation(Vector4 fRot)
         {
-            float x = (float)instance["rotation"][0] * Mathf.Rad2Deg;
-            float y = (float)instance["rotation"][1] * Mathf.Rad2Deg;
-            float z = (float)instance["rotation"][2] * Mathf.Rad2Deg;
-
-            return Quaternion.Euler(y, x, z);
+            return Quaternion.Euler(fRot.y * Mathf.Rad2Deg, fRot.x * Mathf.Rad2Deg, fRot.z * Mathf.Rad2Deg);
         }
 
-        private Vector3 GetScaleFromInstance(JObject instance)
+        private Vector3 ConvertForgelightScale(Vector4 fSca)
         {
-            float scaleX = -(float)instance["scale"][0];
-            float scaleY = (float)instance["scale"][1];
-            float scaleZ = (float)instance["scale"][2];
-
-            return new Vector3(scaleX, scaleY, scaleZ);
+            return new Vector3(-fSca.x, fSca.y, fSca.z);
         }
     }
 }

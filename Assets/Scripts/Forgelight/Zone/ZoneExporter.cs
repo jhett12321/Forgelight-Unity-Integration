@@ -88,7 +88,7 @@ namespace Forgelight.Zone
                     instance.Add("scale", scale);
 
                     instance.Add("id", zoneObject.id);
-                    instance.Add("unknownByte1", zoneObject.notCastShadows);
+                    instance.Add("unknownByte1", zoneObject.DontCastShadows);
                     instance.Add("unknownFloat1", zoneObject.lodMultiplier);
 
                     instances.Add(instance);
