@@ -1,6 +1,6 @@
 ﻿using System.IO;
+using Forgelight.Formats.Zone;
 using Forgelight.Terrain;
-using Forgelight.Zone;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -47,9 +47,6 @@ namespace Forgelight
         //Zone Editing
         public ZoneObjectFactory ZoneObjectFactory { get; private set; }
 
-        //Zone Importing
-        public ZoneLoader ZoneLoader { get; private set; }
-
         //Zone Exporting
         public ZoneExporter ZoneExporter { get; private set; }
 
@@ -79,7 +76,6 @@ namespace Forgelight
             //Create objects
             ForgelightGameFactory = new ForgelightGameFactory();
             TerrainLoader = new TerrainLoader();
-            ZoneLoader = new ZoneLoader();
             ZoneExporter = new ZoneExporter();
 
             //Zone Object Factory

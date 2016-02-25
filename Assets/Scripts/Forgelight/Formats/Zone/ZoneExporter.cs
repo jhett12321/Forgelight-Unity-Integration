@@ -5,32 +5,32 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace Forgelight.Zone
+namespace Forgelight.Formats.Zone
 {
     public class ZoneExporter
     {
         public void ExportZoneFile()
         {
-            if (ForgelightExtension.Instance.ZoneLoader.loadedZone != null)
-            {
-                var path = DialogUtils.SaveFile(
-                    "Save zone file",
-                    ForgelightExtension.Instance.ZoneLoader.loadedZonePath,
-                    Path.GetFileNameWithoutExtension(ForgelightExtension.Instance.ZoneLoader.loadedZonePath),
-                    "json");
+            //if (ForgelightExtension.Instance.ZoneLoader.loadedZone != null)
+            //{
+            //    var path = DialogUtils.SaveFile(
+            //        "Save zone file",
+            //        ForgelightExtension.Instance.ZoneLoader.loadedZonePath,
+            //        Path.GetFileNameWithoutExtension(ForgelightExtension.Instance.ZoneLoader.loadedZonePath),
+            //        "json");
 
-                SaveZone(path);
-            }
-            else
-            {
-                DialogUtils.DisplayDialog("Cannot save zone",
-                    "An existing zone file needs to be loaded first. Please import a zone file, then try again");
-            }
+            //    SaveZone(path);
+            //}
+            //else
+            //{
+            //    DialogUtils.DisplayDialog("Cannot save zone",
+            //        "An existing zone file needs to be loaded first. Please import a zone file, then try again");
+            //}
         }
 
         private void SaveZone(string path)
         {
-            JObject zoneData = ForgelightExtension.Instance.ZoneLoader.loadedZone;
+            JObject zoneData = new JObject();//ForgelightExtension.Instance.ZoneLoader.loadedZone);
 
             Dictionary<string, List<ZoneObject>> actorInstances = new Dictionary<string, List<ZoneObject>>();
 

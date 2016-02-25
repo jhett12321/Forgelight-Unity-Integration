@@ -17,6 +17,8 @@ namespace Forgelight.Formats.Dme
     public class Model
     {
         public UInt32 Version { get; private set; }
+        public UInt32 ModelHeaderOffset { get; private set; }
+
         public String Name { get; private set; }
 
         public List<Dma.Material> Materials { get; private set; }
@@ -54,7 +56,7 @@ namespace Forgelight.Formats.Dme
                 return null;
             }
 
-            UInt32 modelHeaderOffset = binaryReader.ReadUInt32();
+            model.ModelHeaderOffset = binaryReader.ReadUInt32();
 
             model.Name = name;
 

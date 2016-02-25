@@ -1,7 +1,7 @@
 ﻿
 using System;
 using System.IO;
-using Forgelight.Zone;
+using Forgelight.Formats.Zone;
 using UnityEditor;
 using UnityEngine;
 

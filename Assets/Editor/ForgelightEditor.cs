@@ -45,12 +45,6 @@ public class ForgelightEditor : Editor
         //Selection.activeGameObject = newObject;
     }
 
-    [MenuItem("Forgelight/Load Zone File...")]
-    public static void LoadZoneFile()
-    {
-        ForgelightExtension.Instance.ZoneLoader.LoadZoneFile();
-    }
-
     [MenuItem("Forgelight/Delete/Terrain")]
     public static void DeleteTerrain()
     {

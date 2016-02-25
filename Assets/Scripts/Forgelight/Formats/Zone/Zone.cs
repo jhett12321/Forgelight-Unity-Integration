@@ -6,6 +6,8 @@ namespace Forgelight.Formats.Zone
 {
     public class Zone
     {
+        public string Name { get; set; }
+
         //Header
         public UInt32 Version { get; private set; }
         public Dictionary<string, UInt32> Offsets { get; private set; }
@@ -26,7 +28,7 @@ namespace Forgelight.Formats.Zone
         public List<Object> Objects { get; private set; }
         public List<Light> Lights { get; private set; }
 
-        public static Zone LoadFromStream(Stream stream)
+        public static Zone LoadFromStream(string Name, Stream stream)
         {
             BinaryReader binaryReader = new BinaryReader(stream);
 
@@ -42,6 +44,7 @@ namespace Forgelight.Formats.Zone
             }
 
             Zone zone = new Zone();
+            zone.Name = Name;
             zone.Version = binaryReader.ReadUInt32();
 
             if (zone.Version != 1)

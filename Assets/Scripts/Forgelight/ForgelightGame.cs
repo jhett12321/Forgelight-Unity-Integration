@@ -141,9 +141,9 @@ namespace Forgelight
                 ProgressBar(MathUtils.Remap((float)i / (float)zones.Count, 0.0f, 1.0f, progress0, progress100), "Converting Zone: " + zones[i].Name);
 
                 MemoryStream memoryStream = CreateAssetMemoryStreamByName(zones[i].Name);
-                Formats.Zone.Zone zone = Formats.Zone.Zone.LoadFromStream(memoryStream);
+                Formats.Zone.Zone zone = Formats.Zone.Zone.LoadFromStream(zones[i].Name, memoryStream);
 
-                AvailableZones.Add(Path.GetFileNameWithoutExtension(zones[i].Name), zone);
+                AvailableZones[Path.GetFileNameWithoutExtension(zones[i].Name)] = zone;
             }
         }
 
@@ -186,7 +186,7 @@ namespace Forgelight
         //TODO Terrain Exporting
         public void ExportTerrain(float progress0, float progress100)
         {
-            List<Asset> terrainAssets = AssetsByType[Asset.Types.CNK0];
+            //List<Asset> terrainAssets = AssetsByType[Asset.Types.CNK0];
         }
     }
 }

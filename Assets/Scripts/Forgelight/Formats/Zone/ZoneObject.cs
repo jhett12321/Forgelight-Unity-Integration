@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine.Rendering;
 
-namespace Forgelight.Zone
+namespace Forgelight.Formats.Zone
 {
     [ExecuteInEditMode]
     public class ZoneObject : MonoBehaviour
@@ -25,6 +25,11 @@ namespace Forgelight.Zone
             }
             set
             {
+                if (renderers == null)
+                {
+                    renderers = GetComponentsInChildren<Renderer>();
+                }
+
                 foreach (Renderer renderer in renderers)
                 {
                     if (value)
@@ -54,11 +59,6 @@ namespace Forgelight.Zone
 
         private Renderer[] renderers;
         private List<GameObject> objectsToDestroy = new List<GameObject>();
-
-        private void Start()
-        {
-            renderers = GetComponentsInChildren<Renderer>();
-        }
 
         private void OnValidate()
         {

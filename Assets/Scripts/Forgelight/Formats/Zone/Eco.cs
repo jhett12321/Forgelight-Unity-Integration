@@ -49,8 +49,6 @@ namespace Forgelight.Formats.Zone
 
             eco.Index = binaryReader.ReadUInt32();
 
-            List<byte> buffer = new List<byte>();
-
             eco.Name = binaryReader.ReadNullTerminatedString();
             eco.ColorNXMap = binaryReader.ReadNullTerminatedString();
             eco.SpecBlendNyMap = binaryReader.ReadNullTerminatedString();

@@ -27,6 +27,11 @@ namespace Forgelight.Formats.Dma
 
             UInt32 version = binaryReader.ReadUInt32();
 
+            if (version != 1)
+            {
+                return;
+            }
+
             //textures
             UInt32 texturesLength = binaryReader.ReadUInt32();
             char[] buffer = binaryReader.ReadChars((Int32) texturesLength);

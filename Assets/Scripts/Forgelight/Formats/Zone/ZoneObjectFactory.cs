@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Forgelight.Zone
+namespace Forgelight.Formats.Zone
 {
     public class ZoneObjectFactory : MonoBehaviour
     {
