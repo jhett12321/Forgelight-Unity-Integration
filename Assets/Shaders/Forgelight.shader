@@ -36,14 +36,15 @@
             o.Albedo = c.rgb;
 
             //Normal Map
-            o.Normal = UnpackNormal(n);
+            //o.Normal = UnpackNormal(n);
 
             //Packed Specular:
-            //R = metallic, B = emission, G = glaze, A = smoothness
-            o.Metallic = ps.r / 2.5;
+            //R = metallic, B = emission, G = gloss, A = smoothness
+            o.Metallic = ps.r;
             o.Emission = ps.b;
-            o.Smoothness = ps.a / 2.5;
-            o.Alpha = c.a;
+            o.Smoothness = 1 - ps.a;
+
+            //o.Alpha = c.a;
         }
         ENDCG
     }

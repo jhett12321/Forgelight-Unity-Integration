@@ -32,7 +32,10 @@ namespace Forgelight
             "",
             "", CheckGivenAssetDirectory);
 
-            LoadNewForgelightGame(path);
+            if (path != null)
+            {
+                LoadNewForgelightGame(path);
+            }
         }
 
         private void LoadNewForgelightGame(string path)
@@ -46,14 +49,9 @@ namespace Forgelight
             forgelightGame.InitializeMaterialDefinitionManager();
             forgelightGame.ExportModels(0.3f, 0.5f);
             forgelightGame.UpdateActors(0.5f, 0.7f);
-
             //TODO Export Terrain
             forgelightGame.ExportTerrain(0.7f, 0.9f);
-
-            //TODO Update Zones
             forgelightGame.UpdateZones(0.9f, 1.0f);
-
-            //TODO Update State File
 
             forgelightGame.OnLoadComplete();
             ForgelightExtension.Instance.SaveNewForgelightGame(forgelightGame);
