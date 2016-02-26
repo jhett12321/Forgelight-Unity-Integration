@@ -65,11 +65,11 @@ namespace Forgelight.Editor.Windows
 
             if (openElements[forgelightGame])
             {
-                ShowAvailableActors(forgelightGame, availableZones);
+                ShowAvailableZones(forgelightGame, availableZones);
             }
         }
 
-        private void ShowAvailableActors(ForgelightGame forgelightGame, List<Formats.Zone.Zone> availableZones)
+        private void ShowAvailableZones(ForgelightGame forgelightGame, List<Formats.Zone.Zone> availableZones)
         {
             foreach (Formats.Zone.Zone zone in availableZones)
             {
@@ -138,7 +138,7 @@ namespace Forgelight.Editor.Windows
                     return;
                 }
 
-                ProgressBar((float)totalObjects / (float)objectsProcessed, zoneObject.ActorDefinition);
+                ProgressBar((float)objectsProcessed / (float)totalObjects, zoneObject.ActorDefinition);
             }
 
             ZoneObjectFactory.transform.localScale = new Vector3(-1, 1, 1);

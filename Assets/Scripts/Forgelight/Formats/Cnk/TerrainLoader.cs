@@ -5,7 +5,7 @@ using Forgelight.Formats.Zone;
 using UnityEditor;
 using UnityEngine;
 
-namespace Forgelight.Terrain
+namespace Forgelight.Formats.Cnk
 {
     public class TerrainLoader
     {

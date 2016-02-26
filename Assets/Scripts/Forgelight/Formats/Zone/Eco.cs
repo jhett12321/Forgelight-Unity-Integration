@@ -88,7 +88,7 @@ namespace Forgelight.Formats.Zone
                     Byte b = binaryReader.ReadByte();
                     Byte a = binaryReader.ReadByte();
 
-					tint.Color = new Color((float)r/255, (float)g/255, (float)b/255, (float)a/255);
+                    tint.Color = new Color((float)r/255, (float)g/255, (float)b/255, (float)a/255);
 
                     tint.Percentage = binaryReader.ReadUInt32();
 

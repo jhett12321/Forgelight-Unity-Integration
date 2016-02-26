@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor;
 
 namespace Forgelight.Formats.Zone
 {
@@ -81,17 +82,18 @@ namespace Forgelight.Formats.Zone
         private GameObject InitializeBaseActor(ForgelightGame forgelightGame, string actorDef)
         {
             //By default, the actor definitions are appended with the .adr extension.
-            string modelName = Path.GetFileNameWithoutExtension(actorDef) + "_LOD0";
-            string baseModelDir = forgelightGame.Alias + "/Models";
+            string modelName = Path.GetFileNameWithoutExtension(actorDef) + "_LOD0.obj";
+            string baseModelDir = "Assets/Resources/" + forgelightGame.Alias + "/Models";
             string modelPath = baseModelDir + "/" + modelName;
 
-            var resourceObj = Resources.Load(modelPath);
+            GameObject resourceObj = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
 
             GameObject baseActor;
             Renderer baseActorRenderer;
+
             if (resourceObj != null)
             {
-                baseActor = (GameObject) Instantiate(resourceObj);
+                baseActor = Instantiate(resourceObj);
 
                 if (baseActor == null)
                 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Dma;
 using Forgelight.Formats.Dme;
 using Forgelight.Pack;
@@ -186,7 +187,20 @@ namespace Forgelight
         //TODO Terrain Exporting
         public void ExportTerrain(float progress0, float progress100)
         {
-            //List<Asset> terrainAssets = AssetsByType[Asset.Types.CNK0];
+            List<Asset> terrainAssetsCnk0 = AssetsByType[Asset.Types.CNK0];
+
+            for (int i = 0; i < terrainAssetsCnk0.Count; i++)
+            {
+                Asset asset = terrainAssetsCnk0[i];
+
+                ProgressBar(MathUtils.Remap((float)i / (float)terrainAssetsCnk0.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Chunk (LOD0): " + Path.GetFileName(asset.Name));
+
+                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+                {
+                    //TODO Decompress Terrain Data
+                    //Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
+                }
+            }
         }
     }
 }

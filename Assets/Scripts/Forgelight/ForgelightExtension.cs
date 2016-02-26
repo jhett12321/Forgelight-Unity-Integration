@@ -1,6 +1,6 @@
 ﻿using System.IO;
+using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Zone;
-using Forgelight.Terrain;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -52,8 +52,6 @@ namespace Forgelight
 
         //Editor
         public Vector3 lastCameraPos = new Vector3();
-
-        //TODO Implement .zone Conversion
 
         private void EditorUpdate()
         {
