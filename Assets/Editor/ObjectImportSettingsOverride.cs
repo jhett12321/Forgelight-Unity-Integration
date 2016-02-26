@@ -14,6 +14,11 @@ public class ObjectImportSettingsOverride : AssetPostprocessor
             Material sharedMaterial = renderer.sharedMaterial;
             sharedMaterial.shader = Shader.Find("Custom/Forgelight");
 
+            if (assetPath == null || sharedMaterial.mainTexture == null)
+            {
+                return;
+            }
+
             string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(sharedMaterial.mainTexture.name) + ".mtl");
 
             if (File.Exists(mtlFilePath))

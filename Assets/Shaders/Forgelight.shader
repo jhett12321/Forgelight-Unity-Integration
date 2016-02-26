@@ -4,14 +4,16 @@
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _BumpMap("Bump Map", 2D) = "bump" {}
         _PackedSpecular("Packed Specular", 2D) = "black" {}
+
+        _Cutoff("Alpha Cutoff", Range(0.0, 1.0)) = 0
     }
     SubShader {
-        Tags { "RenderType"="TransparentCutout" }
+        Tags {"Queue"="AlphaTest" "RenderType"="TransparentCutout" }
         LOD 200
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows
+        #pragma surface surf Standard fullforwardshadows alphatest:_Cutoff addshadow
 
         // Use shader model 3.0 target, to get nicer looking lighting
         #pragma target 3.0
@@ -36,15 +38,19 @@
             o.Albedo = c.rgb;
 
             //Normal Map
-            //o.Normal = UnpackNormal(n);
+            o.Normal = UnpackNormal(n);
 
             //Packed Specular:
             //R = metallic, B = emission, G = gloss, A = smoothness
             o.Metallic = ps.r;
             o.Emission = ps.b;
-            o.Smoothness = 1 - ps.a;
 
-            //o.Alpha = c.a;
+            if(ps.a > 0)
+            {
+                o.Smoothness = 1 - ps.a;
+            }
+
+            o.Alpha = c.a;
         }
         ENDCG
     }
