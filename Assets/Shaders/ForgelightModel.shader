@@ -1,4 +1,4 @@
-﻿Shader "Custom/Forgelight" {
+﻿Shader "Custom/ForgelightModel" {
     Properties {
         _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
@@ -43,7 +43,8 @@
             //Packed Specular:
             //R = metallic, B = emission, G = gloss, A = smoothness
             o.Metallic = ps.r;
-            o.Emission = ps.b;
+
+            //o.Emission = ps.b;
 
             if(ps.a > 0)
             {

@@ -12,7 +12,7 @@ public class ObjectImportSettingsOverride : AssetPostprocessor
         foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
         {
             Material sharedMaterial = renderer.sharedMaterial;
-            sharedMaterial.shader = Shader.Find("Custom/Forgelight");
+            sharedMaterial.shader = Shader.Find("Custom/ForgelightModel");
 
             if (assetPath == null || sharedMaterial.mainTexture == null)
             {
