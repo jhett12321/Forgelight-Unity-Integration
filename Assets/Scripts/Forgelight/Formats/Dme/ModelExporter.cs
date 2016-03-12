@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using Forgelight.Formats.Dma;
-using UnityEngine;
+﻿    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.IO;
+    using Forgelight.Formats.Dma;
+    using UnityEngine;
 
-namespace Forgelight.Formats.Dme
-{
+    namespace Forgelight.Formats.Dme
+    {
     public class ModelExporter
     {
         public static void ExportModel(ForgelightGame forgelightGame, Model model, string directory)
@@ -22,10 +22,10 @@ namespace Forgelight.Formats.Dme
             {
                 Mesh mesh = model.Meshes[i];
 
-                if (
-                    !forgelightGame.MaterialDefinitionManager.MaterialDefinitions.ContainsKey(
-                        model.Materials[(Int32) mesh.MaterialIndex].MaterialDefinitionHash))
+                if (!forgelightGame.MaterialDefinitionManager.MaterialDefinitions.ContainsKey(model.Materials[(Int32) mesh.MaterialIndex].MaterialDefinitionHash))
+                {
                     return;
+                }
             }
 
             NumberFormatInfo format = new NumberFormatInfo();
@@ -57,20 +57,25 @@ namespace Forgelight.Formats.Dme
 
             foreach (string textureString in usedTextures)
             {
-                using (
-                    MemoryStream textureMemoryStream = forgelightGame.CreateAssetMemoryStreamByName(textureString)
-                    )
+                using (MemoryStream textureMemoryStream = forgelightGame.CreateAssetMemoryStreamByName(textureString))
                 {
                     if (textureMemoryStream == null)
-                        continue;
-
-                    using (
-                        FileStream file = new FileStream(directory + @"\Textures\" + textureString, FileMode.Create,
-                            FileAccess.Write))
                     {
-                        byte[] bytes = new byte[textureMemoryStream.Length];
-                        textureMemoryStream.Read(bytes, 0, (int) textureMemoryStream.Length);
-                        file.Write(bytes, 0, bytes.Length);
+                        continue;
+                    }
+
+                    if (!File.Exists(directory + @"\Textures\" + textureString))
+                    {
+                        try
+                        {
+                            using (FileStream file = File.Create(directory + @"\Textures\" + textureString))
+                            {
+                                byte[] bytes = new byte[textureMemoryStream.Length];
+                                textureMemoryStream.Read(bytes, 0, (int)textureMemoryStream.Length);
+                                file.Write(bytes, 0, bytes.Length);
+                            }
+                        }
+                        catch (IOException) {}
                     }
                 }
             }
@@ -88,9 +93,7 @@ namespace Forgelight.Formats.Dme
 
                         if (mesh.BaseDiffuse != null)
                         {
-                            if (
-                                !File.Exists(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) +
-                                             @".mtl"))
+                            if (!File.Exists(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl"))
                             {
                                 List<string> mtl = new List<string>();
 
@@ -120,13 +123,10 @@ namespace Forgelight.Formats.Dme
                                     mtl.Add("bump " + mesh.BumpMap);
                                 }
 
-                                File.WriteAllLines(
-                                    directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl",
-                                    mtl.ToArray());
+                                File.WriteAllLines(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl", mtl.ToArray());
                             }
 
-                            streamWriter.WriteLine("mtllib " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) +
-                                                   ".mtl");
+                            streamWriter.WriteLine("mtllib " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + ".mtl");
                         }
                     }
 
@@ -134,20 +134,15 @@ namespace Forgelight.Formats.Dme
                     {
                         Mesh mesh = model.Meshes[i];
 
-                        MaterialDefinition materialDefinition =
-                            forgelightGame.MaterialDefinitionManager.MaterialDefinitions[
-                                model.Materials[(Int32) mesh.MaterialIndex].MaterialDefinitionHash];
-                        VertexLayout vertexLayout =
-                            forgelightGame.MaterialDefinitionManager.VertexLayouts[
-                                materialDefinition.DrawStyles[0].VertexLayoutNameHash];
+                        MaterialDefinition materialDefinition = forgelightGame.MaterialDefinitionManager.MaterialDefinitions[model.Materials[(Int32) mesh.MaterialIndex].MaterialDefinitionHash];
+                        VertexLayout vertexLayout = forgelightGame.MaterialDefinitionManager.VertexLayouts[materialDefinition.DrawStyles[0].VertexLayoutNameHash];
 
                         //position
                         VertexLayout.Entry.DataTypes positionDataType;
                         Int32 positionOffset;
                         Int32 positionStreamIndex;
 
-                        vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Position, 0,
-                            out positionDataType, out positionStreamIndex, out positionOffset);
+                        vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Position, 0, out positionDataType, out positionStreamIndex, out positionOffset);
 
                         Mesh.VertexStream positionStream = mesh.VertexStreams[positionStreamIndex];
 
@@ -155,8 +150,7 @@ namespace Forgelight.Formats.Dme
                         {
                             Vector3 position = ReadVector3(positionOffset, positionStream, j);
 
-                            streamWriter.WriteLine("v " + position.x.ToString(format) + " " +
-                                                   position.y.ToString(format) + " " + position.z.ToString(format));
+                            streamWriter.WriteLine("v " + position.x.ToString(format) + " " + position.y.ToString(format) + " " + position.z.ToString(format));
                         }
 
                         //texture coordinates
@@ -164,9 +158,7 @@ namespace Forgelight.Formats.Dme
                         Int32 texCoord0Offset = 0;
                         Int32 texCoord0StreamIndex = 0;
 
-                        Boolean texCoord0Present =
-                            vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Texcoord,
-                                0, out texCoord0DataType, out texCoord0StreamIndex, out texCoord0Offset);
+                        Boolean texCoord0Present = vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Texcoord, 0, out texCoord0DataType, out texCoord0StreamIndex, out texCoord0Offset);
 
                         if (texCoord0Present)
                         {
@@ -179,27 +171,26 @@ namespace Forgelight.Formats.Dme
                                 switch (texCoord0DataType)
                                 {
                                     case VertexLayout.Entry.DataTypes.Float2:
-                                        texCoord.x = BitConverter.ToSingle(texCoord0Stream.Data,
-                                            (j*texCoord0Stream.BytesPerVertex) + 0);
-                                        texCoord.y = 1.0f -
-                                                     BitConverter.ToSingle(texCoord0Stream.Data,
-                                                         (j*texCoord0Stream.BytesPerVertex) + 4);
+                                    {
+                                        texCoord.x = BitConverter.ToSingle(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + 0);
+                                        texCoord.y = 1.0f - BitConverter.ToSingle(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + 4);
                                         break;
+                                    }
+
                                     case VertexLayout.Entry.DataTypes.float16_2:
-                                        texCoord.x = Half.FromBytes(texCoord0Stream.Data,
-                                            (j*texCoord0Stream.BytesPerVertex) + texCoord0Offset + 0);
-                                        texCoord.y = 1.0f -
-                                                     Half.FromBytes(texCoord0Stream.Data,
-                                                         (j*texCoord0Stream.BytesPerVertex) + texCoord0Offset + 2);
+                                    {
+                                        texCoord.x = Half.FromBytes(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 0);
+                                        texCoord.y = 1.0f - Half.FromBytes(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 2);
                                         break;
+                                     }
+
                                     default:
                                         texCoord.x = 0;
                                         texCoord.y = 0;
                                         break;
                                 }
 
-                                streamWriter.WriteLine("vt " + texCoord.x.ToString(format) + " " +
-                                                       texCoord.y.ToString(format));
+                                streamWriter.WriteLine("vt " + texCoord.x.ToString(format) + " " + texCoord.y.ToString(format));
                             }
                         }
                     }
@@ -210,7 +201,6 @@ namespace Forgelight.Formats.Dme
                     for (Int32 i = 0; i < model.Meshes.Length; ++i)
                     {
                         Mesh mesh = model.Meshes[i];
-
                         streamWriter.WriteLine("g Mesh" + i);
 
                         //Custom Material
@@ -242,8 +232,7 @@ namespace Forgelight.Formats.Dme
                                     break;
                             }
 
-                            streamWriter.WriteLine("f " + index2 + "/" + index2 + "/" + index2 + " " + index1 + "/" +
-                                                   index1 + "/" + index1 + " " + index0 + "/" + index0 + "/" + index0);
+                            streamWriter.WriteLine("f " + index2 + "/" + index2 + "/" + index2 + " " + index1 + "/" + index1 + "/" + index1 + " " + index0 + "/" + index0 + "/" + index0);
                         }
 
                         vertexCount += (UInt32) mesh.VertexCount;
@@ -263,4 +252,4 @@ namespace Forgelight.Formats.Dme
             return vector3;
         }
     }
-}
+    }

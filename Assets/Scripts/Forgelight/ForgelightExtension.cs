@@ -1,42 +1,27 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using Forgelight.Attributes;
 using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Zone;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Forgelight
 {
-    public class ForgelightExtension : MonoBehaviour
+    [InitializeOnLoad]
+    public class ForgelightExtension
     {
+        private string lastScene;
+
         //Singleton
-        private static ForgelightExtension instance = null;
-        public static ForgelightExtension Instance
-        {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = (ForgelightExtension)FindObjectOfType(typeof(ForgelightExtension));
+        public static ForgelightExtension Instance { get; private set; }
 
-                    if (instance == null)
-                    {
-                        instance = new GameObject("Forgelight Editor").AddComponent<ForgelightExtension>();
-                    }
+        //State/Configuration
+        public Config Config { get; private set; }
 
-                    instance.Initialize();
-                }
-
-                return instance;
-            }
-        }
-
-        public static string StatePath
-        {
-            get { return Application.dataPath + "/Forgelight/state.json"; }
-        }
-
-        private JObject extensionState;
 
         //Asset Cache/Loading
         public ForgelightGameFactory ForgelightGameFactory { get; private set; }
@@ -45,107 +30,131 @@ namespace Forgelight
         public TerrainLoader TerrainLoader { get; private set; }
 
         //Zone Editing
-        public ZoneObjectFactory ZoneObjectFactory { get; private set; }
+        private ZoneObjectFactory zoneObjectFactory;
+
+        public ZoneObjectFactory ZoneObjectFactory
+        {
+            get
+            {
+                if (zoneObjectFactory == null)
+                {
+                    zoneObjectFactory = (ZoneObjectFactory)Object.FindObjectOfType(typeof(ZoneObjectFactory));
+
+                    if (zoneObjectFactory == null)
+                    {
+                        zoneObjectFactory = new GameObject("Forgelight Zone Objects").AddComponent<ZoneObjectFactory>();
+                    }
+                }
+
+                return zoneObjectFactory;
+            }
+        }
 
         //Zone Exporting
         public ZoneExporter ZoneExporter { get; private set; }
 
         //Editor
-        public Vector3 lastCameraPos = new Vector3();
+        public Vector3 LastCameraPos { get; private set; }
+
+        static ForgelightExtension()
+        {
+            if (Instance == null)
+            {
+                Instance = new ForgelightExtension();
+
+                //Create objects
+                Instance.ForgelightGameFactory = new ForgelightGameFactory();
+                Instance.TerrainLoader = new TerrainLoader();
+                Instance.ZoneExporter = new ZoneExporter();
+                Instance.Config = new Config();
+
+                EditorApplication.update += Instance.EditorUpdate;
+            }
+
+            EditorApplication.hierarchyWindowChanged += Instance.Initialize;
+        }
 
         private void EditorUpdate()
         {
-            if (instance == null)
+            if (Instance == null)
             {
-                instance = this;
+                Instance = this;
             }
 
             if (Camera.current != null)
             {
-                lastCameraPos = Camera.current.transform.position;
+                LastCameraPos = Camera.current.transform.position;
             }
         }
 
         private void Initialize()
         {
-            EditorApplication.update += instance.EditorUpdate;
-            instance = this;
-
-            //Create objects
-            ForgelightGameFactory = new ForgelightGameFactory();
-            TerrainLoader = new TerrainLoader();
-            ZoneExporter = new ZoneExporter();
-
-            //Zone Object Factory
-            GameObject parent = GameObject.FindWithTag("ZoneObjects");
-
-            if (parent == null)
+            if (EditorSceneManager.loadedSceneCount > 0 && EditorSceneManager.GetActiveScene().name == lastScene)
             {
-                parent = new GameObject("Forgelight Objects");
-                parent.tag = "ZoneObjects";
-
-                ZoneObjectFactory = parent.AddComponent<ZoneObjectFactory>();
+                return;
             }
-            else
-            {
-                ZoneObjectFactory = parent.GetComponent<ZoneObjectFactory>();
 
-                if (ZoneObjectFactory == null)
+            lastScene = EditorSceneManager.GetActiveScene().name;
+
+            //Initializes any games we have loaded in the past.
+            Config.LoadSavedState();
+
+            //ChangeActiveForgelightGame the Active Game.
+            string activeGame = null;
+            JToken activeGameInfos = null;
+
+            //The data saved to the current scene.
+            if (ForgelightMonoBehaviour.Instance.ForgelightGame != null)
+            {
+                activeGame = ForgelightMonoBehaviour.Instance.ForgelightGame;
+            }
+
+            if (activeGame != null)
+            {
+                activeGameInfos = Config.GetForgelightGameInfo(activeGame);
+            }
+
+            if (activeGameInfos == null)
+            {
+                string lastActiveConfigGame = Config.GetLastActiveForgelightGame();
+
+                if (lastActiveConfigGame != null)
                 {
-                    ZoneObjectFactory = parent.AddComponent<ZoneObjectFactory>();
+                    activeGame = lastActiveConfigGame;
+                    activeGameInfos = Config.GetForgelightGameInfo(activeGame);
                 }
             }
 
-            //Load saved state information. Create a new state file if it currently does not exist.
-
-            extensionState = null;
-            if (!File.Exists(StatePath))
+            if (activeGameInfos != null)
             {
-                extensionState = GetDefaultState();
-                WriteStateToDisk();
+                ForgelightGameFactory.ChangeActiveForgelightGame(activeGame);
             }
+        }
+    }
 
-            if (extensionState == null)
+    public class ForgelightMonoBehaviour : MonoBehaviour
+    {
+        private static ForgelightMonoBehaviour instance;
+        public static ForgelightMonoBehaviour Instance
+        {
+            get
             {
-                extensionState = JObject.Parse(File.ReadAllText(@StatePath));
+                if (instance == null)
+                {
+                    instance = (ForgelightMonoBehaviour)FindObjectOfType(typeof(ForgelightMonoBehaviour));
+
+                    if (instance == null)
+                    {
+                        instance = new GameObject("Forgelight Editor").AddComponent<ForgelightMonoBehaviour>();
+                    }
+                }
+
+                return instance;
             }
-
-            ForgelightGameFactory.Initialize((JArray)extensionState["forgelight_games"]);
         }
 
-        private JObject GetDefaultState()
-        {
-            JObject retval = new JObject();
-
-            JObject extension = new JObject();
-            extension.Add("version", "1.0");
-            extension.Add("update_url", "http://blackfeatherproductions.com/version.txt");
-
-            retval.Add("extension", extension);
-
-            JArray forgelight_games = new JArray();
-            retval.Add("forgelight_games", forgelight_games);
-
-            return retval;
-        }
-
-        public void SaveNewForgelightGame(ForgelightGame forgelightGame)
-        {
-            JObject gameElement = new JObject();
-
-            gameElement.Add("alias", forgelightGame.Alias);
-            gameElement.Add("pack_directory", forgelightGame.PackDirectory);
-            gameElement.Add("resource_directory", forgelightGame.ResourceDirectory);
-            gameElement.Add("load", true);
-
-            ((JArray) extensionState["forgelight_games"]).Add(gameElement);
-
-            WriteStateToDisk();
-        }
-
-        public void WriteStateToDisk()
-        {
-            File.WriteAllText(@StatePath, extensionState.ToString());
-        }
+        //Forgelight Game. Saved with the scene.
+        [ReadOnly]
+        public string ForgelightGame;
     }
 }

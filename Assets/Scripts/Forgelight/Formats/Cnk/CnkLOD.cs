@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LzhamWrapper;
-using MiscUtil.Threading;
 using UnityEngine;
 
 namespace Forgelight.Formats.Cnk
@@ -110,156 +109,180 @@ namespace Forgelight.Formats.Cnk
             UInt32 decompressedSize = binaryReader.ReadUInt32();
             UInt32 compressedSize = binaryReader.ReadUInt32();
 
-            Stream compressedStream = new MemoryStream(binaryReader.ReadBytes((int) compressedSize));
+            //Decompression
+            byte[] compressedBuffer = binaryReader.ReadBytes((int) compressedSize);
+            byte[] decompressedBuffer = new byte[decompressedSize];
 
-            DecompressionParameters param = new DecompressionParameters();
-            param.DictionarySize = 25u;
-            param.UpdateRate = LzhamWrapper.Enums.TableUpdateRate.Fastest;
-            param.Flags |= LzhamWrapper.Enums.DecompressionFlag.ReadZlibStream;
+            InflateReturnCode result = LzhamInterop.DecompressForgelightData(compressedBuffer, compressedSize, decompressedBuffer, decompressedSize);
 
-            LzhamStream decompressedStream = new LzhamStream(compressedStream, param);
-
-            binaryReader = new BinaryReader(decompressedStream);
-
-            //Textures
-            UInt32 textureCount = binaryReader.ReadUInt32();
-            chunk.Textures = new List<Texture>((int) textureCount);
-
-            for (int i = 0; i < textureCount; i++)
+            if (result != InflateReturnCode.LZHAM_Z_STREAM_END && result != InflateReturnCode.LZHAM_Z_OK)
             {
-                Texture texture = new Texture();
-
-                UInt32 colorNxMapSize = binaryReader.ReadUInt32();
-                texture.ColorNXMap = binaryReader.ReadBytes((int) colorNxMapSize).ToList();
-
-                UInt32 specNyMapSize = binaryReader.ReadUInt32();
-                texture.SpecNyMap = binaryReader.ReadBytes((int) specNyMapSize).ToList();
-
-                UInt32 extraData1Size = binaryReader.ReadUInt32();
-                texture.ExtraData1 = binaryReader.ReadBytes((int)extraData1Size).ToList();
-
-                UInt32 extraData2Size = binaryReader.ReadUInt32();
-                texture.ExtraData2 = binaryReader.ReadBytes((int)extraData2Size).ToList();
-
-                UInt32 extraData3Size = binaryReader.ReadUInt32();
-                texture.ExtraData3 = binaryReader.ReadBytes((int)extraData3Size).ToList();
-
-                UInt32 extraData4Size = binaryReader.ReadUInt32();
-                texture.ExtraData4 = binaryReader.ReadBytes((int)extraData4Size).ToList();
+                //This chunk is invalid.
+                return null;
             }
 
-            //Verts Per Side
-            chunk.VertsPerSide = binaryReader.ReadUInt32();
-
-            //Height Maps
-            UInt32 heightMapCount = binaryReader.ReadUInt32();
-
-            int n = (int) (heightMapCount/4);
-
-            for (int i = 0; i < 4; i++)
+            using (MemoryStream decompressedStream = new MemoryStream(decompressedBuffer))
             {
-                for (int j = 0; j < n; j++)
+                binaryReader = new BinaryReader(decompressedStream);
+
+                //Textures
+                UInt32 textureCount = binaryReader.ReadUInt32();
+                chunk.Textures = new List<Texture>((int)textureCount);
+
+                for (int i = 0; i < textureCount; i++)
                 {
-                    Dictionary<int, HeightMap> entry;
+                    Texture texture = new Texture();
 
-                    if (!chunk.HeightMaps.ContainsKey(i))
+                    UInt32 colorNxMapSize = binaryReader.ReadUInt32();
+                    if (colorNxMapSize > 0)
                     {
-                        entry = new Dictionary<int, HeightMap>();
-                        chunk.HeightMaps[i] = entry;
+                        texture.ColorNXMap = binaryReader.ReadBytes((int)colorNxMapSize).ToList();
                     }
 
-                    else
+                    UInt32 specNyMapSize = binaryReader.ReadUInt32();
+                    if (specNyMapSize > 0)
                     {
-                        entry = chunk.HeightMaps[i];
+                        texture.SpecNyMap = binaryReader.ReadBytes((int)specNyMapSize).ToList();
                     }
 
-                    HeightMap heightMapData = new HeightMap();
-                    heightMapData.Val1 = binaryReader.ReadInt16();
-                    heightMapData.Val2 = binaryReader.ReadByte();
-                    heightMapData.Val3 = binaryReader.ReadByte();
+                    UInt32 extraData1Size = binaryReader.ReadUInt32();
+                    if (extraData1Size > 0)
+                    {
+                        texture.ExtraData1 = binaryReader.ReadBytes((int)extraData1Size).ToList();
+                    }
 
-                    entry[j] = heightMapData;
+                    UInt32 extraData2Size = binaryReader.ReadUInt32();
+                    if (extraData2Size > 0)
+                    {
+                        texture.ExtraData2 = binaryReader.ReadBytes((int)extraData2Size).ToList();
+                    }
+
+                    UInt32 extraData3Size = binaryReader.ReadUInt32();
+                    if (extraData3Size > 0)
+                    {
+                        texture.ExtraData3 = binaryReader.ReadBytes((int)extraData3Size).ToList();
+                    }
+
+                    UInt32 extraData4Size = binaryReader.ReadUInt32();
+                    if (extraData4Size > 0)
+                    {
+                        texture.ExtraData4 = binaryReader.ReadBytes((int)extraData4Size).ToList();
+                    }
                 }
-            }
 
-            //Indices
-            UInt32 indexCount = binaryReader.ReadUInt32();
-            chunk.Indices = new List<ushort>((int)indexCount);
+                //Verts Per Side
+                chunk.VertsPerSide = binaryReader.ReadUInt32();
 
-            for (int i = 0; i < indexCount; i++)
-            {
-                chunk.Indices.Add(binaryReader.ReadUInt16());
-            }
+                //Height Maps
+                UInt32 heightMapCount = binaryReader.ReadUInt32();
 
-            //Verts
-            UInt32 vertCount = binaryReader.ReadUInt32();
-            chunk.Vertices = new List<Vertex>((int)vertCount);
+                int n = (int)(heightMapCount / 4);
 
-            for (int i = 0; i < vertCount; i++)
-            {
-                Vertex vertex = new Vertex();
+                for (int i = 0; i < 4; i++)
+                {
+                    for (int j = 0; j < n; j++)
+                    {
+                        Dictionary<int, HeightMap> entry;
 
-                vertex.X = binaryReader.ReadInt16();
-                vertex.Y = binaryReader.ReadInt16();
-                vertex.HeightFar = binaryReader.ReadInt16();
-                vertex.HeightNear = binaryReader.ReadInt16();
-                vertex.Color = binaryReader.ReadUInt32();
+                        if (!chunk.HeightMaps.ContainsKey(i))
+                        {
+                            entry = new Dictionary<int, HeightMap>();
+                            chunk.HeightMaps[i] = entry;
+                        }
 
-                chunk.Vertices.Add(vertex);
-            }
+                        else
+                        {
+                            entry = chunk.HeightMaps[i];
+                        }
 
-            //Render Batches
-            UInt32 renderBatchCount = binaryReader.ReadUInt32();
-            chunk.RenderBatches = new List<RenderBatch>((int)renderBatchCount);
+                        HeightMap heightMapData = new HeightMap();
+                        heightMapData.Val1 = binaryReader.ReadInt16();
+                        heightMapData.Val2 = binaryReader.ReadByte();
+                        heightMapData.Val3 = binaryReader.ReadByte();
 
-            for (int i = 0; i < renderBatchCount; i++)
-            {
-                RenderBatch renderBatch = new RenderBatch();
+                        entry[j] = heightMapData;
+                    }
+                }
 
-                renderBatch.IndexOffset = binaryReader.ReadUInt32();
-                renderBatch.IndexCount = binaryReader.ReadUInt32();
-                renderBatch.VertexOffset = binaryReader.ReadUInt32();
-                renderBatch.VertexCount = binaryReader.ReadUInt32();
+                //Indices
+                UInt32 indexCount = binaryReader.ReadUInt32();
+                chunk.Indices = new List<ushort>((int)indexCount);
 
-                chunk.RenderBatches.Add(renderBatch);
-            }
+                for (int i = 0; i < indexCount; i++)
+                {
+                    chunk.Indices.Add(binaryReader.ReadUInt16());
+                }
 
-            //Optimized Draw
-            UInt32 optimizedDrawCount = binaryReader.ReadUInt32();
-            chunk.OptimizedDraws = new List<OptimizedDraw>((int)optimizedDrawCount);
+                //Verts
+                UInt32 vertCount = binaryReader.ReadUInt32();
+                chunk.Vertices = new List<Vertex>((int)vertCount);
 
-            for (int i = 0; i < optimizedDrawCount; i++)
-            {
-                OptimizedDraw optimizedDraw = new OptimizedDraw();
-                optimizedDraw.Data = binaryReader.ReadBytes(320).ToList();
-            }
+                for (int i = 0; i < vertCount; i++)
+                {
+                    Vertex vertex = new Vertex();
 
-            //Unknown Data
-            UInt32 unknownShort1Count = binaryReader.ReadUInt32();
-            chunk.UnknownShorts1 = new List<ushort>((int)unknownShort1Count);
+                    vertex.X = binaryReader.ReadInt16();
+                    vertex.Y = binaryReader.ReadInt16();
+                    vertex.HeightFar = binaryReader.ReadInt16();
+                    vertex.HeightNear = binaryReader.ReadInt16();
+                    vertex.Color = binaryReader.ReadUInt32();
 
-            for (int i = 0; i < unknownShort1Count; i++)
-            {
-                chunk.UnknownShorts1.Add(binaryReader.ReadUInt16());
-            }
+                    chunk.Vertices.Add(vertex);
+                }
 
-            //Unknown Data
-            UInt32 unknownVectors1Count = binaryReader.ReadUInt32();
-            chunk.UnknownVectors1 = new List<Vector3>((int)unknownVectors1Count);
+                //Render Batches
+                UInt32 renderBatchCount = binaryReader.ReadUInt32();
+                chunk.RenderBatches = new List<RenderBatch>((int)renderBatchCount);
 
-            for (int i = 0; i < unknownVectors1Count; i++)
-            {
-                chunk.UnknownVectors1.Add(new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle()));
-            }
+                for (int i = 0; i < renderBatchCount; i++)
+                {
+                    RenderBatch renderBatch = new RenderBatch();
 
-            //Tile Occluder Info
-            UInt32 tileOccluderCount = binaryReader.ReadUInt32();
-            chunk.TileOccluderInfos = new List<TileOccluderInfo>((int)tileOccluderCount);
+                    renderBatch.IndexOffset = binaryReader.ReadUInt32();
+                    renderBatch.IndexCount = binaryReader.ReadUInt32();
+                    renderBatch.VertexOffset = binaryReader.ReadUInt32();
+                    renderBatch.VertexCount = binaryReader.ReadUInt32();
 
-            for (int i = 0; i < tileOccluderCount; i++)
-            {
-                TileOccluderInfo tileOccluderInfo = new TileOccluderInfo();
-                tileOccluderInfo.Data = binaryReader.ReadBytes(64).ToList();
+                    chunk.RenderBatches.Add(renderBatch);
+                }
+
+                //Optimized Draw
+                UInt32 optimizedDrawCount = binaryReader.ReadUInt32();
+                chunk.OptimizedDraws = new List<OptimizedDraw>((int)optimizedDrawCount);
+
+                for (int i = 0; i < optimizedDrawCount; i++)
+                {
+                    OptimizedDraw optimizedDraw = new OptimizedDraw();
+                    optimizedDraw.Data = binaryReader.ReadBytes(320).ToList();
+                }
+
+                //Unknown Data
+                UInt32 unknownShort1Count = binaryReader.ReadUInt32();
+                chunk.UnknownShorts1 = new List<ushort>((int)unknownShort1Count);
+
+                for (int i = 0; i < unknownShort1Count; i++)
+                {
+                    chunk.UnknownShorts1.Add(binaryReader.ReadUInt16());
+                }
+
+                //Unknown Data
+                UInt32 unknownVectors1Count = binaryReader.ReadUInt32();
+                chunk.UnknownVectors1 = new List<Vector3>((int)unknownVectors1Count);
+
+                for (int i = 0; i < unknownVectors1Count; i++)
+                {
+                    chunk.UnknownVectors1.Add(new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle()));
+                }
+
+                //Tile Occluder Info
+                UInt32 tileOccluderCount = binaryReader.ReadUInt32();
+                chunk.TileOccluderInfos = new List<TileOccluderInfo>((int)tileOccluderCount);
+
+                for (int i = 0; i < tileOccluderCount; i++)
+                {
+                    TileOccluderInfo tileOccluderInfo = new TileOccluderInfo();
+                    tileOccluderInfo.Data = binaryReader.ReadBytes(64).ToList();
+                }
             }
 
             return chunk;

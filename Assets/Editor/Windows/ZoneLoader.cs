@@ -14,15 +14,14 @@ namespace Forgelight.Editor.Windows
         private const int indent = 1;
 
         private string searchString = "";
-        private Dictionary<ForgelightGame, bool> openElements = new Dictionary<ForgelightGame, bool>();
         private Vector2 scroll;
 
-        private Formats.Zone.Zone selectedZone;
+        private Zone selectedZone;
 
-        [MenuItem("Forgelight/Windows/ZoneLoader")]
+        [MenuItem("Forgelight/Windows/Zones")]
         public static void Init()
         {
-            EditorWindow.GetWindow(typeof(ZoneLoader));
+            GetWindow(typeof(ZoneLoader), false, "Zones");
         }
 
         private void OnGUI()
@@ -40,14 +39,11 @@ namespace Forgelight.Editor.Windows
             {
                 scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(500));
                 {
-                    foreach (ForgelightGame forgelightGame in ForgelightExtension.Instance.ForgelightGameFactory.forgelightGames.Values)
-                    {
-                        if (!openElements.ContainsKey(forgelightGame))
-                        {
-                            openElements[forgelightGame] = false;
-                        }
+                    ForgelightGame activeForgelightGame = ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame;
 
-                        ShowGameZones(forgelightGame, forgelightGame.AvailableZones.Values.ToList());
+                    if (activeForgelightGame != null)
+                    {
+                        ShowAvailableZones(activeForgelightGame, activeForgelightGame.AvailableZones.Values);
                     }
                 }
                 EditorGUILayout.EndScrollView();
@@ -58,20 +54,9 @@ namespace Forgelight.Editor.Windows
             //GameObject model = Resources.Load();
         }
 
-        private void ShowGameZones(ForgelightGame forgelightGame, List<Formats.Zone.Zone> availableZones)
+        private void ShowAvailableZones(ForgelightGame forgelightGame, IEnumerable<Zone> availableZones)
         {
-            // Show entry for parent object
-            openElements[forgelightGame] = EditorGUILayout.Foldout(openElements[forgelightGame], forgelightGame.Alias);
-
-            if (openElements[forgelightGame])
-            {
-                ShowAvailableZones(forgelightGame, availableZones);
-            }
-        }
-
-        private void ShowAvailableZones(ForgelightGame forgelightGame, List<Formats.Zone.Zone> availableZones)
-        {
-            foreach (Formats.Zone.Zone zone in availableZones)
+            foreach (Zone zone in availableZones)
             {
                 if (searchString == null || zone.Name.ToLower().Contains(searchString.ToLower()))
                 {

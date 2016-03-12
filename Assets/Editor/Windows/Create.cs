@@ -2,166 +2,148 @@
 using UnityEngine;
 using System.Collections.Generic;
 using Forgelight.Editor.DraggableObjects;
-using Forgelight;
 
-public class Create : EditorWindow
+namespace Forgelight.Editor.Windows
 {
-    private const int indent = 1;
-    private const float objectCreationDistance = 20.0f;
-
-    private string searchString = "";
-    private Dictionary<ForgelightGame, bool> openElements = new Dictionary<ForgelightGame, bool>();
-    private Vector2 scroll;
-
-    [MenuItem("Forgelight/Windows/Create")]
-    public static void Init()
+    public class Create : EditorWindow
     {
-        EditorWindow.GetWindow(typeof(Create));
-    }
+        private const float objectCreationDistance = 20.0f;
 
-    private void OnFocus()
-    {
-        SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
-        SceneView.onSceneGUIDelegate += this.OnSceneGUI;
-    }
+        private string searchString = "";
+        private Vector2 scroll;
 
-    private void OnDestroy()
-    {
-        SceneView.onSceneGUIDelegate -= OnSceneGUI;
-    }
-
-    private void OnGUI()
-    {
-        //Events
-        EventType eventType = Event.current.type;
-
-        if (eventType == EventType.DragPerform)
+        [MenuItem("Forgelight/Windows/Create")]
+        public static void Init()
         {
-            DragAndDrop.AcceptDrag();
+            GetWindow(typeof (Create), false, "Create");
         }
 
-        //Search Box
-        GUILayout.BeginHorizontal(EditorStyles.toolbar);
-        GUILayout.FlexibleSpace();
-        GUILayout.Label("Search: ", EditorStyles.toolbarButton);
-        searchString = GUILayout.TextField(searchString, EditorStyles.toolbarTextField, GUILayout.MinWidth(200));
-
-        GUILayout.EndHorizontal();
-
-        //Actor List
-        EditorGUILayout.BeginHorizontal();
+        private void OnFocus()
         {
-            scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(500));
-            {
-                foreach (ForgelightGame forgelightGame in ForgelightExtension.Instance.ForgelightGameFactory.forgelightGames.Values)
-                {
-                    if (!openElements.ContainsKey(forgelightGame))
-                    {
-                        openElements[forgelightGame] = false;
-                    }
+            SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
+            SceneView.onSceneGUIDelegate += this.OnSceneGUI;
+        }
 
-                    ShowAlias(forgelightGame, forgelightGame.AvailableActors);
-                }
+        private void OnDestroy()
+        {
+            SceneView.onSceneGUIDelegate -= OnSceneGUI;
+        }
+
+        private void OnGUI()
+        {
+            //Events
+            EventType eventType = Event.current.type;
+
+            if (eventType == EventType.DragPerform)
+            {
+                DragAndDrop.AcceptDrag();
             }
-            EditorGUILayout.EndScrollView();
-        }
-        EditorGUILayout.EndHorizontal();
 
-        //Preview Box
-        //GameObject model = Resources.Load();
-    }
+            //Search Box
+            GUILayout.BeginHorizontal(EditorStyles.toolbar);
+            GUILayout.FlexibleSpace();
+            GUILayout.Label("Search: ", EditorStyles.toolbarButton);
+            searchString = GUILayout.TextField(searchString, EditorStyles.toolbarTextField, GUILayout.MinWidth(200));
 
-    public void OnSceneGUI(SceneView sceneView)
-    {
-        //Events
-        EventType eventType = Event.current.type;
+            GUILayout.EndHorizontal();
 
-        if (eventType == EventType.DragUpdated)
-        {
-            if (DragAndDrop.GetGenericData("ActorDefinition") != null)
+            //Actor List
+            EditorGUILayout.BeginHorizontal();
             {
-                ActorDefinition draggedObj = (ActorDefinition) DragAndDrop.GetGenericData("ActorDefinition");
-
-                DragAndDrop.visualMode = DragAndDropVisualMode.Copy; // show a drag-add icon on the mouse cursor
-
-                Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-
-                //We have entered the scene. Create the forgelight object at our current position.
-                if (draggedObj.instantiatedGameObject == null)
+                scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(500));
                 {
-                    draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject(draggedObj.forgelightGame,
-                        draggedObj.actorDefinition, ray.GetPoint(objectCreationDistance), Quaternion.identity);
-                }
+                    ForgelightGame activeForgelightGame = ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame;
 
-                else
-                {
-                    draggedObj.instantiatedGameObject.transform.position = ray.GetPoint(objectCreationDistance);
-                }
-
-                Selection.activeGameObject = draggedObj.instantiatedGameObject;
-            }
-        }
-
-        if (eventType == EventType.DragPerform)
-        {
-            DragAndDrop.AcceptDrag();
-        }
-    }
-
-    private void ShowAlias(ForgelightGame forgelightGame, List<string> availableActors)
-    {
-        // Show entry for parent object
-        openElements[forgelightGame] = EditorGUILayout.Foldout(openElements[forgelightGame], forgelightGame.Alias);
-
-        if (openElements[forgelightGame])
-        {
-            ShowAvailableActors(forgelightGame, availableActors);
-        }
-    }
-
-    private void ShowAvailableActors(ForgelightGame forgelightGame, List<string> availableActors)
-    {
-        foreach (string actor in availableActors)
-        {
-            if (searchString == null || actor.ToLower().Contains(searchString.ToLower()))
-            {
-                EditorGUI.indentLevel += indent;
-
-                Rect position = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
-
-                if (Event.current.type == EventType.MouseDown)
-                {
-                    if (position.Contains(Event.current.mousePosition))
+                    if (activeForgelightGame != null)
                     {
-                        BeginDrag(forgelightGame, actor);
+                        ShowAvailableActors(activeForgelightGame, activeForgelightGame.AvailableActors);
                     }
                 }
+                EditorGUILayout.EndScrollView();
+            }
+            EditorGUILayout.EndHorizontal();
 
-                GUIStyle style = EditorStyles.label;
-                style.fixedWidth = 0;
-                style.stretchWidth = true;
-                style.clipping = TextClipping.Overflow;
+            //Preview Box
+            //GameObject model = Resources.Load();
+        }
 
-                EditorGUI.Foldout(position, false, actor, true, style);
+        public void OnSceneGUI(SceneView sceneView)
+        {
+            //Events
+            EventType eventType = Event.current.type;
 
-                EditorGUI.indentLevel -= indent;
+            if (eventType == EventType.DragUpdated)
+            {
+                if (DragAndDrop.GetGenericData("ActorDefinition") != null)
+                {
+                    ActorDefinition draggedObj = (ActorDefinition) DragAndDrop.GetGenericData("ActorDefinition");
+
+                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy; // show a drag-add icon on the mouse cursor
+
+                    Ray ray = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
+
+                    //We have entered the scene. Create the forgelight object at our current position.
+                    if (draggedObj.instantiatedGameObject == null)
+                    {
+                        draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject(draggedObj.forgelightGame,
+                            draggedObj.actorDefinition, ray.GetPoint(objectCreationDistance), Quaternion.identity);
+                    }
+
+                    else
+                    {
+                        draggedObj.instantiatedGameObject.transform.position = ray.GetPoint(objectCreationDistance);
+                    }
+
+                    Selection.activeGameObject = draggedObj.instantiatedGameObject;
+                }
+            }
+
+            if (eventType == EventType.DragPerform)
+            {
+                DragAndDrop.AcceptDrag();
             }
         }
-    }
 
-    private void BeginDrag(ForgelightGame forgelightGame, string actor)
-    {
-        ActorDefinition actorDefinition = new ActorDefinition
+        private void ShowAvailableActors(ForgelightGame forgelightGame, List<string> availableActors)
         {
-            forgelightGame = forgelightGame,
-            actorDefinition = actor
-        };
+            foreach (string actor in availableActors)
+            {
+                if (searchString == null || actor.ToLower().Contains(searchString.ToLower()))
+                {
+                    Rect position = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
 
-        DragAndDrop.objectReferences = new Object[0];
-        DragAndDrop.PrepareStartDrag();
-        DragAndDrop.SetGenericData("ActorDefinition", actorDefinition);
-        DragAndDrop.StartDrag("ActorDrag");
+                    if (Event.current.type == EventType.MouseDown)
+                    {
+                        if (position.Contains(Event.current.mousePosition))
+                        {
+                            BeginDrag(forgelightGame, actor);
+                        }
+                    }
 
-        DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                    GUIStyle style = EditorStyles.label;
+                    style.fixedWidth = 0;
+                    style.stretchWidth = true;
+                    style.clipping = TextClipping.Overflow;
+
+                    EditorGUI.Foldout(position, false, actor, true, style);
+                }
+            }
+        }
+
+        private void BeginDrag(ForgelightGame forgelightGame, string actor)
+        {
+            ActorDefinition actorDefinition = new ActorDefinition
+            {
+                forgelightGame = forgelightGame,
+                actorDefinition = actor
+            };
+
+            DragAndDrop.objectReferences = new Object[0];
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.SetGenericData("ActorDefinition", actorDefinition);
+            DragAndDrop.StartDrag("ActorDrag");
+
+            DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+        }
     }
 }

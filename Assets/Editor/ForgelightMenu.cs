@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(ForgelightExtension))]
-public class ForgelightEditor : Editor
+public class ForgelightMenu : Editor
 {
     [MenuItem("Forgelight/Load Forgelight Game Data...")]
     public static void SelectGameDirectory()
@@ -40,8 +40,7 @@ public class ForgelightEditor : Editor
     [MenuItem("Forgelight/Create/New Object")]
     public static void CreateZoneObject()
     {
-        //TODO Implement alias'
-        //GameObject newObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject("default", ForgelightExtension.Instance.lastCameraPos, Quaternion.identity);
+        //GameObject newObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject("default", ForgelightExtension.Instance.LastCameraPos, Quaternion.identity);
         //Selection.activeGameObject = newObject;
     }
 
@@ -78,54 +77,4 @@ public class ForgelightEditor : Editor
     {
         PackCreator.CreatePackFromDirectory();
     }
-
-    #region Forgelight/Load Terrain Data
-    [MenuItem("Forgelight/Load Terrain Data/Indar")]
-    public static void LoadIndarTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Indar");
-    }
-
-    [MenuItem("Forgelight/Load Terrain Data/Hossin")]
-    public static void LoadHossinTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Hossin");
-    }
-
-    [MenuItem("Forgelight/Load Terrain Data/Amerish")]
-    public static void LoadAmerishTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Amerish");
-    }
-
-    [MenuItem("Forgelight/Load Terrain Data/Esamir")]
-    public static void LoadEsamirTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Esamir");
-    }
-
-    [MenuItem("Forgelight/Load Terrain Data/Tutorial")]
-    public static void LoadTutorialTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("Tutorial");
-    }
-
-    [MenuItem("Forgelight/Load Terrain Data/VR")]
-    public static void LoadVRTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("VR");
-    }
-
-    [MenuItem("Forgelight/Load Terrain Data/Koltyr (quickload)")]
-    public static void LoadQuickLoadTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("quickload");
-    }
-
-    [MenuItem("Forgelight/Load Terrain Data/Nexus")]
-    public static void LoadNexusTerrainData()
-    {
-        ForgelightExtension.Instance.TerrainLoader.LoadTerrain("nexus");
-    }
-    #endregion
 }

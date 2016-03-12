@@ -2,28 +2,17 @@
 using System.IO;
 using Forgelight.Utils;
 using Newtonsoft.Json.Linq;
+using UnityEditor;
 using UnityEngine;
 
 namespace Forgelight
 {
     public class ForgelightGameFactory
     {
-        public Dictionary<string, ForgelightGame> forgelightGames { get; private set; }
+        //Active Forgelight Game
+        public ForgelightGame ActiveForgelightGame { get; private set; }
 
-        public ForgelightGameFactory()
-        {
-            forgelightGames = new Dictionary<string, ForgelightGame>();
-        }
-
-        public ForgelightGame CreateForgelightGame(string alias, string packDirectory, string resourceDirectory)
-        {
-            if (!forgelightGames.ContainsKey(alias))
-            {
-                forgelightGames[alias] = new ForgelightGame(alias, packDirectory, resourceDirectory);
-            }
-
-            return forgelightGames[alias];
-        }
+        public List<string> AvailableForgelightGames { get; private set; }
 
         public void OpenForgelightGameFolder()
         {
@@ -38,50 +27,67 @@ namespace Forgelight
             }
         }
 
+        /// <summary>
+        /// Loads a new forgelight game that does not currently exist.
+        /// </summary>
+        /// <param name="path"></param>
         private void LoadNewForgelightGame(string path)
         {
             string alias = Directory.GetParent(path).Parent.Name;
-            string resourceDirectory = Application.dataPath + "/Resources/" + alias;
 
-            ForgelightGame forgelightGame = CreateForgelightGame(alias, path, resourceDirectory);
+            if (ForgelightExtension.Instance.Config.GetForgelightGameInfo(alias) == null)
+            {
+                string resourceDirectory = Application.dataPath + "/Resources/" + alias;
 
-            forgelightGame.LoadPackFiles(0.0f, 0.25f);
-            forgelightGame.InitializeMaterialDefinitionManager();
-            forgelightGame.ExportModels(0.3f, 0.5f);
-            forgelightGame.UpdateActors(0.5f, 0.7f);
-            //TODO Decompress Terrain
-            //forgelightGame.ExportTerrain(0.7f, 0.9f);
-            forgelightGame.UpdateZones(0.9f, 1.0f);
+                ForgelightGame forgelightGame = new ForgelightGame(alias, path, resourceDirectory);
 
-            forgelightGame.OnLoadComplete();
-            ForgelightExtension.Instance.SaveNewForgelightGame(forgelightGame);
+                forgelightGame.LoadPackFiles(0.0f, 0.25f);
+                forgelightGame.InitializeMaterialDefinitionManager();
+                forgelightGame.ExportModels(0.3f, 0.5f);
+                forgelightGame.UpdateActors(0.5f, 0.7f);
+                forgelightGame.ExportTerrain(0.7f, 0.9f);
+                forgelightGame.UpdateZones(0.9f, 1.0f);
+
+                forgelightGame.OnLoadComplete();
+                ForgelightExtension.Instance.Config.SaveNewForgelightGame(forgelightGame);
+
+                UpdateActiveForgelightGame(forgelightGame);
+            }
         }
 
         /// <summary>
-        /// Called at initial startup of extension.
+        /// Deserializes and initializes the raw state data for the given forgelight game.
         /// Loads pack files into memory, and sets up references to required assets.
         /// </summary>
-        public void Initialize(JArray forgelightGames)
+        public void ChangeActiveForgelightGame(string name)
         {
-            foreach (JToken asset in forgelightGames)
+            JObject info = ForgelightExtension.Instance.Config.GetForgelightGameInfo(name);
+
+            string packDirectory = (string) info["pack_directory"];
+            string resourceDirectory = (string) info["resource_directory"];
+
+            ForgelightGame forgelightGame = new ForgelightGame(name, packDirectory, resourceDirectory);
+
+            forgelightGame.LoadPackFiles(0.0f, 0.7f);
+            forgelightGame.InitializeMaterialDefinitionManager();
+            forgelightGame.UpdateActors(0.7f, 0.9f);
+            forgelightGame.UpdateZones(0.9f, 1.0f);
+
+            forgelightGame.OnLoadComplete();
+
+            UpdateActiveForgelightGame(forgelightGame);
+        }
+
+        private void UpdateActiveForgelightGame(ForgelightGame newGame)
+        {
+            if (ActiveForgelightGame != null)
             {
-                string alias = (string) asset["alias"];
-                bool load = (bool) asset["load"];
-                string packDirectory = (string) asset["pack_directory"];
-                string resourceDirectory = (string) asset["resource_directory"];
-
-                if (load)
-                {
-                    ForgelightGame forgelightGame = CreateForgelightGame(alias, packDirectory, resourceDirectory);
-
-                    forgelightGame.LoadPackFiles(0.0f, 0.7f);
-                    forgelightGame.InitializeMaterialDefinitionManager();
-                    forgelightGame.UpdateActors(0.7f, 0.9f);
-                    forgelightGame.UpdateZones(0.9f, 1.0f);
-
-                    forgelightGame.OnLoadComplete();
-                }
+                ForgelightExtension.Instance.Config.UpdateForgelightGame(ActiveForgelightGame, false);
             }
+
+            ActiveForgelightGame = newGame;
+            ForgelightExtension.Instance.Config.UpdateForgelightGame(newGame, true);
+            ForgelightMonoBehaviour.Instance.ForgelightGame = newGame.Name;
         }
 
         private static ValidationResult CheckGivenAssetDirectory(string path)

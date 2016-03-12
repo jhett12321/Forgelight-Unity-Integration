@@ -87,7 +87,7 @@ namespace Forgelight.Formats.Zone
                     instance.Add("rotation", rotation);
                     instance.Add("scale", scale);
 
-                    instance.Add("id", zoneObject.id);
+                    instance.Add("ID", zoneObject.ID);
                     instance.Add("unknownByte1", zoneObject.DontCastShadows);
                     instance.Add("unknownFloat1", zoneObject.lodMultiplier);
 

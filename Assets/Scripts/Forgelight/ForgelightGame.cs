@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Dma;
 using Forgelight.Formats.Dme;
@@ -13,7 +14,7 @@ namespace Forgelight
     public class ForgelightGame
     {
         //Info
-        public string Alias { get; private set; }
+        public string Name { get; private set; }
         public string PackDirectory { get; private set; }
         public string ResourceDirectory { get; private set; }
 
@@ -29,9 +30,9 @@ namespace Forgelight
         // Internal cache to check whether a pack has already been loaded
         private Dictionary<Int32, Pack.Pack> packLookupCache = new Dictionary<Int32, Pack.Pack>();
 
-        public ForgelightGame(string alias, string packDirectory, string resourceDirectory)
+        public ForgelightGame(string name, string packDirectory, string resourceDirectory)
         {
-            Alias = alias;
+            Name = name;
             PackDirectory = packDirectory;
             ResourceDirectory = resourceDirectory;
 
@@ -87,7 +88,7 @@ namespace Forgelight
 
         private void ProgressBar(float progress, string currentTask)
         {
-            EditorUtility.DisplayProgressBar("Forgelight Game - " + Alias, currentTask, progress);
+            EditorUtility.DisplayProgressBar("Forgelight - " + Name, currentTask, progress);
         }
 
         public void OnLoadComplete()
@@ -139,7 +140,7 @@ namespace Forgelight
 
             for (int i = 0; i < zones.Count; ++i)
             {
-                ProgressBar(MathUtils.Remap((float)i / (float)zones.Count, 0.0f, 1.0f, progress0, progress100), "Converting Zone: " + zones[i].Name);
+                ProgressBar(MathUtils.Remap((float)i / (float)zones.Count, 0.0f, 1.0f, progress0, progress100), "Updating Zone: " + zones[i].Name);
 
                 MemoryStream memoryStream = CreateAssetMemoryStreamByName(zones[i].Name);
                 Formats.Zone.Zone zone = Formats.Zone.Zone.LoadFromStream(zones[i].Name, memoryStream);
@@ -153,24 +154,21 @@ namespace Forgelight
             ProgressBar(progress0, "Exporting Models...");
 
             List<Asset> modelAssets = AssetsByType[Asset.Types.DME];
+            int modelsProcessed = 0;
 
-            for (int i = 0; i < modelAssets.Count; ++i)
+            Parallel.ForEach(modelAssets, asset =>
             {
-                Asset asset = modelAssets[i];
-
                 //Ignore auto-generated LOD's
                 if (asset.Name.EndsWith("Auto.dme"))
                 {
-                    continue;
+                    return;
                 }
 
                 //Don't export if the file already exists.
                 if (File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
                 {
-                    continue;
+                    return;
                 }
-
-                ProgressBar(MathUtils.Remap((float)i / (float)modelAssets.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Model: " + Path.GetFileName(asset.Name));
 
                 using (MemoryStream modelMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
@@ -181,26 +179,88 @@ namespace Forgelight
                         ModelExporter.ExportModel(this, model, ResourceDirectory + "/Models");
                     }
                 }
-            }
+
+                Interlocked.Increment(ref modelsProcessed);
+                //ProgressBar(MathUtils.Remap((float)modelsProcessed / (float)modelAssets.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Model: " + Path.GetFileName(asset.Name));
+            });
         }
 
-        //TODO Terrain Exporting
+        //TODO Less Code Duplication.
+        //TODO Update CNK0 Parsing. The curret format seems to be incorrect.
+        //TODO Make Progress Bars more verbose.
         public void ExportTerrain(float progress0, float progress100)
         {
-            List<Asset> terrainAssetsCnk0 = AssetsByType[Asset.Types.CNK0];
+            //CNK0
+            //ProgressBar(progress0, "Exporting Terrain Data (LOD 0)...");
+            //List<Asset> terrainAssetsCnk0 = AssetsByType[Asset.Types.CNK0];
+            //int terrainAssetsCnk0Processed = 0;
 
-            for (int i = 0; i < terrainAssetsCnk0.Count; i++)
+            //foreach (Asset asset in terrainAssetsCnk0)
+            //{
+            //    using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+            //    {
+            //        Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
+            //    }
+            //}
+
+            //Parallel.ForEach(terrainAssetsCnk0, asset =>
+            //{
+            //    using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+            //    {
+            //        Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
+            //    }
+
+            //    Interlocked.Increment(ref terrainAssetsCnk0Processed);
+            //    //ProgressBar(MathUtils.Remap((float)terrainAssetsCnk0Processed / (float)terrainAssetsCnk0.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Chunk (LOD0): " + Path.GetFileName(asset.Name));
+            //});
+
+            //CNK1
+            ProgressBar(progress0 + MathUtils.Remap(0.25f, 0.0f, 1.0f, progress0, progress100), "Exporting Terrain Data (LOD 1)...");
+            List<Asset> terrainAssetsCnk1 = AssetsByType[Asset.Types.CNK1];
+            int terrainAssetsCnk1Processed = 0;
+
+            Parallel.ForEach(terrainAssetsCnk1, asset =>
             {
-                Asset asset = terrainAssetsCnk0[i];
-
-                ProgressBar(MathUtils.Remap((float)i / (float)terrainAssetsCnk0.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Chunk (LOD0): " + Path.GetFileName(asset.Name));
-
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
-                    //TODO Decompress Terrain Data
-                    //Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
+                    CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
                 }
-            }
+
+                Interlocked.Increment(ref terrainAssetsCnk1Processed);
+                //ProgressBar(MathUtils.Remap((float)terrainAssetsCnk1Processed / (float)terrainAssetsCnk1.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Chunk (LOD1): " + Path.GetFileName(asset.Name));
+            });
+
+            //CNK2
+            ProgressBar(progress0 + MathUtils.Remap(0.50f, 0.0f, 1.0f, progress0, progress100), "Exporting Terrain Data (LOD 2)...");
+            List<Asset> terrainAssetsCnk2 = AssetsByType[Asset.Types.CNK2];
+            int terrainAssetsCnk2Processed = 0;
+
+            Parallel.ForEach(terrainAssetsCnk2, asset =>
+            {
+                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+                {
+                    CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
+                }
+
+                Interlocked.Increment(ref terrainAssetsCnk2Processed);
+                //ProgressBar(MathUtils.Remap((float)terrainAssetsCnk2Processed / (float)terrainAssetsCnk2.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Chunk (LOD2): " + Path.GetFileName(asset.Name));
+            });
+
+            //CNK3
+            ProgressBar(progress0 + MathUtils.Remap(0.75f, 0.0f, 1.0f, progress0, progress100), "Exporting Terrain Data (LOD 3)...");
+            List<Asset> terrainAssetsCnk3 = AssetsByType[Asset.Types.CNK3];
+            int terrainAssetsCnk3Processed = 0;
+
+            Parallel.ForEach(terrainAssetsCnk3, asset =>
+            {
+                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+                {
+                    CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
+                }
+
+                Interlocked.Increment(ref terrainAssetsCnk3Processed);
+                //ProgressBar(MathUtils.Remap((float)terrainAssetsCnk3Processed / (float)terrainAssetsCnk3.Count, 0.0f, 1.0f, progress0, progress100), "Exporting Chunk (LOD3): " + Path.GetFileName(asset.Name));
+            });
         }
     }
 }

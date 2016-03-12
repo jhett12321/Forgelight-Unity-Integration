@@ -83,7 +83,7 @@ namespace Forgelight.Formats.Zone
         {
             //By default, the actor definitions are appended with the .adr extension.
             string modelName = Path.GetFileNameWithoutExtension(actorDef) + "_LOD0.obj";
-            string baseModelDir = "Assets/Resources/" + forgelightGame.Alias + "/Models";
+            string baseModelDir = "Assets/Resources/" + forgelightGame.Name + "/Models";
             string modelPath = baseModelDir + "/" + modelName;
 
             GameObject resourceObj = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
@@ -145,7 +145,7 @@ namespace Forgelight.Formats.Zone
             zoneObject.renderDistance = renderDistance;
             zoneObject.lodMultiplier = lodBias;
             zoneObject.DontCastShadows = dontCastShadows;
-            zoneObject.id = id;
+            zoneObject.ID = id;
 
             //Add the ID to our used list.
             usedIDs.Add(id);
@@ -161,12 +161,12 @@ namespace Forgelight.Formats.Zone
 
             foreach (ZoneObject zoneObject in GetComponentsInChildren<ZoneObject>())
             {
-                if (usedIDs.Contains(zoneObject.id))
+                if (usedIDs.Contains(zoneObject.ID))
                 {
-                    zoneObject.id = GenerateUID();
+                    zoneObject.ID = GenerateUID();
                 }
 
-                usedIDs.Add(zoneObject.id);
+                usedIDs.Add(zoneObject.ID);
             }
         }
 

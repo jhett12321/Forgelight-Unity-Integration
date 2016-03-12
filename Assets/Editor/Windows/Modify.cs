@@ -1,31 +1,34 @@
 ﻿using UnityEditor;
 
-public class Modify : EditorWindow
+namespace Forgelight.Editor.Windows
 {
-    [MenuItem("Forgelight/Windows/Modify")]
-    public static void Init()
+    public class Modify : EditorWindow
     {
-        EditorWindow.GetWindow(typeof(Modify));
-    }
+        [MenuItem("Forgelight/Windows/Modify")]
+        public static void Init()
+        {
+            GetWindow(typeof (Modify), false, "Modify");
+        }
 
-    private void OnFocus()
-    {
-        SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
-        SceneView.onSceneGUIDelegate += this.OnSceneGUI;
-    }
+        private void OnFocus()
+        {
+            SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
+            SceneView.onSceneGUIDelegate += this.OnSceneGUI;
+        }
 
-    private void OnDestroy()
-    {
-        SceneView.onSceneGUIDelegate -= OnSceneGUI;
-    }
+        private void OnDestroy()
+        {
+            SceneView.onSceneGUIDelegate -= OnSceneGUI;
+        }
 
-    private void OnGUI()
-    {
+        private void OnGUI()
+        {
 
-    }
+        }
 
-    public void OnSceneGUI(SceneView sceneView)
-    {
+        public void OnSceneGUI(SceneView sceneView)
+        {
 
+        }
     }
 }

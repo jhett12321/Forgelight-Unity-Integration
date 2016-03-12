@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using Forgelight.Attributes;
 using UnityEngine.Rendering;
 
 namespace Forgelight.Formats.Zone
@@ -9,14 +10,21 @@ namespace Forgelight.Formats.Zone
     {
         private string currentActorDef = null;
 
-        public ForgelightGame forgelightGame;
         public string actorDefinition;
         public float renderDistance;
+
+        private float farDistance = 200.0f;
+
+        //TODO HACK make this interval determined by the player's current position.
+        private readonly float interval = 5.0f;
+        private readonly float farInterval = 15.0f;
+        private float target = 5.0f;
 
         /// <summary>
         /// Indicates whether an object should cast shadows. We mostly turn this on (on indicates don't cast shadows, oddly) when an object is indoors (being indoors, shadows don't really matter).
         /// </summary>
         private bool dontCastShadows;
+        [ExposeProperty]
         public bool DontCastShadows
         {
             get
@@ -25,7 +33,7 @@ namespace Forgelight.Formats.Zone
             }
             set
             {
-                if (renderers == null)
+                if (renderers == null || renderers.Length == 0)
                 {
                     renderers = GetComponentsInChildren<Renderer>();
                 }
@@ -51,8 +59,7 @@ namespace Forgelight.Formats.Zone
         /// </summary>
         public float lodMultiplier;
 
-        [HideInInspector]
-        public long id;
+        public long ID { get; set; }
 
         [SerializeField]
         private bool visible = false;
@@ -66,7 +73,12 @@ namespace Forgelight.Formats.Zone
             {
                 if (currentActorDef != null)
                 {
-                    ForgelightExtension.Instance.ZoneObjectFactory.UpdateForgelightObject(forgelightGame, this, actorDefinition);
+                    ForgelightGame activeForgelightGame = ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame;
+
+                    if (activeForgelightGame != null)
+                    {
+                        ForgelightExtension.Instance.ZoneObjectFactory.UpdateForgelightObject(activeForgelightGame, this, actorDefinition);
+                    }
                 }
 
                 currentActorDef = actorDefinition;
@@ -75,16 +87,35 @@ namespace Forgelight.Formats.Zone
 
         private void OnRenderObject()
         {
-            float distance = Vector3.Distance(ForgelightExtension.Instance.lastCameraPos, transform.position);
-
-            if (distance > renderDistance && visible)
+            if (Time.realtimeSinceStartup >= target)
             {
-                Hide();
-            }
+                Vector3 offset = transform.position - ForgelightExtension.Instance.LastCameraPos;
 
-            else if (distance < renderDistance && !visible)
-            {
-                Show();
+                float sqrMagnitude = offset.sqrMagnitude;
+
+                bool isFar = false;
+
+                if (sqrMagnitude <= renderDistance * renderDistance)
+                {
+                    Show();
+                }
+
+                else
+                {
+                    Hide();
+
+                    if (sqrMagnitude > renderDistance * renderDistance + farDistance * farDistance)
+                    {
+                        isFar = true;
+                    }
+                }
+
+                target = Time.realtimeSinceStartup + interval;
+
+                if (isFar)
+                {
+                    target += farInterval;
+                }
             }
 
             foreach (Transform child in transform)
@@ -134,5 +165,4 @@ namespace Forgelight.Formats.Zone
             objectsToDestroy.Add(objToDestroy);
         }
     }
-
 }
