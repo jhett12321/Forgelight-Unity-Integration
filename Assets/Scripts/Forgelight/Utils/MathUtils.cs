@@ -2,10 +2,10 @@
 {
     public class MathUtils
     {
-        public static float Remap(float val, float min, float max, float targetMin, float targetMax)
+        public static float RemapProgress(float val, float targetMin, float targetMax)
         {
-            float retVal = 0.0f;
-            float oldRange = (max - min);
+            float retVal;
+            float oldRange = 1.0f;
 
             if (oldRange == 0)
             {
@@ -16,7 +16,7 @@
             {
                 float newRange = (targetMax - targetMin);
 
-                retVal = (((val - min) * newRange) / oldRange) + targetMin;
+                retVal = (((val - 0.0f) * newRange) / oldRange) + targetMin;
             }
 
             return retVal;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading;
 
 public class Parallel
@@ -9,6 +10,23 @@ public class Parallel
     static Parallel()
     {
         NumberOfParallelTasks = Environment.ProcessorCount;
+    }
+
+    public static void AsyncForEach<T>(IEnumerable<T> enumerable, Action<T> action)
+    {
+        BackgroundWorker backgroundWorker = new BackgroundWorker();
+
+        backgroundWorker.DoWork += delegate
+        {
+            ForEach(enumerable, action);
+        };
+
+        backgroundWorker.RunWorkerCompleted += delegate
+        {
+            backgroundWorker.Dispose();
+        };
+
+        backgroundWorker.RunWorkerAsync();
     }
 
     public static void ForEach<T>(IEnumerable<T> enumerable, Action<T> action)
@@ -36,8 +54,7 @@ public class Parallel
 
             if (moveNext)
             {
-                var iAsyncResult = del.BeginInvoke
-         (enumerator, action, seedItemArray[i], syncRoot, i, null, null);
+                var iAsyncResult = del.BeginInvoke(enumerator, action, seedItemArray[i], syncRoot, i, null, null);
                 resultList.Add(iAsyncResult);
             }
         }
@@ -49,15 +66,14 @@ public class Parallel
         }
     }
 
-    delegate void InvokeAsync<T>(IEnumerator<T> enumerator,
-    Action<T> achtion, T item, object syncRoot, int i);
+    delegate void InvokeAsync<T>(IEnumerator<T> enumerator, Action<T> achtion, T item, object syncRoot, int i);
 
-    static void InvokeAction<T>(IEnumerator<T> enumerator, Action<T> action,
-            T item, object syncRoot, int i)
+    static void InvokeAction<T>(IEnumerator<T> enumerator, Action<T> action, T item, object syncRoot, int i)
     {
         if (String.IsNullOrEmpty(Thread.CurrentThread.Name))
-            Thread.CurrentThread.Name =
-        String.Format("Parallel.ForEach Worker Thread No:{0}", i);
+        {
+            Thread.CurrentThread.Name = String.Format("Parallel.ForEach Worker Thread No:{0}", i);
+        }
 
         bool moveNext = true;
 

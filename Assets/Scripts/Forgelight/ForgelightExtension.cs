@@ -23,11 +23,11 @@ namespace Forgelight
         //Zone Manager
         public ZoneManager ZoneManager { get; private set; }
 
+        //Chunk Loading
+        public ChunkLoader ChunkLoader { get; private set; }
+
         //Asset Cache/Loading
         public ForgelightGameFactory ForgelightGameFactory { get; private set; }
-
-        //Terrain Importing
-        public TerrainLoader TerrainLoader { get; private set; }
 
         //Zone Editing
         private ZoneObjectFactory zoneObjectFactory;
@@ -62,7 +62,7 @@ namespace Forgelight
                 Instance = new ForgelightExtension
                 {
                     ForgelightGameFactory = new ForgelightGameFactory(),
-                    TerrainLoader = new TerrainLoader(),
+                    ChunkLoader = new ChunkLoader(),
                     ZoneExporter = new ZoneExporter(),
                     Config = new Config(),
                     ZoneManager = new ZoneManager()

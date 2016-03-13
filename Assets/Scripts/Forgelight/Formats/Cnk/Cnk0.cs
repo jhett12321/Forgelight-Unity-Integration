@@ -114,6 +114,7 @@ namespace Forgelight.Formats.Cnk
             Cnk0 chunk = new Cnk0();
             BinaryReader binaryReader = new BinaryReader(stream);
 
+            chunk.Name = name;
             //Header
             byte[] magic = binaryReader.ReadBytes(4);
 
@@ -284,6 +285,8 @@ namespace Forgelight.Formats.Cnk
                 {
                     OptimizedDraw optimizedDraw = new OptimizedDraw();
                     optimizedDraw.Data = binaryReader.ReadBytes(320).ToList();
+
+                    chunk.OptimizedDraws.Add(optimizedDraw);
                 }
 
                 //Unknown Data
@@ -301,8 +304,7 @@ namespace Forgelight.Formats.Cnk
 
                 for (int i = 0; i < unknownVectors1Count; i++)
                 {
-                    chunk.UnknownVectors1.Add(new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(),
-                        binaryReader.ReadSingle()));
+                    chunk.UnknownVectors1.Add(new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle()));
                 }
 
                 //Tile Occluder Info
@@ -313,6 +315,8 @@ namespace Forgelight.Formats.Cnk
                 {
                     TileOccluderInfo tileOccluderInfo = new TileOccluderInfo();
                     tileOccluderInfo.Data = binaryReader.ReadBytes(64).ToList();
+
+                    chunk.TileOccluderInfos.Add(tileOccluderInfo);
                 }
             }
 

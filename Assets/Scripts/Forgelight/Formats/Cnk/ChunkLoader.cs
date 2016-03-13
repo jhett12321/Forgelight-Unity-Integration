@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Forgelight.Formats.Cnk
 {
-    public class TerrainLoader
+    public class ChunkLoader
     {
         private const int chunkPosOffset = 32;
 
@@ -16,26 +16,23 @@ namespace Forgelight.Formats.Cnk
         private int resourcesProcessed = 0;
         private string currentChunk = "";
 
-        //TODO Implement game alias'
-
-        /// <summary>
-        /// Loads Terrain data, using the default terrain directory. (Assets/Resources/Terrain)
-        /// </summary>
-        /// <param name="contPrefix">The terrain object prefix (before the underscore) for each terrain chunk.</param>
-        public void LoadTerrain(string contPrefix)
-        {
-            LoadTerrain("Terrain/" + contPrefix, contPrefix);
-        }
-
-        public void LoadTerrain(string path, string contPrefix)
+        public void LoadTerrain(ForgelightGame forgelightGame, string contPrefix)
         {
             running = true;
 
             Transform terrainParent = new GameObject("Forgelight Terrain - " + contPrefix).transform;
             terrainParent.tag = "Terrain";
 
-            string resourcePath = Application.dataPath + "/Resources/" + path;
-            string[] resources = Directory.GetFiles(resourcePath, "*.obj");
+            string resourcePath = forgelightGame.Name + "/Terrain/" + contPrefix;
+
+            if (!Directory.Exists(Application.dataPath + "/Resources/" + resourcePath))
+            {
+                Debug.LogWarning("Could not find terrain for zone " + contPrefix);
+                GameObject.DestroyImmediate(terrainParent.gameObject);
+                return;
+            }
+
+            string[] resources = Directory.GetFiles(Application.dataPath + "/Resources/" + resourcePath, "*.obj");
 
             totalResources = resources.Length;
 
@@ -48,7 +45,7 @@ namespace Forgelight.Formats.Cnk
 
                     ProgressBar();
 
-                    CreateChunk(path + "/" + chunkName, contPrefix, terrainParent);
+                    CreateChunk(resourcePath + "/" + chunkName, terrainParent);
                 }
 
                 else
@@ -70,7 +67,7 @@ namespace Forgelight.Formats.Cnk
             OnLoadComplete(true);
         }
 
-        private void CreateChunk(string chunkPath, string contPrefix, Transform terrainParent)
+        private void CreateChunk(string chunkPath, Transform terrainParent)
         {
             object resource = Resources.Load(chunkPath);
 
@@ -85,26 +82,23 @@ namespace Forgelight.Formats.Cnk
             {
                 string[] nameElements = chunk.name.Split('_');
 
-                if (nameElements[0] == contPrefix)
+                //Multiply the position on each axis by the size of the chunk, as we are given only chunk coordinates.
+                int chunkPosX = -(Convert.ToInt32(nameElements[2]) * chunkPosOffset);
+                int chunkPosZ = (Convert.ToInt32(nameElements[1]) * chunkPosOffset);
+
+                GameObject instance = (GameObject) GameObject.Instantiate(chunk, new Vector3(chunkPosX, 0, chunkPosZ), Quaternion.identity);
+
+                instance.transform.parent = terrainParent;
+
+                //TODO HACK - We do not have the RAM to hold an entire continent in memory.
+                ZoneObject zoneObject = instance.GetComponent<ZoneObject>();
+                if (zoneObject == null)
                 {
-                    //Multiply the position on each axis by the size of the chunk, as we are given only chunk coordinates.
-                    int chunkPosX = -(Convert.ToInt32(nameElements[2]) * chunkPosOffset);
-                    int chunkPosZ = (Convert.ToInt32(nameElements[1]) * chunkPosOffset);
-
-                    GameObject instance = (GameObject) GameObject.Instantiate(chunk, new Vector3(chunkPosX, 0, chunkPosZ), Quaternion.identity);
-
-                    instance.transform.parent = terrainParent;
-
-                    //TODO HACK - We do not have the RAM to hold an entire continent in memory.
-                    ZoneObject zoneObject = instance.GetComponent<ZoneObject>();
-                    if (zoneObject == null)
-                    {
-                        zoneObject = instance.AddComponent<ZoneObject>();
-                    }
-
-                    zoneObject.renderDistance = 3000;
-                    zoneObject.Hide();
+                    zoneObject = instance.AddComponent<ZoneObject>();
                 }
+
+                zoneObject.renderDistance = 3000;
+                zoneObject.Hide();
             }
 
             resourcesProcessed++;

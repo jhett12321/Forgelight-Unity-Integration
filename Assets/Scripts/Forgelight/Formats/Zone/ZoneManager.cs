@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Forgelight.Formats.Cnk;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
@@ -46,10 +47,13 @@ namespace Forgelight.Formats.Zone
                     return;
                 }
 
-                ProgressBar((float)objectsProcessed / (float)totalObjects, zoneObject.ActorDefinition);
+                ProgressBar(Utils.MathUtils.RemapProgress((float)objectsProcessed / (float)totalObjects, 0.0f, 0.50f), zoneObject.ActorDefinition);
             }
 
             ZoneObjectFactory.transform.localScale = new Vector3(-1, 1, 1);
+
+            //Load this zone's terrain, if it exists
+            ForgelightExtension.Instance.ChunkLoader.LoadTerrain(forgelightGame, Path.GetFileNameWithoutExtension(zone.Name));
 
             //Unload any unused assets.
             OnLoadComplete();

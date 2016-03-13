@@ -9,25 +9,55 @@ public class ObjectImportSettingsOverride : AssetPostprocessor
 
     public void OnPostprocessModel(GameObject gameObject)
     {
-        foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
+        //Forgelight Models
+        if (assetPath.Contains("Models"))
         {
-            Material sharedMaterial = renderer.sharedMaterial;
-            sharedMaterial.shader = Shader.Find("Custom/ForgelightModel");
-
-            if (assetPath == null || sharedMaterial.mainTexture == null)
+            foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
             {
-                return;
-            }
+                Material sharedMaterial = renderer.sharedMaterial;
+                sharedMaterial.shader = Shader.Find("Custom/ForgelightModel");
 
-            string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(sharedMaterial.mainTexture.name) + ".mtl");
-
-            if (File.Exists(mtlFilePath))
-            {
-                string[] mtlDefs = File.ReadAllLines(mtlFilePath);
-
-                foreach (string mtlDef in mtlDefs)
+                if (assetPath == null || sharedMaterial.mainTexture == null)
                 {
-                    ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
+                    return;
+                }
+
+                string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(sharedMaterial.mainTexture.name) + ".mtl");
+
+                if (File.Exists(mtlFilePath))
+                {
+                    string[] mtlDefs = File.ReadAllLines(mtlFilePath);
+
+                    foreach (string mtlDef in mtlDefs)
+                    {
+                        ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
+                    }
+                }
+            }
+        }
+
+        else if (assetPath.Contains("Terrain"))
+        {
+            foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
+            {
+                Material sharedMaterial = renderer.sharedMaterial;
+                sharedMaterial.shader = Shader.Find("Custom/ForgelightTerrain");
+
+                if (assetPath == null || sharedMaterial.mainTexture == null)
+                {
+                    return;
+                }
+
+                string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(assetPath) + ".mtl");
+
+                if (File.Exists(mtlFilePath))
+                {
+                    string[] mtlDefs = File.ReadAllLines(mtlFilePath);
+
+                    foreach (string mtlDef in mtlDefs)
+                    {
+                        ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
+                    }
                 }
             }
         }

@@ -2,7 +2,6 @@
 using System.IO;
 using Forgelight.Utils;
 using Newtonsoft.Json.Linq;
-using UnityEditor;
 using UnityEngine;
 
 namespace Forgelight

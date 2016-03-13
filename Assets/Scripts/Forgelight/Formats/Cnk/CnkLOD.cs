@@ -93,6 +93,7 @@ namespace Forgelight.Formats.Cnk
             CnkLOD chunk = new CnkLOD();
             BinaryReader binaryReader = new BinaryReader(stream);
 
+            chunk.Name = name;
             //Header
             byte[] magic = binaryReader.ReadBytes(4);
 
@@ -168,6 +169,8 @@ namespace Forgelight.Formats.Cnk
                     {
                         texture.ExtraData4 = binaryReader.ReadBytes((int)extraData4Size).ToList();
                     }
+
+                    chunk.Textures.Add(texture);
                 }
 
                 //Verts Per Side
@@ -254,6 +257,8 @@ namespace Forgelight.Formats.Cnk
                 {
                     OptimizedDraw optimizedDraw = new OptimizedDraw();
                     optimizedDraw.Data = binaryReader.ReadBytes(320).ToList();
+
+                    chunk.OptimizedDraws.Add(optimizedDraw);
                 }
 
                 //Unknown Data
@@ -282,6 +287,8 @@ namespace Forgelight.Formats.Cnk
                 {
                     TileOccluderInfo tileOccluderInfo = new TileOccluderInfo();
                     tileOccluderInfo.Data = binaryReader.ReadBytes(64).ToList();
+
+                    chunk.TileOccluderInfos.Add(tileOccluderInfo);
                 }
             }
 
