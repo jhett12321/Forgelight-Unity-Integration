@@ -44,7 +44,7 @@ namespace Forgelight.Formats.Zone
             Byte g = binaryReader.ReadByte();
             Byte b = binaryReader.ReadByte();
 
-			light.Color = new Color((float)r/255, (float)g/255, (float)b/255, (float)a/255);
+            light.Color = new Color((float)r/255, (float)g/255, (float)b/255, (float)a/255);
             light.UnknownByte1 = binaryReader.ReadByte();
             light.UnknownByte2 = binaryReader.ReadByte();
             light.UnknownByte3 = binaryReader.ReadByte();
@@ -58,5 +58,44 @@ namespace Forgelight.Formats.Zone
             return light;
         }
 
+        public void WriteToStream(BinaryWriter binaryWriter)
+        {
+            binaryWriter.WriteNullTerminiatedString(Name);
+            binaryWriter.WriteNullTerminiatedString(ColorName);
+            binaryWriter.Write(Type);
+            binaryWriter.Write(UnknownFloat1);
+
+            binaryWriter.Write(Position.x);
+            binaryWriter.Write(Position.y);
+            binaryWriter.Write(Position.z);
+            binaryWriter.Write(Position.w);
+
+            binaryWriter.Write(Rotation.x);
+            binaryWriter.Write(Rotation.y);
+            binaryWriter.Write(Rotation.z);
+            binaryWriter.Write(Rotation.w);
+
+            binaryWriter.Write(Range);
+            binaryWriter.Write(InnerRange);
+
+            binaryWriter.Write((byte)(Color.a * 255));
+            binaryWriter.Write((byte)(Color.r * 255));
+            binaryWriter.Write((byte)(Color.g * 255));
+            binaryWriter.Write((byte)(Color.b * 255));
+
+            binaryWriter.Write(UnknownByte1);
+            binaryWriter.Write(UnknownByte2);
+            binaryWriter.Write(UnknownByte3);
+            binaryWriter.Write(UnknownByte4);
+            binaryWriter.Write(UnknownByte5);
+
+            binaryWriter.Write(UnknownVector1.x);
+            binaryWriter.Write(UnknownVector1.y);
+            binaryWriter.Write(UnknownVector1.z);
+            binaryWriter.Write(UnknownVector1.w);
+
+            binaryWriter.WriteNullTerminiatedString(UnknownString1);
+            binaryWriter.Write(ID);
+        }
     }
 }

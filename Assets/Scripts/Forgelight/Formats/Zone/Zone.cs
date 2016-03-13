@@ -27,6 +27,7 @@ namespace Forgelight.Formats.Zone
         public List<InvisibleWall> InvisibleWalls { get; private set; }
         public List<Object> Objects { get; private set; }
         public List<Light> Lights { get; private set; }
+        public List<Unknown> Unknowns { get; private set; }
 
         public static Zone LoadFromStream(string Name, Stream stream)
         {
@@ -69,9 +70,6 @@ namespace Forgelight.Formats.Zone
             zone.StartY = binaryReader.ReadInt32();
             zone.ChunksX = binaryReader.ReadUInt32();
             zone.ChunksY = binaryReader.ReadUInt32();
-
-            //uint currentOffset = 68;
-            //long offsetStream = binaryReader.BaseStream.Position;
 
             //Ecos
             zone.Ecos = new List<Eco>();
@@ -118,7 +116,128 @@ namespace Forgelight.Formats.Zone
                 zone.Lights.Add(Light.ReadFromStream(binaryReader.BaseStream));
             }
 
+            //Unknowns
+            zone.Unknowns = new List<Unknown>();
+            UInt32 unknownsLength = binaryReader.ReadUInt32();
+
+            for (int i = 0; i < unknownsLength; i++)
+            {
+                //zone.Unknowns.Add(Unknown.ReadFromStream(binaryReader.BaseStream));
+                //???
+            }
+
             return zone;
+        }
+
+        public static void SerializeZoneToStream(Zone zone, Stream stream)
+        {
+            if (!stream.CanWrite || !stream.CanSeek)
+            {
+                return;
+            }
+
+            BinaryWriter binaryWriter = new BinaryWriter(stream);
+
+            //Header
+            byte[] magic = new byte[4];
+
+            magic[0] = (byte) 'Z';
+            magic[1] = (byte) 'O';
+            magic[2] = (byte) 'N';
+            magic[3] = (byte) 'E';
+
+            binaryWriter.Write(magic);
+            binaryWriter.Write(zone.Version);
+
+            //Offsets
+            long offsetsPosition = binaryWriter.BaseStream.Position;
+
+            //Allocates space for the offset locations.
+            binaryWriter.Write(0u);
+            binaryWriter.Write(0u);
+            binaryWriter.Write(0u);
+            binaryWriter.Write(0u);
+            binaryWriter.Write(0u);
+            binaryWriter.Write(0u);
+
+            //binaryWriter.Write(zone.Offsets["ecos"]);
+            //binaryWriter.Write(zone.Offsets["floras"]);
+            //binaryWriter.Write(zone.Offsets["invisibleWalls"]);
+            //binaryWriter.Write(zone.Offsets["objects"]);
+            //binaryWriter.Write(zone.Offsets["lights"]);
+            //binaryWriter.Write(zone.Offsets["unknowns"]);
+
+            Dictionary<string, UInt32> offsets = new Dictionary<string, uint>();
+
+            //Misc Header
+            binaryWriter.Write(zone.QuadsPerTile);
+            binaryWriter.Write(zone.TileSize);
+            binaryWriter.Write(zone.TileHeight);
+            binaryWriter.Write(zone.VertsPerTile);
+            binaryWriter.Write(zone.TilesPerChunk);
+            binaryWriter.Write(zone.StartX);
+            binaryWriter.Write(zone.StartY);
+            binaryWriter.Write(zone.ChunksX);
+            binaryWriter.Write(zone.ChunksY);
+
+            //Ecos
+            offsets["ecos"] = (uint) binaryWriter.BaseStream.Position;
+            binaryWriter.Write((uint) zone.Ecos.Count);
+
+            foreach (Eco eco in zone.Ecos)
+            {
+                eco.WriteToStream(binaryWriter);
+            }
+
+            //Floras
+            offsets["floras"] = (uint) binaryWriter.BaseStream.Position;
+            binaryWriter.Write((uint) zone.Floras.Count);
+
+            foreach (Flora flora in zone.Floras)
+            {
+                flora.WriteToStream(binaryWriter);
+            }
+
+            offsets["invisibleWalls"] = (uint) binaryWriter.BaseStream.Position;
+            binaryWriter.Write((uint) zone.InvisibleWalls.Count);
+
+            foreach (InvisibleWall invisibleWall in zone.InvisibleWalls)
+            {
+                invisibleWall.WriteToStream(binaryWriter);
+            }
+
+            offsets["objects"] = (uint) binaryWriter.BaseStream.Position;
+            binaryWriter.Write((uint) zone.Objects.Count);
+
+            foreach (Object obj in zone.Objects)
+            {
+                obj.WriteToStream(binaryWriter);
+            }
+
+            offsets["lights"] = (uint) binaryWriter.BaseStream.Position;
+            binaryWriter.Write((uint) zone.Lights.Count);
+
+            foreach (Light light in zone.Lights)
+            {
+                light.WriteToStream(binaryWriter);
+            }
+
+            offsets["unknowns"] = (uint) binaryWriter.BaseStream.Position;
+            binaryWriter.Write((uint) zone.Unknowns.Count);
+
+            foreach (Unknown unknown in zone.Unknowns)
+            {
+                //???
+            }
+
+            //Update offset values.
+            binaryWriter.BaseStream.Seek(offsetsPosition, SeekOrigin.Begin);
+            binaryWriter.Write(offsets["ecos"]);
+            binaryWriter.Write(offsets["floras"]);
+            binaryWriter.Write(offsets["invisibleWalls"]);
+            binaryWriter.Write(offsets["objects"]);
+            binaryWriter.Write(offsets["lights"]);
+            binaryWriter.Write(offsets["unknowns"]);
         }
     }
 }

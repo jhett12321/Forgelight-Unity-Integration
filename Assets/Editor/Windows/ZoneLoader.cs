@@ -1,18 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 using Forgelight.Formats.Zone;
+using Forgelight.Utils;
 using UnityEditor;
-using Object = Forgelight.Formats.Zone.Object;
 
 namespace Forgelight.Editor.Windows
 {
     public class ZoneLoader : EditorWindow
     {
-        private bool running = false;
-
-        private const int indent = 1;
-
         private string searchString = "";
         private Vector2 scroll;
 
@@ -43,38 +38,33 @@ namespace Forgelight.Editor.Windows
 
                     if (activeForgelightGame != null)
                     {
-                        ShowAvailableZones(activeForgelightGame, activeForgelightGame.AvailableZones.Values);
+                        ShowAvailableZones(activeForgelightGame, activeForgelightGame.AvailableZones);
                     }
                 }
                 EditorGUILayout.EndScrollView();
             }
             EditorGUILayout.EndHorizontal();
-
-            //Preview Box
-            //GameObject model = Resources.Load();
         }
 
-        private void ShowAvailableZones(ForgelightGame forgelightGame, IEnumerable<Zone> availableZones)
+        private void ShowAvailableZones(ForgelightGame forgelightGame, Dictionary<string, Zone> availableZones)
         {
-            foreach (Zone zone in availableZones)
+            foreach (KeyValuePair<string, Zone> zone in availableZones)
             {
-                if (searchString == null || zone.Name.ToLower().Contains(searchString.ToLower()))
+                if (searchString == null || zone.Key.ToLower().Contains(searchString.ToLower()))
                 {
-                    EditorGUI.indentLevel += indent;
-
                     Rect position = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
 
                     if (Event.current.type == EventType.MouseDown)
                     {
                         if (position.Contains(Event.current.mousePosition))
                         {
-                            if (selectedZone != null && selectedZone == zone)
+                            if (selectedZone != null && selectedZone == zone.Value)
                             {
-                                LoadZone(forgelightGame, zone);
+                                OnZoneSelected(forgelightGame, zone.Value);
                                 selectedZone = null;
                             }
 
-                            selectedZone = zone;
+                            selectedZone = zone.Value;
                         }
                     }
 
@@ -83,86 +73,17 @@ namespace Forgelight.Editor.Windows
                     style.stretchWidth = true;
                     style.clipping = TextClipping.Overflow;
 
-                    EditorGUI.Foldout(position, false, zone.Name, true, style);
-
-                    EditorGUI.indentLevel -= indent;
+                    EditorGUI.Foldout(position, false, zone.Key, true, style);
                 }
             }
         }
 
-        public void LoadZone(ForgelightGame forgelightGame, Formats.Zone.Zone zone)
+        private void OnZoneSelected(ForgelightGame forgelightGame, Zone zone)
         {
-            running = true;
-
-            int totalObjects = 0;
-            int objectsProcessed = 0;
-
-            //Calculate the total objects we need to process.
-            foreach (Object zoneObject in zone.Objects)
+            if (DialogUtils.DisplayCancelableDialog("Changing Zone", "You have selected a new zone. Changing zones will DESTROY all objects and terrain in the current scene, and you will lose any unsaved changes. Are you sure you wish to continue?"))
             {
-                totalObjects += zoneObject.Instances.Count();
+                ForgelightExtension.Instance.ZoneManager.LoadZone(forgelightGame, zone);
             }
-
-            ZoneObjectFactory ZoneObjectFactory = ForgelightExtension.Instance.ZoneObjectFactory;
-
-            //Begin processing the file
-            foreach (Object zoneObject in zone.Objects)
-            {
-                if (running && zoneObject.Instances.Count() > 0)
-                {
-                    foreach (Object.Instance instance in zoneObject.Instances)
-                    {
-                        ZoneObjectFactory.CreateForgelightObject(forgelightGame, zoneObject.ActorDefinition, ConvertForgelightPosition(instance.Position), ConvertForgelightRotation(instance.Rotation), ConvertForgelightScale(instance.Scale), zoneObject.RenderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
-                        objectsProcessed++;
-                    }
-                }
-
-                else if(!running)
-                {
-                    OnLoadComplete();
-                    return;
-                }
-
-                ProgressBar((float)objectsProcessed / (float)totalObjects, zoneObject.ActorDefinition);
-            }
-
-            ZoneObjectFactory.transform.localScale = new Vector3(-1, 1, 1);
-
-            //Unload any unused assets.
-            OnLoadComplete();
-        }
-
-        public void OnLoadComplete()
-        {
-            running = false;
-
-            //Unload any unused assets.
-            Resources.UnloadUnusedAssets();
-
-            EditorUtility.ClearProgressBar();
-        }
-
-        private void ProgressBar(float progress, string currentTask)
-        {
-            if (EditorUtility.DisplayCancelableProgressBar("Loading Zone", currentTask, progress))
-            {
-                OnLoadComplete();
-            }
-        }
-
-        private Vector3 ConvertForgelightPosition(Vector4 fPos)
-        {
-            return new Vector3(fPos.x, fPos.y, fPos.z);
-        }
-
-        private Quaternion ConvertForgelightRotation(Vector4 fRot)
-        {
-            return Quaternion.Euler(fRot.y * Mathf.Rad2Deg, fRot.x * Mathf.Rad2Deg, fRot.z * Mathf.Rad2Deg);
-        }
-
-        private Vector3 ConvertForgelightScale(Vector4 fSca)
-        {
-            return new Vector3(-fSca.x, fSca.y, fSca.z);
         }
     }
 }

@@ -101,5 +101,50 @@ namespace Forgelight.Formats.Zone
             return eco;
         }
 
+        public void WriteToStream(BinaryWriter binaryWriter)
+        {
+            //Eco
+            binaryWriter.Write(Index);
+
+            binaryWriter.WriteNullTerminiatedString(Name);
+            binaryWriter.WriteNullTerminiatedString(ColorNXMap);
+            binaryWriter.WriteNullTerminiatedString(SpecBlendNyMap);
+            binaryWriter.Write(DetailRepeat);
+            binaryWriter.Write(BlendStrength);
+            binaryWriter.Write(SpecMin);
+            binaryWriter.Write(SpecMax);
+            binaryWriter.Write(SpecSmoothnessMin);
+            binaryWriter.Write(SpecSmoothnessMax);
+            binaryWriter.WriteNullTerminiatedString(PhysicsMaterial);
+
+            //Layers
+            binaryWriter.Write((uint) Layers.Count);
+
+            foreach (Layer layer in Layers)
+            {
+                binaryWriter.Write(layer.Density);
+                binaryWriter.Write(layer.MinScale);
+                binaryWriter.Write(layer.MaxScale);
+                binaryWriter.Write(layer.SlopePeak);
+                binaryWriter.Write(layer.SlopeExtent);
+                binaryWriter.Write(layer.MinElevation);
+                binaryWriter.Write(layer.MaxElevation);
+                binaryWriter.Write(layer.MinAlpha);
+                binaryWriter.WriteNullTerminiatedString(layer.Flora);
+
+                //Tints
+                binaryWriter.Write((uint) layer.Tints.Count);
+
+                foreach (Layer.Tint tint in layer.Tints)
+                {
+                    binaryWriter.Write(Convert.ToByte(tint.Color.r * 255));
+                    binaryWriter.Write(Convert.ToByte(tint.Color.g * 255));
+                    binaryWriter.Write(Convert.ToByte(tint.Color.b * 255));
+                    binaryWriter.Write(Convert.ToByte(tint.Color.a * 255));
+
+                    binaryWriter.Write(tint.Percentage);
+                }
+            }
+        }
     }
 }

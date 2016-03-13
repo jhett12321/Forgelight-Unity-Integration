@@ -22,5 +22,13 @@ namespace Forgelight.Formats.Zone
 
             return invisibleWall;
         }
+
+        public void WriteToStream(BinaryWriter binaryWriter)
+        {
+            binaryWriter.Write(UnknownUInt32);
+            binaryWriter.Write(UnknownFloat1);
+            binaryWriter.Write(UnknownFloat2);
+            binaryWriter.Write(UnknownFloat3);
+        }
     }
 }

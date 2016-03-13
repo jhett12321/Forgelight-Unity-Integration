@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Assets.Scripts.Forgelight.Utils;
 
 namespace Forgelight.Formats.Zone
@@ -25,6 +26,17 @@ namespace Forgelight.Formats.Zone
             flora.UnknownFloat2 = binaryReader.ReadSingle();
 
             return flora;
+        }
+
+        public void WriteToStream(BinaryWriter binaryWriter)
+        {
+            binaryWriter.WriteNullTerminiatedString(Name);
+            binaryWriter.WriteNullTerminiatedString(Texture);
+            binaryWriter.WriteNullTerminiatedString(Model);
+
+            binaryWriter.Write(UnknownBoolean1);
+            binaryWriter.Write(UnknownFloat1);
+            binaryWriter.Write(UnknownFloat2);
         }
     }
 }

@@ -61,7 +61,6 @@ namespace Forgelight.Formats.Zone
 
         public long ID { get; set; }
 
-        [SerializeField]
         private bool visible = false;
 
         private Renderer[] renderers;

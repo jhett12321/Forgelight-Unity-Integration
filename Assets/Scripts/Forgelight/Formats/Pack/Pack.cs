@@ -21,7 +21,7 @@ namespace Forgelight.Pack
             get { return System.IO.Path.GetFileName(Path); }
         }
 
-        public Dictionary<Int32, Asset> assetLookupCache = new Dictionary<Int32, Asset>();
+        public Dictionary<string, Asset> assetLookupCache = new Dictionary<string, Asset>();
 
         private Pack(String path)
         {
@@ -38,19 +38,20 @@ namespace Forgelight.Pack
                 BinaryReaderBigEndian binaryReader = new BinaryReaderBigEndian(fileStream);
 
                 UInt32 nextChunkAbsoluteOffset = 0;
-                UInt32 fileCount = 0;
 
                 do
                 {
                     fileStream.Seek(nextChunkAbsoluteOffset, SeekOrigin.Begin);
 
                     nextChunkAbsoluteOffset = binaryReader.ReadUInt32();
-                    fileCount = binaryReader.ReadUInt32();
+                    uint fileCount = binaryReader.ReadUInt32();
 
                     for (UInt32 i = 0; i < fileCount; ++i)
                     {
                         Asset file = Asset.LoadBinary(pack, binaryReader.BaseStream);
-                        pack.assetLookupCache.Add(file.Name.GetHashCode(), file);
+
+                        pack.assetLookupCache[file.Name] = file;
+
                         pack.Assets.Add(file);
                     }
                 } while (nextChunkAbsoluteOffset != 0);
@@ -59,11 +60,11 @@ namespace Forgelight.Pack
             }
         }
 
-        public MemoryStream CreateAssetMemoryStreamByName(String name)
+        public MemoryStream CreateAssetMemoryStreamByName(string name)
         {
             Asset asset = null;
 
-            if (false == assetLookupCache.TryGetValue(name.GetHashCode(), out asset))
+            if (!assetLookupCache.TryGetValue(name, out asset))
             {
                 return null;
             }

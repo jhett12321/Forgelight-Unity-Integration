@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using Forgelight.Attributes;
+﻿using Forgelight.Attributes;
 using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Zone;
 using Newtonsoft.Json.Linq;
@@ -22,6 +20,8 @@ namespace Forgelight
         //State/Configuration
         public Config Config { get; private set; }
 
+        //Zone Manager
+        public ZoneManager ZoneManager { get; private set; }
 
         //Asset Cache/Loading
         public ForgelightGameFactory ForgelightGameFactory { get; private set; }
@@ -31,7 +31,6 @@ namespace Forgelight
 
         //Zone Editing
         private ZoneObjectFactory zoneObjectFactory;
-
         public ZoneObjectFactory ZoneObjectFactory
         {
             get
@@ -60,13 +59,14 @@ namespace Forgelight
         {
             if (Instance == null)
             {
-                Instance = new ForgelightExtension();
-
-                //Create objects
-                Instance.ForgelightGameFactory = new ForgelightGameFactory();
-                Instance.TerrainLoader = new TerrainLoader();
-                Instance.ZoneExporter = new ZoneExporter();
-                Instance.Config = new Config();
+                Instance = new ForgelightExtension
+                {
+                    ForgelightGameFactory = new ForgelightGameFactory(),
+                    TerrainLoader = new TerrainLoader(),
+                    ZoneExporter = new ZoneExporter(),
+                    Config = new Config(),
+                    ZoneManager = new ZoneManager()
+                };
 
                 EditorApplication.update += Instance.EditorUpdate;
             }

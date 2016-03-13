@@ -1,5 +1,7 @@
 ﻿using Forgelight;
+using Forgelight.Formats.Zone;
 using Forgelight.Pack;
+using Forgelight.Utils;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,31 +13,6 @@ public class ForgelightMenu : Editor
     {
         ForgelightExtension.Instance.ForgelightGameFactory.OpenForgelightGameFolder();
     }
-
-    #region Validate editor
-    //[MenuItem("Forgelight/Load Zone File...", true)]
-    //[MenuItem("Forgelight/Load Terrain Data", true)]
-    //[MenuItem("Forgelight/Export Current Scene to Zone File...", true)]
-    //[MenuItem("Forgelight/Create Pack File", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/Indar", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/Hossin", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/Amerish", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/Esamir", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/Tutorial", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/VR", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/Koltyr (quickload)", true)]
-    //[MenuItem("Forgelight/Load Terrain Data/Nexus", true)]
-    //public static bool CanUseEditor()
-    //{
-    //    //if (forgeLightFilePath != null)
-    //    //{
-    //    //    return true;
-    //    //}
-
-    //    //return false;
-    //    return true;
-    //}
-    #endregion
 
     [MenuItem("Forgelight/Create/New Object")]
     public static void CreateZoneObject()
@@ -55,14 +32,12 @@ public class ForgelightMenu : Editor
         }
     }
 
-    [MenuItem("Forgelight/Delete/Zone Objects")]
+    [MenuItem("Forgelight/Delete/All Zone Objects")]
     public static void DeleteZoneObjects()
     {
-        GameObject zoneObjectsParent = GameObject.FindWithTag("ZoneObjects");
-
-        if (zoneObjectsParent != null)
+        if (DialogUtils.DisplayCancelableDialog("Delete Zone Objects", "This will destroy all objects current scene, and you will lose any unsaved changes. This cannot be undone. Are you sure you wish to continue?"))
         {
-            DestroyImmediate(zoneObjectsParent);
+            ForgelightExtension.Instance.ZoneObjectFactory.DestroyAllObjects();
         }
     }
 

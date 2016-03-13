@@ -58,7 +58,7 @@ namespace Forgelight
 
                     foreach (Asset asset in pack.Assets)
                     {
-                        if (false == AssetsByType.ContainsKey(asset.Type))
+                        if (!AssetsByType.ContainsKey(asset.Type))
                         {
                             AssetsByType.Add(asset.Type, new List<Asset>());
                         }
@@ -142,10 +142,25 @@ namespace Forgelight
             {
                 ProgressBar(MathUtils.Remap((float)i / (float)zones.Count, 0.0f, 1.0f, progress0, progress100), "Updating Zone: " + zones[i].Name);
 
-                MemoryStream memoryStream = CreateAssetMemoryStreamByName(zones[i].Name);
+                MemoryStream memoryStream = zones[i].Pack.CreateAssetMemoryStreamByName(zones[i].Name);
                 Formats.Zone.Zone zone = Formats.Zone.Zone.LoadFromStream(zones[i].Name, memoryStream);
 
-                AvailableZones[Path.GetFileNameWithoutExtension(zones[i].Name)] = zone;
+                string rawZoneName = Path.GetFileNameWithoutExtension(zones[i].Name);
+                string zoneName = rawZoneName;
+
+                if (AvailableZones.ContainsKey(zoneName))
+                {
+                    zoneName = rawZoneName +  " (" + zones[i].Pack.Name + ")";
+                }
+
+                //int j = 0;
+                //while (AvailableZones.ContainsKey(zoneName))
+                //{
+                //    j++;
+                //    zoneName = string.Format("{0} ({1})", rawZoneName, j);
+                //}
+
+                AvailableZones[zoneName] = zone;
             }
         }
 
@@ -186,7 +201,7 @@ namespace Forgelight
         }
 
         //TODO Less Code Duplication.
-        //TODO Update CNK0 Parsing. The curret format seems to be incorrect.
+        //TODO Update CNK0 Parsing. The current format seems to be incorrect.
         //TODO Make Progress Bars more verbose.
         public void ExportTerrain(float progress0, float progress100)
         {

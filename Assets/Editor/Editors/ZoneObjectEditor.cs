@@ -1,5 +1,4 @@
-﻿
-using Forgelight.Editor.AttributeDrawers;
+﻿using Forgelight.Editor.AttributeDrawers;
 using Forgelight.Formats.Zone;
 using UnityEditor;
 

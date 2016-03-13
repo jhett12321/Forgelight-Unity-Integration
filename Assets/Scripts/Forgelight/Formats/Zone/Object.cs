@@ -14,14 +14,13 @@ namespace Forgelight.Formats.Zone
             public Vector4 Rotation { get; set; }
             public Vector4 Scale { get; set; }
             public UInt32 ID { get; set; }
-
             public bool DontCastShadows { get; set; }
             public float LODMultiplier { get; set; }
         }
 
-        public string ActorDefinition { get; private set; }
-        public float RenderDistance { get; private set; }
-        public List<Instance> Instances { get; private set; }
+        public string ActorDefinition { get; set; }
+        public float RenderDistance { get; set; }
+        public List<Instance> Instances { get; set; }
 
         public static Object ReadFromStream(Stream stream)
         {
@@ -49,6 +48,39 @@ namespace Forgelight.Formats.Zone
             }
 
             return obj;
+        }
+
+        public void WriteToStream(BinaryWriter binaryWriter)
+        {
+            binaryWriter.WriteNullTerminiatedString(ActorDefinition);
+            binaryWriter.Write(RenderDistance);
+
+            binaryWriter.Write((uint) Instances.Count);
+
+            foreach (Instance instance in Instances)
+            {
+                Vector4 position = instance.Position;
+                binaryWriter.Write(position.x);
+                binaryWriter.Write(position.y);
+                binaryWriter.Write(position.z);
+                binaryWriter.Write(position.w);
+
+                Vector4 rotation = instance.Rotation;
+                binaryWriter.Write(rotation.x);
+                binaryWriter.Write(rotation.y);
+                binaryWriter.Write(rotation.z);
+                binaryWriter.Write(rotation.w);
+
+                Vector4 scale = instance.Scale;
+                binaryWriter.Write(scale.x);
+                binaryWriter.Write(scale.y);
+                binaryWriter.Write(scale.z);
+                binaryWriter.Write(scale.w);
+
+                binaryWriter.Write(instance.ID);
+                binaryWriter.Write(instance.DontCastShadows);
+                binaryWriter.Write(instance.LODMultiplier);
+            }
         }
     }
 }

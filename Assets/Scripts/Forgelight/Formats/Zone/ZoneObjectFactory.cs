@@ -61,6 +61,14 @@ namespace Forgelight.Formats.Zone
             return instance;
         }
 
+        public void DestroyAllObjects()
+        {
+            Destroy(gameObject);
+
+            //Creates a new instance
+            ZoneObjectFactory zoneObjectFactory = ForgelightExtension.Instance.ZoneObjectFactory;
+        }
+
         public void UpdateForgelightObject(ForgelightGame forgelightGame, ZoneObject forgeLightObject, string newActorDefinition)
         {
             GameObject baseActor = InitializeBaseActor(forgelightGame, newActorDefinition);

@@ -46,6 +46,7 @@ namespace Forgelight.Pack
             EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, new MemoryStream());
             wr.Write(NextChunkOffset);
             wr.Write(FileCount);
+
             foreach (FileHeader h in files)
             {
                 wr.Write(h.Encode());
@@ -96,9 +97,12 @@ namespace Forgelight.Pack
             {
                 byte[] fdata = File.ReadAllBytes(file);
                 fileData.Add(fdata);
+
                 Crc32 crc = new Crc32();
                 byte[] c = crc.ComputeHash(fdata);
+
                 string filename = file.Substring(file.LastIndexOf("\\") + 1);
+
                 FileHeader h = new FileHeader()
                 {
                     name_len = (uint)filename.Length,
@@ -107,6 +111,7 @@ namespace Forgelight.Pack
                     length = (uint)fdata.Length,
                     crc32 = (uint)BitConverter.ToInt32(c, 0),
                 };
+
                 fheader.Add(h);
             }
 
@@ -121,19 +126,23 @@ namespace Forgelight.Pack
             //Update the files with the offset of each data chunk of the file
             int length = header.Encode().Length;
             int offset = 0;
+
             for (int i = 0; i < fheader.Count; i++)
             {
                 if (i != 0)
                 {
                     offset += fileData[i - 1].Length;
                 }
+
                 fheader[i].offset = (uint)length + (uint)offset;
             }
+
             //Write the chunk to a file
             using (EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, File.Open(savePath, FileMode.OpenOrCreate)))
             {
                 byte[] ph = header.Encode();
                 wr.Write(ph);
+
                 for (int i = 0; i < fileData.Count; i++)
                 {
                     wr.Write(fileData[i]);

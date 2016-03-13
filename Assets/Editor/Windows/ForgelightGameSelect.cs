@@ -1,11 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
-using Forgelight.Editor.DraggableObjects;
-using Forgelight.Formats.Zone;
 using Forgelight.Utils;
-using Object = UnityEngine.Object;
 
 namespace Forgelight.Editor.Windows
 {
@@ -32,7 +28,7 @@ namespace Forgelight.Editor.Windows
 
             GUILayout.EndHorizontal();
 
-            //Zone List
+            //Game List
             EditorGUILayout.BeginHorizontal();
             {
                 scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(500));
@@ -78,7 +74,7 @@ namespace Forgelight.Editor.Windows
 
         private void OnGameSelected(string gameName)
         {
-            if (DialogUtils.DisplayCancelableDialog("Change Forgelight Game", "You have selected a new Forgelight game. Changing games will DESTROY all objects and terrain in the current scene, and you will lose any unsaved changes. Are you sure you want to continue?"))
+            if (DialogUtils.DisplayCancelableDialog("Change Forgelight Game", "You have selected a new Forgelight game. Changing games will DESTROY all objects and terrain in the current scene, and you will lose any unsaved changes. Are you sure you wish to continue?"))
             {
                 //TODO reset scene.
                 ForgelightExtension.Instance.ForgelightGameFactory.ChangeActiveForgelightGame(gameName);

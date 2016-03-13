@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text;
 
 namespace Assets.Scripts.Forgelight.Utils
 {
@@ -16,5 +17,11 @@ namespace Assets.Scripts.Forgelight.Utils
             return str;
         }
 
+        public static void WriteNullTerminiatedString(this BinaryWriter binaryWriter, string value)
+        {
+            byte[] buffer = Encoding.Default.GetBytes(value);
+            binaryWriter.Write(buffer);
+            binaryWriter.Write((byte)0);
+        }
     }
 }
