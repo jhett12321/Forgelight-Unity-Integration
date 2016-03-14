@@ -42,10 +42,10 @@ namespace Forgelight
 
                 forgelightGame.LoadPackFiles(0.0f, 0.25f);
                 forgelightGame.InitializeMaterialDefinitionManager();
-                forgelightGame.ExportModels(0.3f, 0.5f);
-                forgelightGame.UpdateActors(0.5f, 0.7f);
-                forgelightGame.ExportTerrain(0.7f, 0.9f);
-                forgelightGame.UpdateZones(0.9f, 1.0f);
+                //forgelightGame.ExportModels(0.3f, 0.6f);
+                forgelightGame.ExportTerrain(0.6f, 0.9f);
+                forgelightGame.UpdateActors(0.9f, 0.95f);
+                forgelightGame.UpdateZones(0.95f, 1.0f);
 
                 forgelightGame.OnLoadComplete();
                 ForgelightExtension.Instance.Config.SaveNewForgelightGame(forgelightGame);

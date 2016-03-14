@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
+using ImageMagick;
 
 namespace Forgelight.Formats.Cnk
 {
     public class ChunkExporter
     {
-
         public static void ExportChunk(ForgelightGame forgelightGame, CnkLOD chunk, string directory)
         {
             string name = Path.GetFileNameWithoutExtension(chunk.Name);
@@ -23,180 +22,201 @@ namespace Forgelight.Formats.Cnk
                 //Material
                 if (!File.Exists(directory + @"\" + name + @".mtl"))
                 {
-                    List<string> mtl = new List<string>();
-
-                    string[] baseMtl =
+                    string[] mtl =
                     {
                         "newmtl " + name,
                         "Ka 1.000000 1.000000 1.000000",
                         "Kd 1.000000 1.000000 1.000000",
                         "Ks 0.000000 0.000000 0.000000",
                         "d 1.0",
-                        "illum 2",
-                        "map_Ka " + name + "_colornx" + ".png",
-                        "map_Kd " + name + "_colornx" + ".png",
-                        "map_d " + name + "_colornx" + ".png",
-                        "map_Ks " + name + "_colornx" + ".png",
-                        "map_Ns " + name + "_specny" + ".png"
+                        "illum 1",
+                        "map_Ka " + name + "_colornx" + ".dds",
+                        "map_Kd " + name + "_colornx" + ".dds",
+                        "map_d " + name + "_colornx" + ".dds",
+                        "map_Ks " + name + "_colornx" + ".dds",
+                        "map_Ns " + name + "_specny" + ".dds"
                     };
 
-                    File.WriteAllLines(directory + @"\" + name + @".mtl", mtl.ToArray());
+                    File.WriteAllLines(directory + @"\" + name + @".mtl", mtl);
                 }
             }
             catch (IOException) {}
 
+            //Heighmaps
+            //Texture2D image = new Texture2D((int) chunk.VertsPerSide, (int) chunk.VertsPerSide);
+
+            //byte[] imageData = image.GetRawTextureData();
+
+            //for (int i = 0; i < chunk.HeightMaps.Count; i++)
+            //{
+            //    Dictionary<int, CnkLOD.HeightMap> heightmap = chunk.HeightMaps[i];
+
+            //    uint n = chunk.VertsPerSide*chunk.VertsPerSide;
+
+            //    for (int j = 0; j < n; j++)
+            //    {
+            //        int height = heightmap[j].Val1 + 4096;
+
+            //        imageData[j*4] = (byte) (height >> 8);
+            //        imageData[j*4 + 1] = (byte) (height & 0xFF);
+            //        imageData[j*4 + 2] = 0;
+            //        imageData[j*4 + 3] = 255;
+            //    }
+
+            //    image.LoadRawTextureData(imageData);
+            //}
+
             //Geometry
             string path = directory + @"\" + name + ".obj";
-            using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write))
+
+            if (!File.Exists(path))
             {
-                using (StreamWriter streamWriter = new StreamWriter(fileStream))
+                using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write))
                 {
-                    List<string> vertices = new List<string>();
-                    List<string> uvs = new List<string>();
-                    List<string> faces = new List<string>();
-
-                    streamWriter.WriteLine("mtllib " + name + ".mtl");
-                    streamWriter.WriteLine("o " + name);
-                    streamWriter.WriteLine("g " + name);
-
-                    for (int i = 0; i < 4; i++)
+                    using (StreamWriter streamWriter = new StreamWriter(fileStream))
                     {
-                        uint vertexOffset = chunk.RenderBatches[i].VertexOffset;
-                        uint vertextCount = chunk.RenderBatches[i].VertexCount;
+                        List<string> vertices = new List<string>();
+                        List<string> uvs = new List<string>();
+                        List<string> faces = new List<string>();
 
-                        for (uint j = 0; j < vertextCount; j++)
+                        streamWriter.WriteLine("mtllib " + name + ".mtl");
+                        streamWriter.WriteLine("o " + name);
+                        streamWriter.WriteLine("g " + name);
+
+                        for (int i = 0; i < 4; i++)
                         {
-                            float k = (int) (vertexOffset + j);
-                            float x = chunk.Vertices[(int) k].X + (i >> 1) * 64;
-                            float y = chunk.Vertices[(int) k].Y + (i % 2) * 64;
-                            float heightNear = (float)chunk.Vertices[(int) k].HeightNear / 64 ;
+                            uint vertexOffset = chunk.RenderBatches[i].VertexOffset;
+                            uint vertextCount = chunk.RenderBatches[i].VertexCount;
 
-                            vertices.Add("v " + x + " " + heightNear + " " + y);
-                            uvs.Add("vt " + (y / 128) + " " + (1 - x / 128));
+                            for (uint j = 0; j < vertextCount; j++)
+                            {
+                                float k = (int)(vertexOffset + j);
+                                float x = chunk.Vertices[(int)k].X + (i >> 1) * 64;
+                                float y = chunk.Vertices[(int)k].Y + (i % 2) * 64;
+                                float heightNear = (float)chunk.Vertices[(int)k].HeightNear / 64;
 
+                                vertices.Add("v " + x + " " + heightNear + " " + y);
+                                uvs.Add("vt " + (y / 128) + " " + (1 - x / 128));
+                            }
                         }
-                    }
 
-                    for (int i = 0; i < 4; i++)
-                    {
-                        int indexOffset = (int) chunk.RenderBatches[i].IndexOffset;
-                        uint indexCount = chunk.RenderBatches[i].IndexCount;
-                        uint vertexOffset = chunk.RenderBatches[i].VertexOffset;
-
-                        for (int j = 0; j < indexCount; j += 3)
+                        for (int i = 0; i < 4; i++)
                         {
-                            uint v0 = chunk.Indices[j + indexOffset] + vertexOffset;
-                            uint v1 = chunk.Indices[j + indexOffset + 1] + vertexOffset;
-                            uint v2 = chunk.Indices[j + indexOffset + 2] + vertexOffset;
+                            int indexOffset = (int)chunk.RenderBatches[i].IndexOffset;
+                            uint indexCount = chunk.RenderBatches[i].IndexCount;
+                            uint vertexOffset = chunk.RenderBatches[i].VertexOffset;
 
-                            faces.Add("f " + (v2 + 1) + "/" + (v2 + 1) + " " + (v1 + 1) + "/" + (v1 + 1) + " " + (v0 + 1) + "/" + (v0 + 1));
+                            for (int j = 0; j < indexCount; j += 3)
+                            {
+                                uint v0 = chunk.Indices[j + indexOffset] + vertexOffset;
+                                uint v1 = chunk.Indices[j + indexOffset + 1] + vertexOffset;
+                                uint v2 = chunk.Indices[j + indexOffset + 2] + vertexOffset;
+
+                                faces.Add("f " + (v2 + 1) + "/" + (v2 + 1) + " " + (v1 + 1) + "/" + (v1 + 1) + " " + (v0 + 1) + "/" + (v0 + 1));
+                            }
                         }
-                    }
 
-                    foreach (string vertex in vertices)
-                    {
-                        streamWriter.WriteLine(vertex);
-                    }
+                        foreach (string vertex in vertices)
+                        {
+                            streamWriter.WriteLine(vertex);
+                        }
 
-                    foreach (string uv in uvs)
-                    {
-                        streamWriter.WriteLine(uv);
-                    }
+                        foreach (string uv in uvs)
+                        {
+                            streamWriter.WriteLine(uv);
+                        }
 
-                    streamWriter.WriteLine("usemtl " + name);
+                        streamWriter.WriteLine("usemtl " + name);
 
-                    foreach (string face in faces)
-                    {
-                        streamWriter.WriteLine(face);
+                        foreach (string face in faces)
+                        {
+                            streamWriter.WriteLine(face);
+                        }
                     }
                 }
             }
         }
 
-        //Since creating Texture2D's is not thread safe, we need to call this in the main thread.
-        //TODO Broken - Textures don't seem to be stitched/imported correctly.
-        //public static void ExportTextures(ForgelightGame forgelightGame, CnkLOD chunk, string directory)
+        public static void ExportTextures(ForgelightGame forgelightGame, CnkLOD chunk, string directory)
+        {
+            string name = Path.GetFileNameWithoutExtension(chunk.Name);
+            directory += "/" + name.Split('_')[0];
+
+            MontageSettings montageSettings = new MontageSettings();
+            montageSettings.TileGeometry = new MagickGeometry(2, 2);
+            montageSettings.Geometry = new MagickGeometry(512, 512);
+            montageSettings.BackgroundColor = MagickColor.FromRgba(0, 0, 0, 0);
+            montageSettings.BorderColor = MagickColor.FromRgba(0, 0, 0, 0);
+            montageSettings.BorderWidth = 0;
+
+            //TODO Code Duplication
+            //Color Map
+            string colorMapPath = directory + @"\Textures\" + name + "_colornx" + ".dds";
+
+            if (!File.Exists(colorMapPath))
+            {
+                using (MagickImageCollection stitchedColorMap = new MagickImageCollection())
+                {
+                    for (int i = 0; i < chunk.Textures.Count; i++)
+                    {
+                        CnkLOD.Texture texture = chunk.Textures[i];
+
+                        MagickImage textureQuad = new MagickImage(texture.ColorNXMap.ToArray());
+                        stitchedColorMap.Add(textureQuad);
+                    }
+
+                    using (MagickImage result = stitchedColorMap.Montage(montageSettings))
+                    {
+                        result.Write(colorMapPath);
+                    }
+                }
+            }
+
+            //TODO code duplication
+            //Specular map
+            string specMapPath = directory + @"\Textures\" + name + "_specny" + ".dds";
+
+            if (!File.Exists(specMapPath))
+            {
+                using (MagickImageCollection stitchedSpecMap = new MagickImageCollection())
+                {
+                    for (int i = 0; i < chunk.Textures.Count; i++)
+                    {
+                        CnkLOD.Texture texture = chunk.Textures[i];
+
+                        MagickImage textureQuad = new MagickImage(texture.SpecNyMap.ToArray());
+                        stitchedSpecMap.Add(textureQuad);
+                    }
+
+                    using (MagickImage result = stitchedSpecMap.Montage(montageSettings))
+                    {
+                        result.Write(specMapPath);
+                    }
+                }
+            }
+        }
+
+        //public static Texture2D LoadTextureDXT(byte[] ddsBytes, TextureFormat textureFormat)
         //{
-        //    string name = Path.GetFileNameWithoutExtension(chunk.Name);
-        //    directory += "/" + name.Split('_')[0];
+        //    if (textureFormat != TextureFormat.DXT1 && textureFormat != TextureFormat.DXT5)
+        //        throw new Exception("Invalid TextureFormat. Only DXT1 and DXT5 formats are supported by this method.");
 
-        //    //TODO Code Duplication
-        //    //Color Map
-        //    Texture2D stitchedColorMap = new Texture2D(1024, 1024);
-        //    for (int i = 0; i < chunk.Textures.Count; i++)
-        //    {
-        //        CnkLOD.Texture texture = chunk.Textures[i];
-        //        Texture2D dataStore = new Texture2D(512, 512);
+        //    byte ddsSizeCheck = ddsBytes[4];
+        //    if (ddsSizeCheck != 124)
+        //        throw new Exception("Invalid DDS DXTn texture. Unable to read");  //this header byte should be 124 for DDS image files
 
-        //        dataStore.LoadImage(texture.ColorNXMap.ToArray());
+        //    int height = ddsBytes[13] * 256 + ddsBytes[12];
+        //    int width = ddsBytes[17] * 256 + ddsBytes[16];
 
-        //        for (int j = 0; j < dataStore.GetPixels().Length; j++)
-        //        {
-        //            //Local pixel coordinate.
-        //            int x = j % 512;
-        //            int y = j / 512;
+        //    int DDS_HEADER_SIZE = 128;
+        //    byte[] dxtBytes = new byte[ddsBytes.Length - DDS_HEADER_SIZE];
+        //    Buffer.BlockCopy(ddsBytes, DDS_HEADER_SIZE, dxtBytes, 0, ddsBytes.Length - DDS_HEADER_SIZE);
 
-        //            Color pixel = dataStore.GetPixel(x, y);
+        //    Texture2D texture = new Texture2D(width, height, textureFormat, false);
+        //    texture.LoadRawTextureData(dxtBytes);
+        //    texture.Apply();
 
-        //            //Stitched coordinate.
-        //            int stitchedX = ((i % 2) * 512) + x;
-        //            int stitchedY = ((i / 2) * 512) + y;
-
-        //            stitchedColorMap.SetPixel(stitchedX, stitchedY, pixel);
-        //        }
-
-        //        stitchedColorMap.Apply();
-        //    }
-
-        //    string colorMapPath = directory + @"\Textures\" + name + "_colornx" + ".png";
-        //    byte[] colorMap = stitchedColorMap.EncodeToPNG();
-
-        //    if (!File.Exists(colorMapPath))
-        //    {
-        //        using (FileStream file = File.Create(colorMapPath))
-        //        {
-        //            file.Write(colorMap, 0, colorMap.Length);
-        //        }
-        //    }
-
-        //    //TODO code duplication
-        //    //Specular map
-        //    Texture2D stitchedSpecMap = new Texture2D(1024, 1024);
-        //    for (int i = 0; i < chunk.Textures.Count; i++)
-        //    {
-        //        CnkLOD.Texture texture = chunk.Textures[i];
-        //        Texture2D dataStore = new Texture2D(512, 512);
-
-        //        dataStore.LoadImage(texture.SpecNyMap.ToArray());
-
-        //        for (int j = 0; j < dataStore.GetPixels().Length; j++)
-        //        {
-        //            //Local pixel coordinate.
-        //            int x = j % 512;
-        //            int y = j / 512;
-
-        //            Color pixel = dataStore.GetPixel(x, y);
-
-        //            //Stitched coordinate.
-        //            int stitchedX = ((i % 2) * 512) + x;
-        //            int stitchedY = ((i / 2) * 512) + y;
-
-        //            stitchedSpecMap.SetPixel(stitchedX, stitchedY, pixel);
-        //        }
-
-        //        stitchedSpecMap.Apply();
-        //    }
-
-        //    string specMapPath = directory + @"\Textures\" + name + "_specny" + ".png";
-        //    byte[] specMap = stitchedSpecMap.EncodeToPNG();
-
-        //    if (!File.Exists(specMapPath))
-        //    {
-        //        using (FileStream file = File.Create(specMapPath))
-        //        {
-        //            file.Write(specMap, 0, specMap.Length);
-        //        }
-        //    }
+        //    return (texture);
         //}
     }
 }

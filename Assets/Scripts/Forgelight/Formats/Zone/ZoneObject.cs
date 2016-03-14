@@ -141,22 +141,28 @@ namespace Forgelight.Formats.Zone
 
         public void Hide()
         {
-            foreach (Transform child in transform)
+            if (visible)
             {
-                child.gameObject.SetActive(false);
-            }
+                foreach (Transform child in transform)
+                {
+                    child.gameObject.SetActive(false);
+                }
 
-            visible = false;
+                visible = false;
+            }
         }
 
         public void Show()
         {
-            foreach (Transform child in transform)
+            if (!visible)
             {
-                child.gameObject.SetActive(true);
-            }
+                foreach (Transform child in transform)
+                {
+                    child.gameObject.SetActive(true);
+                }
 
-            visible = true;
+                visible = true;
+            }
         }
 
         public void DestroyObject(GameObject objToDestroy)

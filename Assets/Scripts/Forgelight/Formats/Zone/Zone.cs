@@ -225,10 +225,11 @@ namespace Forgelight.Formats.Zone
             offsets["unknowns"] = (uint) binaryWriter.BaseStream.Position;
             binaryWriter.Write((uint) zone.Unknowns.Count);
 
-            foreach (Unknown unknown in zone.Unknowns)
-            {
-                //???
-            }
+            //???
+            //foreach (Unknown unknown in zone.Unknowns)
+            //{
+
+            //}
 
             //Update offset values.
             binaryWriter.BaseStream.Seek(offsetsPosition, SeekOrigin.Begin);

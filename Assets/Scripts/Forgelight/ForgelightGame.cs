@@ -153,13 +153,6 @@ namespace Forgelight
                     zoneName = rawZoneName +  " (" + zones[i].Pack.Name + ")";
                 }
 
-                //int j = 0;
-                //while (AvailableZones.ContainsKey(zoneName))
-                //{
-                //    j++;
-                //    zoneName = string.Format("{0} ({1})", rawZoneName, j);
-                //}
-
                 AvailableZones[zoneName] = zone;
             }
         }
@@ -174,30 +167,23 @@ namespace Forgelight
 
             Parallel.AsyncForEach(modelAssets, asset =>
             {
-                //Ignore auto-generated LOD's
-                if (asset.Name.EndsWith("Auto.dme"))
+                //Ignore auto-generated LOD's and Don't export if the file already exists.
+                if (!asset.Name.EndsWith("Auto.dme") && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
                 {
-                    return;
-                }
-
-                //Don't export if the file already exists.
-                if (File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
-                {
-                    return;
-                }
-
-                using (MemoryStream modelMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
-                {
-                    Model model = Model.LoadFromStream(asset.Name, modelMemoryStream);
-
-                    if (model != null)
+                    using (MemoryStream modelMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                     {
-                        ModelExporter.ExportModel(this, model, ResourceDirectory + "/Models");
+                        Model model = Model.LoadFromStream(asset.Name, modelMemoryStream);
+
+                        if (model != null)
+                        {
+                            ModelExporter.ExportModel(this, model, ResourceDirectory + "/Models");
+                        }
                     }
+
+                    lastAssetProcessed = asset.Name;
                 }
 
                 Interlocked.Increment(ref modelsProcessed);
-                lastAssetProcessed = asset.Name;
             });
 
             while (modelsProcessed < modelAssets.Count)
@@ -249,7 +235,7 @@ namespace Forgelight
                     CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
 
                     ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
-                    //ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
+                    ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
 
                     Interlocked.Increment(ref chunksProcessed);
                     lastAssetProcessed = chunk.Name;

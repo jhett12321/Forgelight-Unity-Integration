@@ -64,9 +64,6 @@ namespace Forgelight.Formats.Zone
         public void DestroyAllObjects()
         {
             Destroy(gameObject);
-
-            //Creates a new instance
-            ZoneObjectFactory zoneObjectFactory = ForgelightExtension.Instance.ZoneObjectFactory;
         }
 
         public void UpdateForgelightObject(ForgelightGame forgelightGame, ZoneObject forgeLightObject, string newActorDefinition)

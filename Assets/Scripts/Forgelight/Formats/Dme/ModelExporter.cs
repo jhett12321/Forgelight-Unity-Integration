@@ -82,23 +82,25 @@
 
             string path = directory + @"\" + Path.GetFileNameWithoutExtension(model.Name) + ".obj";
 
-            using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write))
+            if (!File.Exists(path))
             {
-                using (StreamWriter streamWriter = new StreamWriter(fileStream))
+                using (FileStream fileStream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Write))
                 {
-                    //Custom Material
-                    for (Int32 i = 0; i < model.Meshes.Length; ++i)
+                    using (StreamWriter streamWriter = new StreamWriter(fileStream))
                     {
-                        Mesh mesh = model.Meshes[i];
-
-                        if (mesh.BaseDiffuse != null)
+                        //Custom Material
+                        for (Int32 i = 0; i < model.Meshes.Length; ++i)
                         {
-                            if (!File.Exists(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl"))
-                            {
-                                List<string> mtl = new List<string>();
+                            Mesh mesh = model.Meshes[i];
 
-                                string[] baseMtl =
+                            if (mesh.BaseDiffuse != null)
+                            {
+                                if (!File.Exists(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl"))
                                 {
+                                    List<string> mtl = new List<string>();
+
+                                    string[] baseMtl =
+                                    {
                                     "newmtl " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse),
                                     "Ka 1.000000 1.000000 1.000000",
                                     "Kd 1.000000 1.000000 1.000000",
@@ -110,132 +112,133 @@
                                     "map_d " + mesh.BaseDiffuse
                                 };
 
-                                mtl.AddRange(baseMtl);
+                                    mtl.AddRange(baseMtl);
 
-                                if (mesh.SpecMap != null)
-                                {
-                                    mtl.Add("map_Ks " + mesh.BaseDiffuse);
-                                    mtl.Add("map_Ns " + mesh.SpecMap);
+                                    if (mesh.SpecMap != null)
+                                    {
+                                        mtl.Add("map_Ks " + mesh.BaseDiffuse);
+                                        mtl.Add("map_Ns " + mesh.SpecMap);
+                                    }
+
+                                    if (mesh.BumpMap != null)
+                                    {
+                                        mtl.Add("bump " + mesh.BumpMap);
+                                    }
+
+                                    File.WriteAllLines(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl", mtl.ToArray());
                                 }
 
-                                if (mesh.BumpMap != null)
-                                {
-                                    mtl.Add("bump " + mesh.BumpMap);
-                                }
-
-                                File.WriteAllLines(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl", mtl.ToArray());
+                                streamWriter.WriteLine("mtllib " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + ".mtl");
                             }
-
-                            streamWriter.WriteLine("mtllib " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + ".mtl");
-                        }
-                    }
-
-                    for (Int32 i = 0; i < model.Meshes.Length; ++i)
-                    {
-                        Mesh mesh = model.Meshes[i];
-
-                        MaterialDefinition materialDefinition = forgelightGame.MaterialDefinitionManager.MaterialDefinitions[model.Materials[(Int32) mesh.MaterialIndex].MaterialDefinitionHash];
-                        VertexLayout vertexLayout = forgelightGame.MaterialDefinitionManager.VertexLayouts[materialDefinition.DrawStyles[0].VertexLayoutNameHash];
-
-                        //position
-                        VertexLayout.Entry.DataTypes positionDataType;
-                        Int32 positionOffset;
-                        Int32 positionStreamIndex;
-
-                        vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Position, 0, out positionDataType, out positionStreamIndex, out positionOffset);
-
-                        Mesh.VertexStream positionStream = mesh.VertexStreams[positionStreamIndex];
-
-                        for (Int32 j = 0; j < mesh.VertexCount; ++j)
-                        {
-                            Vector3 position = ReadVector3(positionOffset, positionStream, j);
-
-                            streamWriter.WriteLine("v " + position.x.ToString(format) + " " + position.y.ToString(format) + " " + position.z.ToString(format));
                         }
 
-                        //texture coordinates
-                        VertexLayout.Entry.DataTypes texCoord0DataType;
-                        Int32 texCoord0Offset = 0;
-                        Int32 texCoord0StreamIndex = 0;
-
-                        Boolean texCoord0Present = vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Texcoord, 0, out texCoord0DataType, out texCoord0StreamIndex, out texCoord0Offset);
-
-                        if (texCoord0Present)
+                        for (Int32 i = 0; i < model.Meshes.Length; ++i)
                         {
-                            Mesh.VertexStream texCoord0Stream = mesh.VertexStreams[texCoord0StreamIndex];
+                            Mesh mesh = model.Meshes[i];
+
+                            MaterialDefinition materialDefinition = forgelightGame.MaterialDefinitionManager.MaterialDefinitions[model.Materials[(Int32)mesh.MaterialIndex].MaterialDefinitionHash];
+                            VertexLayout vertexLayout = forgelightGame.MaterialDefinitionManager.VertexLayouts[materialDefinition.DrawStyles[0].VertexLayoutNameHash];
+
+                            //position
+                            VertexLayout.Entry.DataTypes positionDataType;
+                            Int32 positionOffset;
+                            Int32 positionStreamIndex;
+
+                            vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Position, 0, out positionDataType, out positionStreamIndex, out positionOffset);
+
+                            Mesh.VertexStream positionStream = mesh.VertexStreams[positionStreamIndex];
 
                             for (Int32 j = 0; j < mesh.VertexCount; ++j)
                             {
-                                Vector2 texCoord;
+                                Vector3 position = ReadVector3(positionOffset, positionStream, j);
 
-                                switch (texCoord0DataType)
+                                streamWriter.WriteLine("v " + position.x.ToString(format) + " " + position.y.ToString(format) + " " + position.z.ToString(format));
+                            }
+
+                            //texture coordinates
+                            VertexLayout.Entry.DataTypes texCoord0DataType;
+                            Int32 texCoord0Offset = 0;
+                            Int32 texCoord0StreamIndex = 0;
+
+                            Boolean texCoord0Present = vertexLayout.GetEntryInfoFromDataUsageAndUsageIndex(VertexLayout.Entry.DataUsages.Texcoord, 0, out texCoord0DataType, out texCoord0StreamIndex, out texCoord0Offset);
+
+                            if (texCoord0Present)
+                            {
+                                Mesh.VertexStream texCoord0Stream = mesh.VertexStreams[texCoord0StreamIndex];
+
+                                for (Int32 j = 0; j < mesh.VertexCount; ++j)
                                 {
-                                    case VertexLayout.Entry.DataTypes.Float2:
+                                    Vector2 texCoord;
+
+                                    switch (texCoord0DataType)
                                     {
-                                        texCoord.x = BitConverter.ToSingle(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + 0);
-                                        texCoord.y = 1.0f - BitConverter.ToSingle(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + 4);
-                                        break;
+                                        case VertexLayout.Entry.DataTypes.Float2:
+                                            {
+                                                texCoord.x = BitConverter.ToSingle(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + 0);
+                                                texCoord.y = 1.0f - BitConverter.ToSingle(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + 4);
+                                                break;
+                                            }
+
+                                        case VertexLayout.Entry.DataTypes.float16_2:
+                                            {
+                                                texCoord.x = Half.FromBytes(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 0);
+                                                texCoord.y = 1.0f - Half.FromBytes(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 2);
+                                                break;
+                                            }
+
+                                        default:
+                                            texCoord.x = 0;
+                                            texCoord.y = 0;
+                                            break;
                                     }
 
-                                    case VertexLayout.Entry.DataTypes.float16_2:
-                                    {
-                                        texCoord.x = Half.FromBytes(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 0);
-                                        texCoord.y = 1.0f - Half.FromBytes(texCoord0Stream.Data, (j * texCoord0Stream.BytesPerVertex) + texCoord0Offset + 2);
-                                        break;
-                                     }
+                                    streamWriter.WriteLine("vt " + texCoord.x.ToString(format) + " " + texCoord.y.ToString(format));
+                                }
+                            }
+                        }
 
+                        //faces
+                        UInt32 vertexCount = 0;
+
+                        for (Int32 i = 0; i < model.Meshes.Length; ++i)
+                        {
+                            Mesh mesh = model.Meshes[i];
+                            streamWriter.WriteLine("g Mesh" + i);
+
+                            //Custom Material
+                            if (mesh.BaseDiffuse != null)
+                            {
+                                streamWriter.WriteLine("usemtl " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse));
+                            }
+
+                            for (Int32 j = 0; j < mesh.IndexCount; j += 3)
+                            {
+                                UInt32 index0, index1, index2;
+
+                                switch (mesh.IndexSize)
+                                {
+                                    case 2:
+                                        index0 = vertexCount + BitConverter.ToUInt16(mesh.IndexData, (j * 2) + 0) + 1;
+                                        index1 = vertexCount + BitConverter.ToUInt16(mesh.IndexData, (j * 2) + 2) + 1;
+                                        index2 = vertexCount + BitConverter.ToUInt16(mesh.IndexData, (j * 2) + 4) + 1;
+                                        break;
+                                    case 4:
+                                        index0 = vertexCount + BitConverter.ToUInt32(mesh.IndexData, (j * 4) + 0) + 1;
+                                        index1 = vertexCount + BitConverter.ToUInt32(mesh.IndexData, (j * 4) + 4) + 1;
+                                        index2 = vertexCount + BitConverter.ToUInt32(mesh.IndexData, (j * 4) + 8) + 1;
+                                        break;
                                     default:
-                                        texCoord.x = 0;
-                                        texCoord.y = 0;
+                                        index0 = 0;
+                                        index1 = 0;
+                                        index2 = 0;
                                         break;
                                 }
 
-                                streamWriter.WriteLine("vt " + texCoord.x.ToString(format) + " " + texCoord.y.ToString(format));
-                            }
-                        }
-                    }
-
-                    //faces
-                    UInt32 vertexCount = 0;
-
-                    for (Int32 i = 0; i < model.Meshes.Length; ++i)
-                    {
-                        Mesh mesh = model.Meshes[i];
-                        streamWriter.WriteLine("g Mesh" + i);
-
-                        //Custom Material
-                        if (mesh.BaseDiffuse != null)
-                        {
-                            streamWriter.WriteLine("usemtl " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse));
-                        }
-
-                        for (Int32 j = 0; j < mesh.IndexCount; j += 3)
-                        {
-                            UInt32 index0, index1, index2;
-
-                            switch (mesh.IndexSize)
-                            {
-                                case 2:
-                                    index0 = vertexCount + BitConverter.ToUInt16(mesh.IndexData, (j*2) + 0) + 1;
-                                    index1 = vertexCount + BitConverter.ToUInt16(mesh.IndexData, (j*2) + 2) + 1;
-                                    index2 = vertexCount + BitConverter.ToUInt16(mesh.IndexData, (j*2) + 4) + 1;
-                                    break;
-                                case 4:
-                                    index0 = vertexCount + BitConverter.ToUInt32(mesh.IndexData, (j*4) + 0) + 1;
-                                    index1 = vertexCount + BitConverter.ToUInt32(mesh.IndexData, (j*4) + 4) + 1;
-                                    index2 = vertexCount + BitConverter.ToUInt32(mesh.IndexData, (j*4) + 8) + 1;
-                                    break;
-                                default:
-                                    index0 = 0;
-                                    index1 = 0;
-                                    index2 = 0;
-                                    break;
+                                streamWriter.WriteLine("f " + index2 + "/" + index2 + "/" + index2 + " " + index1 + "/" + index1 + "/" + index1 + " " + index0 + "/" + index0 + "/" + index0);
                             }
 
-                            streamWriter.WriteLine("f " + index2 + "/" + index2 + "/" + index2 + " " + index1 + "/" + index1 + "/" + index1 + " " + index0 + "/" + index0 + "/" + index0);
+                            vertexCount += (UInt32)mesh.VertexCount;
                         }
-
-                        vertexCount += (UInt32) mesh.VertexCount;
                     }
                 }
             }
