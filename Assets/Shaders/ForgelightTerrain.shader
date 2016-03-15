@@ -38,16 +38,14 @@
 
             //Packed Specular:
             //R = metallic, B = emission, G = gloss, A = smoothness
-            o.Metallic = ps.r;
+            //o.Metallic = ps.r;
 
             //o.Emission = ps.b;
 
-            if(ps.a > 0)
-            {
-                o.Smoothness = 1 - ps.a;
-            }
-
-            o.Alpha = c.a;
+            //if(ps.a > 0)
+            //{
+            //    o.Smoothness = 1 - ps.a;
+            //}
         }
         ENDCG
     }

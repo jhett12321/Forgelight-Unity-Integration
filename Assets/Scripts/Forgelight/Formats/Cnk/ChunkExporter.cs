@@ -90,10 +90,10 @@ namespace Forgelight.Formats.Cnk
 
                             for (uint j = 0; j < vertextCount; j++)
                             {
-                                float k = (int)(vertexOffset + j);
-                                float x = chunk.Vertices[(int)k].X + (i >> 1) * 64;
-                                float y = chunk.Vertices[(int)k].Y + (i % 2) * 64;
-                                float heightNear = (float)chunk.Vertices[(int)k].HeightNear / 64;
+                                int k = (int)(vertexOffset + j);
+                                double x = chunk.Vertices[k].X + (i >> 1) * 64;
+                                double y = chunk.Vertices[k].Y + (i % 2) * 64;
+                                double heightNear = (double)chunk.Vertices[k].HeightNear / 64;
 
                                 vertices.Add("v " + x + " " + heightNear + " " + y);
                                 uvs.Add("vt " + (y / 128) + " " + (1 - x / 128));

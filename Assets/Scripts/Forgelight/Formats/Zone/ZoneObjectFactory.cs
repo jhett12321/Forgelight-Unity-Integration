@@ -63,7 +63,7 @@ namespace Forgelight.Formats.Zone
 
         public void DestroyAllObjects()
         {
-            Destroy(gameObject);
+            DestroyImmediate(gameObject);
         }
 
         public void UpdateForgelightObject(ForgelightGame forgelightGame, ZoneObject forgeLightObject, string newActorDefinition)

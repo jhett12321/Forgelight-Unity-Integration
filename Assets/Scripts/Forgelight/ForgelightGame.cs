@@ -189,7 +189,10 @@ namespace Forgelight
 
             while (modelsProcessed < modelAssets.Count && backgroundWorker.IsBusy)
             {
-                ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
+                lock (lastAssetProcessed)
+                {
+                    ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
+                }
             }
 
             backgroundWorker.Dispose();
@@ -247,7 +250,10 @@ namespace Forgelight
 
             while (chunksProcessed < terrainAssetsCnk1.Count && backgroundWorker.IsBusy)
             {
-                ProgressBar(MathUtils.RemapProgress((float)chunksProcessed / (float)terrainAssetsCnk1.Count, progress0, progress100), "Exporting Chunk: " + lastAssetProcessed);
+                lock (lastAssetProcessed)
+                {
+                    ProgressBar(MathUtils.RemapProgress((float)chunksProcessed / (float)terrainAssetsCnk1.Count, progress0, progress100), "Exporting Chunk: " + lastAssetProcessed);
+                }
             }
 
             backgroundWorker.Dispose();
