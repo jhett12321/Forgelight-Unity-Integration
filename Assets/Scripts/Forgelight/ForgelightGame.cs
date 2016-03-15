@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using Forgelight.Formats.Cnk;
@@ -165,7 +166,7 @@ namespace Forgelight
             int modelsProcessed = 0;
             string lastAssetProcessed = "";
 
-            Parallel.AsyncForEach(modelAssets, asset =>
+            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(modelAssets, asset =>
             {
                 //Ignore auto-generated LOD's and Don't export if the file already exists.
                 if (!asset.Name.EndsWith("Auto.dme") && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
@@ -186,10 +187,12 @@ namespace Forgelight
                 Interlocked.Increment(ref modelsProcessed);
             });
 
-            while (modelsProcessed < modelAssets.Count)
+            while (modelsProcessed < modelAssets.Count && backgroundWorker.IsBusy)
             {
                 ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
             }
+
+            backgroundWorker.Dispose();
         }
 
         //TODO Less Code Duplication.
@@ -228,7 +231,7 @@ namespace Forgelight
             List<Asset> terrainAssetsCnk1 = AssetsByType[Asset.Types.CNK1];
             chunksProcessed = 0;
 
-            Parallel.AsyncForEach(terrainAssetsCnk1, asset =>
+            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(terrainAssetsCnk1, asset =>
             {
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
@@ -242,10 +245,12 @@ namespace Forgelight
                 }
             });
 
-            while (chunksProcessed < terrainAssetsCnk1.Count)
+            while (chunksProcessed < terrainAssetsCnk1.Count && backgroundWorker.IsBusy)
             {
                 ProgressBar(MathUtils.RemapProgress((float)chunksProcessed / (float)terrainAssetsCnk1.Count, progress0, progress100), "Exporting Chunk: " + lastAssetProcessed);
             }
+
+            backgroundWorker.Dispose();
 
             ////CNK2
             //ProgressBar(progress0 + MathUtils.RemapProgress(0.50f, progress0, progress100), "Exporting Terrain Data (LOD 2)...");
