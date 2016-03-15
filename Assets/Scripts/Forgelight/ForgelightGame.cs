@@ -187,7 +187,13 @@ namespace Forgelight
                 Interlocked.Increment(ref modelsProcessed);
             });
 
-            while (modelsProcessed < modelAssets.Count && backgroundWorker.IsBusy)
+            bool completed = false;
+            backgroundWorker.RunWorkerCompleted += delegate
+            {
+                completed = true;
+            };
+
+            while (!completed)
             {
                 lock (lastAssetProcessed)
                 {
@@ -248,7 +254,13 @@ namespace Forgelight
                 }
             });
 
-            while (chunksProcessed < terrainAssetsCnk1.Count && backgroundWorker.IsBusy)
+            bool completed = false;
+            backgroundWorker.RunWorkerCompleted += delegate
+            {
+                completed = true;
+            };
+
+            while (!completed)
             {
                 lock (lastAssetProcessed)
                 {
