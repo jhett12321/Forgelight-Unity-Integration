@@ -166,8 +166,8 @@ namespace Forgelight
             int modelsProcessed = 0;
             string lastAssetProcessed = "";
 
-            //BackgroundWorker backgroundWorker = Parallel.AsyncForEach(modelAssets, asset =>
-            foreach (Asset asset in modelAssets)
+            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, modelAssets, asset =>
+            //foreach (Asset asset in modelAssets)
             {
                 //Ignore auto-generated LOD's and Don't export if the file already exists.
                 if (!asset.Name.EndsWith("Auto.dme") && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
@@ -186,15 +186,15 @@ namespace Forgelight
                 }
 
                 Interlocked.Increment(ref modelsProcessed);
+                //ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
+            });
+
+            while (modelsProcessed < modelAssets.Count && backgroundWorker.IsBusy)
+            {
                 ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
-            }//);
+            }
 
-            //while (modelsProcessed < modelAssets.Count && backgroundWorker.IsBusy)
-            //{
-            //    ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
-            //}
-
-            //backgroundWorker.Dispose();
+            backgroundWorker.Dispose();
         }
 
         //TODO Less Code Duplication.
@@ -203,6 +203,7 @@ namespace Forgelight
         public void ExportTerrain(float progress0, float progress100)
         {
             int chunksProcessed = 0;
+            int texturesProcessed = 0;
             string lastAssetProcessed = "";
 
             //CNK0
@@ -229,33 +230,45 @@ namespace Forgelight
             //    //ProgressBar(MathUtils.RemapProgress((float)terrainAssetsCnk0Processed / (float)terrainAssetsCnk0.Count, progress0, progress100), "Exporting Chunk (LOD0): " + Path.GetFileName(asset.Name));
             //});
 
-            //CNK1
+            //CNK1 (Geo)
             List<Asset> terrainAssetsCnk1 = AssetsByType[Asset.Types.CNK1];
             chunksProcessed = 0;
 
-            //BackgroundWorker backgroundWorker = Parallel.AsyncForEach(terrainAssetsCnk1, asset =>
-            foreach (Asset asset in terrainAssetsCnk1)
+            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, terrainAssetsCnk1, asset =>
             {
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
                     CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
 
                     ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
-                    ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
 
                     Interlocked.Increment(ref chunksProcessed);
                     lastAssetProcessed = chunk.Name;
-
-                    ProgressBar(MathUtils.RemapProgress((float)chunksProcessed / (float)terrainAssetsCnk1.Count, progress0, progress100), "Exporting Chunk: " + lastAssetProcessed);
                 }
-            }//);
+            });
 
-            //while (chunksProcessed < terrainAssetsCnk1.Count && backgroundWorker.IsBusy)
-            //{
-            //    ProgressBar(MathUtils.RemapProgress((float)chunksProcessed / (float)terrainAssetsCnk1.Count, progress0, progress100), "Exporting Chunk: " + lastAssetProcessed);
-            //}
+            //CNK1 (Textures)
+            foreach (Asset asset in terrainAssetsCnk1)
+            {
+                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+                {
+                    CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
 
-            //backgroundWorker.Dispose();
+                    ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
+
+                    texturesProcessed++;
+                    lastAssetProcessed = chunk.Name;
+
+                    ProgressBar(MathUtils.RemapProgress((float)texturesProcessed + (float)chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk Texture: " + lastAssetProcessed);
+                }
+            }
+
+            while (chunksProcessed < terrainAssetsCnk1.Count && backgroundWorker.IsBusy)
+            {
+                ProgressBar(MathUtils.RemapProgress((float)texturesProcessed + (float)chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk Texture: " + lastAssetProcessed);
+            }
+
+            backgroundWorker.Dispose();
 
             ////CNK2
             //ProgressBar(progress0 + MathUtils.RemapProgress(0.50f, progress0, progress100), "Exporting Terrain Data (LOD 2)...");

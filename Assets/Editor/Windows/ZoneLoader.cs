@@ -82,7 +82,7 @@ namespace Forgelight.Editor.Windows
         {
             if (DialogUtils.DisplayCancelableDialog("Changing Zone", "You have selected a new zone. Changing zones will DESTROY all objects and terrain in the current scene, and you will lose any unsaved changes. Are you sure you wish to continue?"))
             {
-                ForgelightExtension.Instance.ZoneManager.LoadZone(forgelightGame, zone);
+                ForgelightExtension.Instance.ZoneManager.ChangeZone(forgelightGame, zone);
             }
         }
     }

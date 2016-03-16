@@ -12,7 +12,7 @@ public class Parallel
         NumberOfParallelTasks = Environment.ProcessorCount;
     }
 
-    public static BackgroundWorker AsyncForEach<T>(IEnumerable<T> enumerable, Action<T> action)
+    public static BackgroundWorker AsyncForEach<T>(bool autoDispose, IEnumerable<T> enumerable, Action<T> action)
     {
         BackgroundWorker backgroundWorker = new BackgroundWorker();
 
@@ -20,6 +20,14 @@ public class Parallel
         {
             ForEach(enumerable, action);
         };
+
+        if (autoDispose)
+        {
+            backgroundWorker.RunWorkerCompleted += delegate
+            {
+                backgroundWorker.Dispose();
+            };
+        }
 
         backgroundWorker.RunWorkerAsync();
 
@@ -63,7 +71,7 @@ public class Parallel
         }
     }
 
-    delegate void InvokeAsync<T>(IEnumerator<T> enumerator, Action<T> achtion, T item, object syncRoot, int i);
+    delegate void InvokeAsync<T>(IEnumerator<T> enumerator, Action<T> action, T item, object syncRoot, int i);
 
     static void InvokeAction<T>(IEnumerator<T> enumerator, Action<T> action, T item, object syncRoot, int i)
     {

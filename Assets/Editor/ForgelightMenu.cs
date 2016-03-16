@@ -14,29 +14,12 @@ public class ForgelightMenu : Editor
         ForgelightExtension.Instance.ForgelightGameFactory.OpenForgelightGameFolder();
     }
 
-    [MenuItem("Forgelight/Create/New Object")]
-    public static void CreateZoneObject()
-    {
-        //GameObject newObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject("default", ForgelightExtension.Instance.LastCameraPos, Quaternion.identity);
-        //Selection.activeGameObject = newObject;
-    }
-
-    [MenuItem("Forgelight/Delete/Terrain")]
-    public static void DeleteTerrain()
-    {
-        GameObject terrain = GameObject.FindWithTag("Terrain");
-
-        if (terrain != null)
-        {
-            DestroyImmediate(terrain);
-        }
-    }
-
-    [MenuItem("Forgelight/Delete/All Zone Objects")]
+    [MenuItem("Forgelight/Delete Zone")]
     public static void DeleteZoneObjects()
     {
-        if (DialogUtils.DisplayCancelableDialog("Delete Zone Objects", "This will destroy all objects current scene, and you will lose any unsaved changes. This cannot be undone. Are you sure you wish to continue?"))
+        if (DialogUtils.DisplayCancelableDialog("Delete Zone", "This will destroy all objects and terrain in the current scene, and you will lose any unsaved changes. This cannot be undone. Are you sure you wish to continue?"))
         {
+            ForgelightExtension.Instance.ChunkLoader.DestroyTerrain();
             ForgelightExtension.Instance.ZoneObjectFactory.DestroyAllObjects();
         }
     }

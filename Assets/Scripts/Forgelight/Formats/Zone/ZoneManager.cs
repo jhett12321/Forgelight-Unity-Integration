@@ -14,8 +14,14 @@ namespace Forgelight.Formats.Zone
         private bool running = false;
         public Zone LoadedZone { get; private set; }
 
-        public void LoadZone(ForgelightGame forgelightGame, Zone zone)
+        public void ChangeZone(ForgelightGame forgelightGame, Zone zone)
         {
+            //Destroy any objects in the current zone.
+            ForgelightExtension.Instance.ZoneObjectFactory.DestroyAllObjects();
+
+            //Destroy the terrain
+            ForgelightExtension.Instance.ChunkLoader.DestroyTerrain();
+
             running = true;
 
             int totalObjects = 0;

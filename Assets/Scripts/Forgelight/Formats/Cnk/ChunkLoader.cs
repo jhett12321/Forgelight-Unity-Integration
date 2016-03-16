@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.IO;
 using Forgelight.Formats.Zone;
 using UnityEditor;
@@ -15,6 +14,16 @@ namespace Forgelight.Formats.Cnk
         private int totalResources = 0;
         private int resourcesProcessed = 0;
         private string currentChunk = "";
+
+        public void DestroyTerrain()
+        {
+            GameObject terrain = GameObject.FindWithTag("Terrain");
+
+            if (terrain != null)
+            {
+                GameObject.DestroyImmediate(terrain);
+            }
+        }
 
         public void LoadTerrain(ForgelightGame forgelightGame, string contPrefix)
         {
