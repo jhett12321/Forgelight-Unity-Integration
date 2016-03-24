@@ -14,6 +14,8 @@ namespace Forgelight.Formats.Zone
 
         public void ChangeZone(ForgelightGame forgelightGame, Zone zone)
         {
+            LoadedZone = zone;
+
             //Destroy any objects in the current zone.
             ForgelightExtension.Instance.ZoneObjectFactory.DestroyAllObjects();
 
@@ -57,11 +59,10 @@ namespace Forgelight.Formats.Zone
             ZoneObjectFactory.transform.localScale = new Vector3(-1, 1, 1);
 
             //Load this zone's terrain, if it exists
-            ForgelightExtension.Instance.ChunkLoader.LoadTerrain(forgelightGame, Path.GetFileNameWithoutExtension(zone.Name));
+            ForgelightExtension.Instance.ChunkLoader.LoadTerrain(forgelightGame, Path.GetFileNameWithoutExtension(zone.Name), 0.50f, 1.0f);
 
             //Unload any unused assets.
             OnLoadComplete();
-            LoadedZone = zone;
         }
 
         /// <summary>
@@ -138,10 +139,7 @@ namespace Forgelight.Formats.Zone
 
         private void ProgressBar(float progress, string currentTask)
         {
-            if (EditorUtility.DisplayCancelableProgressBar("Loading Zone", currentTask, progress))
-            {
-                OnLoadComplete();
-            }
+            EditorUtility.DisplayProgressBar("Loading Zone: " + LoadedZone.Name, currentTask, progress);
         }
 
         private Vector3 ConvertForgelightPosition(Vector4 fPos)

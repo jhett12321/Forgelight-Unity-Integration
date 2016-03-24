@@ -13,12 +13,8 @@ namespace Forgelight.Formats.Zone
         public string actorDefinition;
         public float renderDistance;
 
-        private float farDistance = 200.0f;
-
-        //TODO HACK make this interval determined by the player's current position.
-        private readonly float interval = 5.0f;
-        private readonly float farInterval = 15.0f;
-        private float target = 5.0f;
+        private const float gracePeriod = 3.0f;
+        private float target = 3.0f;
 
         /// <summary>
         /// Indicates whether an object should cast shadows. We mostly turn this on (on indicates don't cast shadows, oddly) when an object is indoors (being indoors, shadows don't really matter).
@@ -66,6 +62,13 @@ namespace Forgelight.Formats.Zone
         private Renderer[] renderers;
         private List<GameObject> objectsToDestroy = new List<GameObject>();
 
+        private ForgelightExtension forgelightExtension;
+
+        private void OnEnable()
+        {
+            forgelightExtension = ForgelightExtension.Instance;
+        }
+
         private void OnValidate()
         {
             if (actorDefinition != currentActorDef)
@@ -86,14 +89,16 @@ namespace Forgelight.Formats.Zone
 
         private void OnRenderObject()
         {
+            if (forgelightExtension.cameraPosChanged)
+            {
+                target = Time.realtimeSinceStartup + gracePeriod;
+            }
+
             if (Time.realtimeSinceStartup >= target)
             {
                 Vector3 offset = transform.position - ForgelightExtension.Instance.LastCameraPos;
 
                 float sqrMagnitude = offset.sqrMagnitude;
-
-                bool isFar = false;
-
                 if (sqrMagnitude <= renderDistance * renderDistance)
                 {
                     Show();
@@ -102,19 +107,9 @@ namespace Forgelight.Formats.Zone
                 else
                 {
                     Hide();
-
-                    if (sqrMagnitude > renderDistance * renderDistance + farDistance * farDistance)
-                    {
-                        isFar = true;
-                    }
                 }
 
-                target = Time.realtimeSinceStartup + interval;
-
-                if (isFar)
-                {
-                    target += farInterval;
-                }
+                target = float.MaxValue; //We don't need to update until we move again.
             }
 
             foreach (Transform child in transform)

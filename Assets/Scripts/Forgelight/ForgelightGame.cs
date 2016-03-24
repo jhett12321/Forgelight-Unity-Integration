@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -6,8 +6,9 @@ using System.Threading;
 using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Dma;
 using Forgelight.Formats.Dme;
+using Forgelight.Formats.Zone;
+using Forgelight.Pack;
 using UnityEditor;
-using Asset = Forgelight.Pack.Asset;
 using MathUtils = Forgelight.Utils.MathUtils;
 
 namespace Forgelight
@@ -21,15 +22,18 @@ namespace Forgelight
 
         //Available Assets
         public List<string> AvailableActors { get; private set; }
-        public Dictionary<string, Formats.Zone.Zone> AvailableZones { get; private set; }
+        public Dictionary<string, Zone> AvailableZones { get; private set; }
 
         //Data
         public List<Pack.Pack> Packs { get; private set; }
-        public Dictionary<Asset.Types, List<Asset>> AssetsByType { get; private set; }
+        public ConcurrentDictionary<Asset.Types, List<Asset>> AssetsByType { get; private set; }
         public MaterialDefinitionManager MaterialDefinitionManager { get; private set; }
 
         // Internal cache to check whether a pack has already been loaded
-        private Dictionary<Int32, Pack.Pack> packLookupCache = new Dictionary<Int32, Pack.Pack>();
+        private ConcurrentDictionary<int, Pack.Pack> packLookupCache = new ConcurrentDictionary<int, Pack.Pack>();
+
+        //Progress
+        private float lastProgress = 0.0f;
 
         public ForgelightGame(string name, string packDirectory, string resourceDirectory)
         {
@@ -37,31 +41,28 @@ namespace Forgelight
             PackDirectory = packDirectory;
             ResourceDirectory = resourceDirectory;
 
-            AvailableActors = new List<string>();
-            AvailableZones = new Dictionary<string, Formats.Zone.Zone>();
-
             Packs = new List<Pack.Pack>();
-            AssetsByType = new Dictionary<Asset.Types, List<Asset>>();
+            AssetsByType = new ConcurrentDictionary<Asset.Types, List<Asset>>();
         }
 
         public void LoadPack(string path)
         {
-            Pack.Pack pack = null;
+            Pack.Pack pack;
 
-            if (packLookupCache.TryGetValue(path.GetHashCode(), out pack) == false)
+            if (!packLookupCache.TryGetValue(path.GetHashCode(), out pack))
             {
                 pack = Pack.Pack.LoadBinary(path);
 
                 if (pack != null)
                 {
-                    packLookupCache.Add(path.GetHashCode(), pack);
+                    packLookupCache.TryAdd(path.GetHashCode(), pack);
                     Packs.Add(pack);
 
                     foreach (Asset asset in pack.Assets)
                     {
                         if (!AssetsByType.ContainsKey(asset.Type))
                         {
-                            AssetsByType.Add(asset.Type, new List<Asset>());
+                            AssetsByType.TryAdd(asset.Type, new List<Asset>());
                         }
 
                         AssetsByType[asset.Type].Add(asset);
@@ -70,7 +71,7 @@ namespace Forgelight
             }
         }
 
-        public MemoryStream CreateAssetMemoryStreamByName(String name)
+        public MemoryStream CreateAssetMemoryStreamByName(string name)
         {
             MemoryStream memoryStream = null;
 
@@ -89,7 +90,11 @@ namespace Forgelight
 
         private void ProgressBar(float progress, string currentTask)
         {
-            EditorUtility.DisplayProgressBar("Forgelight - " + Name, currentTask, progress);
+            if (progress != lastProgress)
+            {
+                EditorUtility.DisplayProgressBar("Forgelight - " + Name, currentTask, progress);
+                lastProgress = progress;
+            }
         }
 
         public void OnLoadComplete()
@@ -99,16 +104,28 @@ namespace Forgelight
 
         public void LoadPackFiles(float progress0, float progress100)
         {
-            String[] files = Directory.GetFiles(PackDirectory, "*.pack");
+            string[] files = Directory.GetFiles(PackDirectory, "*.pack");
 
             //Load Pack files into AssetManager.
             ProgressBar(progress0, "Loading Pack Data...");
 
-            for (int i = 0; i < files.Length; ++i)
+            int packsProcessed = 0;
+            string assetProcessing = "";
+
+            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, files, file =>
             {
-                ProgressBar(MathUtils.RemapProgress((float)i / (float)files.Length, progress0, progress100), "Loading Pack File: " + Path.GetFileName(files[i]));
-                LoadPack(files[i]);
+                assetProcessing = Path.GetFileName(file);
+
+                LoadPack(file);
+                Interlocked.Increment(ref packsProcessed);
+            });
+
+            while (backgroundWorker.IsBusy)
+            {
+                ProgressBar(MathUtils.RemapProgress(packsProcessed / (float)files.Length, progress0, progress100), "Loading Pack File: " + assetProcessing);
             }
+
+            backgroundWorker.Dispose();
         }
 
         public void InitializeMaterialDefinitionManager()
@@ -118,43 +135,76 @@ namespace Forgelight
 
         public void UpdateActors(float progress0, float progress100)
         {
-            AvailableActors.Clear();
             ProgressBar(progress0, "Updating Actors List...");
 
             List<Asset> actors = AssetsByType[Asset.Types.ADR];
+            AvailableActors = new List<string>(actors.Count);
 
-            for (int i = 0; i < actors.Count; ++i)
+            int actorsProcessed = 0;
+            string assetProcessing = "";
+            object listLock = new object();
+
+            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, actors, asset =>
             {
-                ProgressBar(MathUtils.RemapProgress((float)i / (float)actors.Count, progress0, progress100), "Updating Actors List...");
-                AvailableActors.Add(actors[i].Name);
+                assetProcessing = asset.Name;
+
+                lock (listLock)
+                {
+                    AvailableActors.Add(asset.Name);
+                }
+
+                Interlocked.Increment(ref actorsProcessed);
+            });
+
+            while (backgroundWorker.IsBusy)
+            {
+                ProgressBar(MathUtils.RemapProgress(actorsProcessed / (float)actors.Count, progress0, progress100), "Updating Actors List: " + assetProcessing);
             }
 
+            backgroundWorker.Dispose();
             AvailableActors.Sort();
         }
 
         public void UpdateZones(float progress0, float progress100)
         {
-            AvailableZones.Clear();
             ProgressBar(progress0, "Updating Zones...");
 
             List<Asset> zones = AssetsByType[Asset.Types.ZONE];
+            AvailableZones = new Dictionary<string, Zone>(zones.Count);
 
-            for (int i = 0; i < zones.Count; ++i)
+            int assetsProcessed = 0;
+            string lastAssetProcessed = "";
+            object listLock = new object();
+
+            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, zones, asset =>
             {
-                ProgressBar(MathUtils.RemapProgress((float)i / (float)zones.Count, progress0, progress100), "Updating Zone: " + zones[i].Name);
-
-                MemoryStream memoryStream = zones[i].Pack.CreateAssetMemoryStreamByName(zones[i].Name);
-                Formats.Zone.Zone zone = Formats.Zone.Zone.LoadFromStream(zones[i].Name, memoryStream);
-
-                string rawZoneName = Path.GetFileNameWithoutExtension(zones[i].Name);
+                string rawZoneName = Path.GetFileNameWithoutExtension(asset.Name);
                 string zoneName = rawZoneName;
 
-                if (AvailableZones.ContainsKey(zoneName))
+                lastAssetProcessed = zoneName;
+
+                if (zoneName == null)
                 {
-                    zoneName = rawZoneName +  " (" + zones[i].Pack.Name + ")";
+                    return;
                 }
 
-                AvailableZones[zoneName] = zone;
+                MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
+                Zone zone = Zone.LoadFromStream(asset.Name, memoryStream);
+
+                lock (listLock)
+                {
+                    if (AvailableZones.ContainsKey(zoneName))
+                    {
+                        zoneName = rawZoneName + " (" + asset.Pack.Name + ")";
+                    }
+
+                    AvailableZones[zoneName] = zone;
+                }
+            });
+
+            while (backgroundWorker.IsBusy)
+            {
+                ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)zones.Count, progress0, progress100), "Updating Zone: " + lastAssetProcessed);
             }
         }
 
@@ -163,15 +213,16 @@ namespace Forgelight
             ProgressBar(progress0, "Exporting Models...");
 
             List<Asset> modelAssets = AssetsByType[Asset.Types.DME];
-            int modelsProcessed = 0;
+            int assetsProcessed = 0;
             string lastAssetProcessed = "";
 
             BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, modelAssets, asset =>
-            //foreach (Asset asset in modelAssets)
             {
                 //Ignore auto-generated LOD's and Don't export if the file already exists.
                 if (!asset.Name.EndsWith("Auto.dme") && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
                 {
+                    lastAssetProcessed = asset.Name;
+
                     using (MemoryStream modelMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                     {
                         Model model = Model.LoadFromStream(asset.Name, modelMemoryStream);
@@ -181,17 +232,14 @@ namespace Forgelight
                             ModelExporter.ExportModel(this, model, ResourceDirectory + "/Models");
                         }
                     }
-
-                    lastAssetProcessed = asset.Name;
                 }
 
-                Interlocked.Increment(ref modelsProcessed);
-                //ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
+                Interlocked.Increment(ref assetsProcessed);
             });
 
-            while (modelsProcessed < modelAssets.Count && backgroundWorker.IsBusy)
+            while (backgroundWorker.IsBusy)
             {
-                ProgressBar(MathUtils.RemapProgress((float)modelsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
+                ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
             }
 
             backgroundWorker.Dispose();
@@ -199,12 +247,11 @@ namespace Forgelight
 
         //TODO Less Code Duplication.
         //TODO Update CNK0 Parsing. The current format seems to be incorrect.
-        //TODO Make Progress Bars more verbose.
         public void ExportTerrain(float progress0, float progress100)
         {
             int chunksProcessed = 0;
             int texturesProcessed = 0;
-            string lastAssetProcessed = "";
+            string assetProcessing = "";
 
             //CNK0
             //ProgressBar(progress0, "Exporting Terrain Data (LOD 0)...");
@@ -232,18 +279,18 @@ namespace Forgelight
 
             //CNK1 (Geo)
             List<Asset> terrainAssetsCnk1 = AssetsByType[Asset.Types.CNK1];
-            chunksProcessed = 0;
 
             BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, terrainAssetsCnk1, asset =>
             {
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
+                    assetProcessing = asset.Name;
+
                     CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
 
                     ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
 
                     Interlocked.Increment(ref chunksProcessed);
-                    lastAssetProcessed = chunk.Name;
                 }
             });
 
@@ -257,15 +304,15 @@ namespace Forgelight
                     ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
 
                     texturesProcessed++;
-                    lastAssetProcessed = chunk.Name;
 
-                    ProgressBar(MathUtils.RemapProgress((float)texturesProcessed + (float)chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk Texture: " + lastAssetProcessed);
+                    assetProcessing = chunk.Name;
+                    ProgressBar(MathUtils.RemapProgress(texturesProcessed + chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk: " + assetProcessing);
                 }
             }
 
-            while (chunksProcessed < terrainAssetsCnk1.Count && backgroundWorker.IsBusy)
+            while (backgroundWorker.IsBusy)
             {
-                ProgressBar(MathUtils.RemapProgress((float)texturesProcessed + (float)chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk Texture: " + lastAssetProcessed);
+                ProgressBar(MathUtils.RemapProgress(texturesProcessed + chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk: " + assetProcessing);
             }
 
             backgroundWorker.Dispose();

@@ -55,6 +55,7 @@ namespace Forgelight
 
         //Editor
         public Vector3 LastCameraPos { get; private set; }
+        public bool cameraPosChanged { get; private set; }
 
         static ForgelightExtension()
         {
@@ -84,7 +85,15 @@ namespace Forgelight
 
             if (Camera.current != null)
             {
-                LastCameraPos = Camera.current.transform.position;
+                if (LastCameraPos != Camera.current.transform.position)
+                {
+                    LastCameraPos = Camera.current.transform.position;
+                    cameraPosChanged = true;
+                }
+                else
+                {
+                    cameraPosChanged = false;
+                }
             }
         }
 

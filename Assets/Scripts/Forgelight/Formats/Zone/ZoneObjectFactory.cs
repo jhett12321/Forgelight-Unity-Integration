@@ -20,7 +20,7 @@ namespace Forgelight.Formats.Zone
         public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, float renderDistance, float lodMultiplier, bool dontCastShadows, uint id)
         {
             GameObject baseActor;
-            GameObject instance = null;
+            GameObject instance;
 
             if (!cachedActors.ContainsKey(forgelightGame))
             {
@@ -61,6 +61,16 @@ namespace Forgelight.Formats.Zone
             return instance;
         }
 
+        public GameObject GetForgelightObject(ForgelightGame forgelightGame, string actorDefinition)
+        {
+            //By default, the actor definitions are appended with the .adr extension.
+            string modelName = Path.GetFileNameWithoutExtension(actorDefinition) + "_LOD0.obj";
+            string baseModelDir = "Assets/Resources/" + forgelightGame.Name + "/Models";
+            string modelPath = baseModelDir + "/" + modelName;
+
+            return AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+        }
+
         public void DestroyAllObjects()
         {
             DestroyImmediate(gameObject);
@@ -86,12 +96,7 @@ namespace Forgelight.Formats.Zone
 
         private GameObject InitializeBaseActor(ForgelightGame forgelightGame, string actorDef)
         {
-            //By default, the actor definitions are appended with the .adr extension.
-            string modelName = Path.GetFileNameWithoutExtension(actorDef) + "_LOD0.obj";
-            string baseModelDir = "Assets/Resources/" + forgelightGame.Name + "/Models";
-            string modelPath = baseModelDir + "/" + modelName;
-
-            GameObject resourceObj = AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
+            GameObject resourceObj = GetForgelightObject(forgelightGame, actorDef);
 
             GameObject baseActor;
             Renderer baseActorRenderer;
@@ -111,7 +116,7 @@ namespace Forgelight.Formats.Zone
                 {
                     DestroyImmediate(baseActor);
 
-                    Debug.LogWarning("Warning: Forgelight Object " + modelName + " Failed to instantiate. Ignoring object.");
+                    Debug.LogWarning("Warning: Forgelight Object " + actorDef + " Failed to instantiate. Ignoring object.");
 
                     return null;
                 }
@@ -152,11 +157,10 @@ namespace Forgelight.Formats.Zone
             zoneObject.DontCastShadows = dontCastShadows;
             zoneObject.ID = id;
 
+            //instance.isStatic = true;
+
             //Add the ID to our used list.
             usedIDs.Add(id);
-
-            //Hide the gameobject. It will be made visible when we are in render range.
-            zoneObject.Hide();
         }
 
         public void ValidateObjectUIDs()

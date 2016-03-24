@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Forgelight.Formats.Zone;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -12,9 +11,6 @@ namespace Forgelight.Formats.Cnk
         private const int chunkPosOffset = 32;
 
         private bool running;
-        private int totalResources;
-        private int resourcesProcessed;
-        private string currentChunk = "";
 
         public void DestroyTerrain()
         {
@@ -26,12 +22,13 @@ namespace Forgelight.Formats.Cnk
             }
         }
 
-        public void LoadTerrain(ForgelightGame forgelightGame, string contPrefix)
+        public void LoadTerrain(ForgelightGame forgelightGame, string contPrefix, float progressMin, float progressMax)
         {
             running = true;
 
             Transform terrainParent = new GameObject("Forgelight Terrain - " + contPrefix).transform;
             terrainParent.tag = "Terrain";
+            //terrainParent.gameObject.isStatic = true;
 
             string resourcePath = forgelightGame.Name + "/Terrain/" + contPrefix;
 
@@ -44,6 +41,9 @@ namespace Forgelight.Formats.Cnk
 
             string[] resources = Directory.GetFiles(Application.dataPath + "/Resources/" + resourcePath, "*.obj");
 
+            int totalResources;
+            int resourcesProcessed = 0;
+            string currentChunk = "";
             totalResources = resources.Length;
 
             foreach (string resource in resources)
@@ -53,9 +53,11 @@ namespace Forgelight.Formats.Cnk
                     string chunkName = Path.GetFileNameWithoutExtension(resource);
                     currentChunk = chunkName;
 
-                    ProgressBar();
+                    ProgressBar(Utils.MathUtils.RemapProgress((float) resourcesProcessed / totalResources, progressMin, progressMax), currentChunk);
 
                     CreateChunk(resourcePath + "/" + chunkName, terrainParent);
+
+                    resourcesProcessed++;
                 }
 
                 else
@@ -85,11 +87,6 @@ namespace Forgelight.Formats.Cnk
 
             if (chunk != null)
             {
-                currentChunk = chunk.name;
-            }
-
-            if (chunk != null)
-            {
                 string[] nameElements = chunk.name.Split('_');
 
                 //Multiply the position on each axis by the size of the chunk, as we are given only chunk coordinates.
@@ -100,18 +97,12 @@ namespace Forgelight.Formats.Cnk
 
                 instance.transform.parent = terrainParent;
 
-                //TODO HACK - We do not have the RAM to hold an entire continent in memory.
-                ZoneObject zoneObject = instance.GetComponent<ZoneObject>();
-                if (zoneObject == null)
-                {
-                    zoneObject = instance.AddComponent<ZoneObject>();
-                }
-
-                zoneObject.renderDistance = 3000;
-                zoneObject.Hide();
+                //instance.isStatic = true;
+                //foreach (Transform child in instance.transform)
+                //{
+                //    child.gameObject.isStatic = true;
+                //}
             }
-
-            resourcesProcessed++;
         }
 
         public void OnLoadComplete(bool completed)
@@ -120,23 +111,11 @@ namespace Forgelight.Formats.Cnk
             Resources.UnloadUnusedAssets();
 
             EditorUtility.ClearProgressBar();
-
-            totalResources = 0;
-            resourcesProcessed = 0;
         }
 
-        private void ProgressBar()
+        private void ProgressBar(float progress, string currentTask)
         {
-            if (running)
-            {
-                float progress = resourcesProcessed / (float)totalResources;
-
-                if (EditorUtility.DisplayCancelableProgressBar("Importing Forgelight Terrain Data",
-                    currentChunk != "" ? currentChunk : "Importing Forgelight Terrain Data.", progress))
-                {
-                    running = false;
-                }
-            }
+            EditorUtility.DisplayProgressBar("Loading Zone: " + ForgelightExtension.Instance.ZoneManager.LoadedZone.Name, currentTask, progress);
         }
     }
 }

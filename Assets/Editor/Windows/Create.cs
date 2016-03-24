@@ -1,27 +1,43 @@
-﻿using UnityEditor;
-using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Forgelight.Editor.DraggableObjects;
+using UnityEditor;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Forgelight.Editor.Windows
 {
+    /// <summary>
+    /// The Create Window. Shows all available actors, and can create Unity GameObjects through drag and drop.
+    /// </summary>
     public class Create : EditorWindow
     {
         private const float objectCreationDistance = 20.0f;
 
         private string searchString = "";
-        private Vector2 scroll;
+        private Vector2 scrollTop;
+        private Vector2 scrollBottom;
+
+        private GameObject selectedActor;
+        private UnityEditor.Editor previewWindowEditor;
+
+        //Splitter
+        private float splitterPos;
+        private Rect splitterRect;
+        private Vector2 dragStartPos;
+        private bool dragging;
+        private float splitterWidth = 5;
 
         [MenuItem("Forgelight/Windows/Create")]
         public static void Init()
         {
-            GetWindow(typeof (Create), false, "Create");
-        }
+            Create window = (Create) GetWindow(typeof (Create), false, "Create");
+            window.splitterPos = 500.0f;
+       }
 
         private void OnFocus()
         {
-            SceneView.onSceneGUIDelegate -= this.OnSceneGUI;
-            SceneView.onSceneGUIDelegate += this.OnSceneGUI;
+            SceneView.onSceneGUIDelegate -= OnSceneGUI;
+            SceneView.onSceneGUIDelegate += OnSceneGUI;
         }
 
         private void OnDestroy()
@@ -29,54 +45,141 @@ namespace Forgelight.Editor.Windows
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
         }
 
+        /// <summary>
+        /// Called every update of this window.
+        /// </summary>
         private void OnGUI()
         {
+            DrawSearchBox();
+
+            //The main content for this window.
+            GUILayout.BeginVertical();
+
+            DrawAvailableActors();
+            DrawSplitter();
+            DrawPreviewBox();
+
+            GUILayout.EndVertical();
+
             //Events
-            EventType eventType = Event.current.type;
+            ProcessDragEvents(false);
+            ProcessSplitterEvents();
+        }
 
-            if (eventType == EventType.DragPerform)
-            {
-                DragAndDrop.AcceptDrag();
-            }
+        /// <summary>
+        /// Called every update of the scene view.
+        /// </summary>
+        /// <param name="sceneView"></param>
+        public void OnSceneGUI(SceneView sceneView)
+        {
+            ProcessDragEvents(true);
+        }
 
-            //Search Box
+        #region Draws
+        /// <summary>
+        /// Draws a small toolbar with a search box to filter out actor definitions.
+        /// </summary>
+        private void DrawSearchBox()
+        {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             GUILayout.FlexibleSpace();
             GUILayout.Label("Search: ", EditorStyles.toolbarButton);
             searchString = GUILayout.TextField(searchString, EditorStyles.toolbarTextField, GUILayout.MinWidth(200));
-
             GUILayout.EndHorizontal();
-
-            //Actor List
-            EditorGUILayout.BeginHorizontal();
-            {
-                scroll = EditorGUILayout.BeginScrollView(scroll, GUILayout.Height(500));
-                {
-                    ForgelightGame activeForgelightGame = ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame;
-
-                    if (activeForgelightGame != null)
-                    {
-                        ShowAvailableActors(activeForgelightGame, activeForgelightGame.AvailableActors);
-                    }
-                }
-                EditorGUILayout.EndScrollView();
-            }
-            EditorGUILayout.EndHorizontal();
-
-            //Preview Box
-            //GameObject model = Resources.Load();
         }
 
-        public void OnSceneGUI(SceneView sceneView)
+        /// <summary>
+        /// Retrieves the available actors from the game factory, creating a list of actors, and checks if they have been clicked this frame.
+        /// Triggers the "BeginDrag" operation on a double click.
+        /// </summary>
+        private void DrawAvailableActors()
         {
-            //Events
+            scrollTop = GUILayout.BeginScrollView(scrollTop, GUILayout.Height(splitterPos), GUILayout.MaxHeight(splitterPos), GUILayout.MinHeight(splitterPos));
+            ForgelightGame forgelightGame = ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame;
+
+            if (forgelightGame != null)
+            {
+                List<string> availableActors = forgelightGame.AvailableActors;
+
+                foreach (string actor in availableActors)
+                {
+                    if (searchString == null || actor.ToLower().Contains(searchString.ToLower()))
+                    {
+                        Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
+
+                        if (Event.current.type == EventType.MouseDown)
+                        {
+                            if (rect.Contains(Event.current.mousePosition))
+                            {
+                                BeginDrag(forgelightGame, actor);
+                                DestroyImmediate(previewWindowEditor);
+                                selectedActor = ForgelightExtension.Instance.ZoneObjectFactory.GetForgelightObject(forgelightGame, actor);
+                            }
+                        }
+
+                        GUIStyle style = EditorStyles.label;
+                        style.fixedWidth = 0;
+                        style.stretchWidth = true;
+                        style.clipping = TextClipping.Overflow;
+
+                        EditorGUI.Foldout(rect, false, actor, true, style);
+                    }
+                }
+            }
+
+            GUILayout.EndScrollView();
+        }
+
+        /// <summary>
+        /// Draws a small box shape that is used to resize the elements in this window.
+        /// </summary>
+        private void DrawSplitter()
+        {
+            GUILayout.Box("",GUILayout.Height(splitterWidth), GUILayout.MaxHeight(splitterWidth), GUILayout.MinHeight(splitterWidth), GUILayout.ExpandWidth(true));
+
+            splitterRect = GUILayoutUtility.GetLastRect();
+
+            EditorGUIUtility.AddCursorRect(splitterRect, MouseCursor.ResizeVertical);
+        }
+
+        /// <summary>
+        /// Draws a 3D object preview of the selected forgelight object, if available.
+        /// </summary>
+        private void DrawPreviewBox()
+        {
+            scrollBottom = GUILayout.BeginScrollView(scrollBottom, GUILayout.ExpandHeight(true));
+
+            if (selectedActor != null)
+            {
+                if (previewWindowEditor == null)
+                {
+                    previewWindowEditor = UnityEditor.Editor.CreateEditor(selectedActor);
+                }
+
+                Rect rect = GUILayoutUtility.GetRect(300.0f, 300.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                previewWindowEditor.OnPreviewGUI(rect, GUIStyle.none);
+            }
+
+            GUILayout.EndScrollView();
+        }
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// Checks for mouse events in this frame, moving created objects and notifying "DragAndDrop" of state changes.
+        /// </summary>
+        /// <param name="inScene">true if being called from OnSceneGUI, otherwise false.</param>
+        private void ProcessDragEvents(bool inScene)
+        {
             EventType eventType = Event.current.type;
 
-            if (eventType == EventType.DragUpdated)
+            //Don't try and make/move the object when we are not focused in the scene.
+            if (inScene && eventType == EventType.DragUpdated)
             {
                 if (DragAndDrop.GetGenericData("ActorDefinition") != null)
                 {
-                    ActorDefinition draggedObj = (ActorDefinition) DragAndDrop.GetGenericData("ActorDefinition");
+                    ActorDefinition draggedObj = (ActorDefinition)DragAndDrop.GetGenericData("ActorDefinition");
 
                     DragAndDrop.visualMode = DragAndDropVisualMode.Copy; // show a drag-add icon on the mouse cursor
 
@@ -85,8 +188,7 @@ namespace Forgelight.Editor.Windows
                     //We have entered the scene. Create the forgelight object at our current position.
                     if (draggedObj.instantiatedGameObject == null)
                     {
-                        draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject(draggedObj.forgelightGame,
-                            draggedObj.actorDefinition, ray.GetPoint(objectCreationDistance), Quaternion.identity);
+                        draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject(draggedObj.forgelightGame, draggedObj.actorDefinition, ray.GetPoint(objectCreationDistance), Quaternion.identity);
                     }
 
                     else
@@ -98,38 +200,53 @@ namespace Forgelight.Editor.Windows
                 }
             }
 
-            if (eventType == EventType.DragPerform)
+            else if (eventType == EventType.DragPerform)
             {
                 DragAndDrop.AcceptDrag();
             }
         }
 
-        private void ShowAvailableActors(ForgelightGame forgelightGame, List<string> availableActors)
+        /// <summary>
+        /// Checks for mouse events in this frame, resizing the window elements as necessary.
+        /// </summary>
+        private void ProcessSplitterEvents()
         {
-            foreach (string actor in availableActors)
+            if (Event.current != null)
             {
-                if (searchString == null || actor.ToLower().Contains(searchString.ToLower()))
+                switch (Event.current.type)
                 {
-                    Rect position = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
-
-                    if (Event.current.type == EventType.MouseDown)
-                    {
-                        if (position.Contains(Event.current.mousePosition))
+                    case EventType.MouseDown:
+                        if (splitterRect.Contains(Event.current.mousePosition))
                         {
-                            BeginDrag(forgelightGame, actor);
+                            dragging = true;
                         }
-                    }
 
-                    GUIStyle style = EditorStyles.label;
-                    style.fixedWidth = 0;
-                    style.stretchWidth = true;
-                    style.clipping = TextClipping.Overflow;
+                        break;
+                    case EventType.MouseDrag:
+                        if (dragging)
+                        {
+                            splitterPos += Event.current.delta.y;
+                            Repaint();
+                        }
 
-                    EditorGUI.Foldout(position, false, actor, true, style);
+                        break;
+                    case EventType.MouseUp:
+                        if (dragging)
+                        {
+                            dragging = false;
+                        }
+
+                        break;
                 }
             }
         }
+        #endregion
 
+        /// <summary>
+        /// Creates the DragAndDrop object's references, and begins the drag operation.
+        /// </summary>
+        /// <param name="forgelightGame">The forgelight game containing "actor"</param>
+        /// <param name="actor">The selected actor</param>
         private void BeginDrag(ForgelightGame forgelightGame, string actor)
         {
             ActorDefinition actorDefinition = new ActorDefinition
