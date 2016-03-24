@@ -156,7 +156,7 @@ namespace Forgelight.Editor.Windows
                     previewWindowEditor = UnityEditor.Editor.CreateEditor(selectedActor);
                 }
 
-                Rect rect = GUILayoutUtility.GetRect(300.0f, 300.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+                Rect rect = GUILayoutUtility.GetRect(1.0f, 1.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
                 previewWindowEditor.OnPreviewGUI(rect, GUIStyle.none);
             }
 
@@ -225,8 +225,13 @@ namespace Forgelight.Editor.Windows
                     case EventType.MouseDrag:
                         if (dragging)
                         {
-                            splitterPos += Event.current.delta.y;
-                            Repaint();
+                            Rect lastRect = GUILayoutUtility.GetLastRect();
+
+                            if (splitterPos + (splitterWidth * 3) + Event.current.delta.y < lastRect.height && splitterPos + Event.current.delta.y > 0)
+                            {
+                                splitterPos += Event.current.delta.y;
+                                Repaint();
+                            }
                         }
 
                         break;
