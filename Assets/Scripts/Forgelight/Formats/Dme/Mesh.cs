@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Forgelight.Formats.Dma;
 
@@ -9,7 +8,7 @@ namespace Forgelight.Formats.Dme
     {
         public class VertexStream
         {
-            public static VertexStream LoadFromStream(Stream stream, Int32 vertexCount, Int32 bytesPerVertex)
+            public static VertexStream LoadFromStream(Stream stream, int vertexCount, int bytesPerVertex)
             {
                 VertexStream vertexStream = new VertexStream();
 
@@ -22,21 +21,21 @@ namespace Forgelight.Formats.Dme
                 return vertexStream;
             }
 
-            public Int32 BytesPerVertex { get; private set; }
-            public Byte[] Data { get; private set; }
+            public int BytesPerVertex { get; private set; }
+            public byte[] Data { get; private set; }
         }
 
         public VertexStream[] VertexStreams { get; private set; }
-        public Byte[] IndexData { get; private set; }
+        public byte[] IndexData { get; private set; }
 
-        public UInt32 MaterialIndex { get; set; }
-        public UInt32 Unknown1 { get; set; }
-        public UInt32 Unknown2 { get; set; }
-        public UInt32 Unknown3 { get; set; }
-        public UInt32 Unknown4 { get; set; }
-        public UInt32 VertexCount { get; set; }
-        public UInt32 IndexCount { get; private set; }
-        public UInt32 IndexSize { get; private set; }
+        public uint MaterialIndex { get; set; }
+        public uint Unknown1 { get; set; }
+        public uint Unknown2 { get; set; }
+        public uint Unknown3 { get; set; }
+        public uint Unknown4 { get; set; }
+        public uint VertexCount { get; set; }
+        public uint IndexCount { get; private set; }
+        public uint IndexSize { get; private set; }
 
         //The diffuse map. Forgelight Ref: BaseDiffuse, baseDiffuse
         public string BaseDiffuse { get; set; }
@@ -53,27 +52,24 @@ namespace Forgelight.Formats.Dme
 
             Mesh mesh = new Mesh();
 
-            UInt32 bytesPerVertex = 0;
-            UInt32 vertexStreamCount = 0;
-
             mesh.MaterialIndex = binaryReader.ReadUInt32();
             mesh.Unknown1 = binaryReader.ReadUInt32();
             mesh.Unknown2 = binaryReader.ReadUInt32();
             mesh.Unknown3 = binaryReader.ReadUInt32();
-            vertexStreamCount = binaryReader.ReadUInt32();
+            uint vertexStreamCount = binaryReader.ReadUInt32();
             mesh.IndexSize = binaryReader.ReadUInt32();
             mesh.IndexCount = binaryReader.ReadUInt32();
             mesh.VertexCount = binaryReader.ReadUInt32();
 
-            mesh.VertexStreams = new VertexStream[(Int32) vertexStreamCount];
+            mesh.VertexStreams = new VertexStream[(int) vertexStreamCount];
 
             // read vertex streams
-            for (Int32 j = 0; j < vertexStreamCount; ++j)
+            for (int j = 0; j < vertexStreamCount; ++j)
             {
-                bytesPerVertex = binaryReader.ReadUInt32();
+                uint bytesPerVertex = binaryReader.ReadUInt32();
 
                 VertexStream vertexStream = VertexStream.LoadFromStream(binaryReader.BaseStream,
-                    (Int32) mesh.VertexCount, (Int32) bytesPerVertex);
+                    (int) mesh.VertexCount, (int) bytesPerVertex);
 
                 if (vertexStream != null)
                 {
@@ -82,7 +78,7 @@ namespace Forgelight.Formats.Dme
             }
 
             // read indices
-            mesh.IndexData = binaryReader.ReadBytes((Int32) mesh.IndexCount*(Int32) mesh.IndexSize);
+            mesh.IndexData = binaryReader.ReadBytes((int) mesh.IndexCount*(int) mesh.IndexSize);
 
             return mesh;
         }

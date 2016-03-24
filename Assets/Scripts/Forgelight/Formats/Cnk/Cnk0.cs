@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LzhamWrapper;
@@ -17,24 +16,24 @@ namespace Forgelight.Formats.Cnk
                 {
                     public class Layer
                     {
-                        public UInt32 Unknown1 { get; set; }
-                        public UInt32 Unknown2 { get; set; }
+                        public uint UnknownUint1 { get; set; }
+                        public uint UnknownUint2 { get; set; }
                     }
 
                     public List<Layer> Layers { get; set; }
                 }
 
-                public UInt32 ID { get; set; }
+                public uint ID { get; set; }
                 public List<Flora> Floras { get; set; }
             }
 
-            public Int32 X { get; set; }
-            public Int32 Y { get; set; }
-            public Int32 UnknownInt1 { get; set; }
-            public Int32 UnknownInt2 { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public int UnknownInt1 { get; set; }
+            public int UnknownInt2 { get; set; }
             public List<Eco> Ecos { get; set; }
-            public UInt32 Index { get; set; } //TODO Verify if this is an int or uint
-            public UInt32 UnknownInt3 { get; set; } //TODO Verify if this is an int or uint
+            public uint Index { get; set; } //TODO Verify if this is an int or uint
+            public uint UnknownInt3 { get; set; } //TODO Verify if this is an int or uint
             public List<byte> ImageData { get; set; }
             public List<byte> LayerTextures { get; set; }
 
@@ -42,27 +41,27 @@ namespace Forgelight.Formats.Cnk
 
         public class Unknown1
         {
-            public Int16 Height { get; set; }
+            public short Height { get; set; }
             public byte UnknownByte1 { get; set; }
             public byte UnknownByte2 { get; set; }
         }
 
         public class Vertex
         {
-            public Int16 X { get; set; }
-            public Int16 Y { get; set; }
-            public Int16 HeightFar { get; set; }
-            public Int16 HeightNear { get; set; }
-            public UInt32 Color1 { get; set; }
-            public UInt32 Color2 { get; set; }
+            public short X { get; set; }
+            public short Y { get; set; }
+            public short HeightFar { get; set; }
+            public short HeightNear { get; set; }
+            public uint Color1 { get; set; }
+            public uint Color2 { get; set; }
         }
 
         public class RenderBatch
         {
-            public UInt32 IndexOffset { get; set; }
-            public UInt32 IndexCount { get; set; }
-            public UInt32 VertexOffset { get; set; }
-            public UInt32 VertexCount { get; set; }
+            public uint IndexOffset { get; set; }
+            public uint IndexCount { get; set; }
+            public uint VertexOffset { get; set; }
+            public uint VertexCount { get; set; }
         }
 
         public class OptimizedDraw
@@ -77,19 +76,19 @@ namespace Forgelight.Formats.Cnk
 
         //Header
         public string Name { get; private set; }
-        public UInt32 Version { get; private set; }
-        public UInt32 UncompressedSize { get; private set; }
-        public UInt32 CompressedSize { get; private set; }
+        public uint Version { get; private set; }
+        public uint DecompressedSize { get; private set; }
+        public uint CompressedSize { get; private set; }
 
         //Tiles
         public List<Tile> Tiles { get; private set; }
 
         //Unknown Data
-        public Int32 UnknownInt1 { get; private set; }
+        public int UnknownInt1 { get; private set; }
         public List<Unknown1> UnknownArray1 { get; private set; }
 
         //Indices
-        public List<UInt16> Indices { get; private set; }
+        public List<ushort> Indices { get; private set; }
 
         //Verts
         public List<Vertex> Vertices { get; private set; }
@@ -101,7 +100,7 @@ namespace Forgelight.Formats.Cnk
         public List<OptimizedDraw> OptimizedDraws { get; private set; }
 
         //Unknown Data
-        public List<UInt16> UnknownShorts1 { get; private set; }
+        public List<ushort> UnknownShorts1 { get; private set; }
 
         //Unknown Data
         public List<Vector3> UnknownVectors1 { get; private set; }
@@ -128,14 +127,14 @@ namespace Forgelight.Formats.Cnk
 
             chunk.Version = binaryReader.ReadUInt32();
 
-            UInt32 decompressedSize = binaryReader.ReadUInt32();
-            UInt32 compressedSize = binaryReader.ReadUInt32();
+            chunk.DecompressedSize = binaryReader.ReadUInt32();
+            chunk.CompressedSize = binaryReader.ReadUInt32();
 
             //Decompression
-            byte[] compressedBuffer = binaryReader.ReadBytes((int)compressedSize);
-            byte[] decompressedBuffer = new byte[decompressedSize];
+            byte[] compressedBuffer = binaryReader.ReadBytes((int)chunk.CompressedSize);
+            byte[] decompressedBuffer = new byte[chunk.DecompressedSize];
 
-            InflateReturnCode result = LzhamInterop.DecompressForgelightData(compressedBuffer, compressedSize, decompressedBuffer, decompressedSize);
+            InflateReturnCode result = LzhamInterop.DecompressForgelightData(compressedBuffer, chunk.CompressedSize, decompressedBuffer, chunk.DecompressedSize);
 
             if (result != InflateReturnCode.LZHAM_Z_STREAM_END && result != InflateReturnCode.LZHAM_Z_OK)
             {
@@ -148,7 +147,7 @@ namespace Forgelight.Formats.Cnk
                 binaryReader = new BinaryReader(decompressedStream);
 
                 //Tiles
-                UInt32 tileCount = binaryReader.ReadUInt32();
+                uint tileCount = binaryReader.ReadUInt32();
                 chunk.Tiles = new List<Tile>((int) tileCount);
 
                 for (int i = 0; i < tileCount; i++)
@@ -160,7 +159,7 @@ namespace Forgelight.Formats.Cnk
                     tile.UnknownInt1 = binaryReader.ReadInt32();
                     tile.UnknownInt2 = binaryReader.ReadInt32();
 
-                    UInt32 ecosCount = binaryReader.ReadUInt32();
+                    uint ecosCount = binaryReader.ReadUInt32();
 
                     if (ecosCount > 0)
                     {
@@ -172,22 +171,22 @@ namespace Forgelight.Formats.Cnk
 
                             eco.ID = binaryReader.ReadUInt32();
 
-                            UInt32 florasCount = binaryReader.ReadUInt32();
+                            uint florasCount = binaryReader.ReadUInt32();
                             eco.Floras = new List<Tile.Eco.Flora>((int)florasCount);
 
                             for (int k = 0; k < florasCount; k++)
                             {
                                 Tile.Eco.Flora flora = new Tile.Eco.Flora();
 
-                                UInt32 layersCount = binaryReader.ReadUInt32();
+                                uint layersCount = binaryReader.ReadUInt32();
                                 flora.Layers = new List<Tile.Eco.Flora.Layer>((int)layersCount);
 
                                 for (int l = 0; l < layersCount; l++)
                                 {
                                     Tile.Eco.Flora.Layer layer = new Tile.Eco.Flora.Layer();
 
-                                    layer.Unknown1 = binaryReader.ReadUInt32();
-                                    layer.Unknown2 = binaryReader.ReadUInt32();
+                                    layer.UnknownUint1 = binaryReader.ReadUInt32();
+                                    layer.UnknownUint2 = binaryReader.ReadUInt32();
 
                                     flora.Layers.Add(layer);
                                 }
@@ -202,13 +201,13 @@ namespace Forgelight.Formats.Cnk
                     tile.Index = binaryReader.ReadUInt32();
                     tile.UnknownInt3 = binaryReader.ReadUInt32();
 
-                    UInt32 imageSize = binaryReader.ReadUInt32();
+                    uint imageSize = binaryReader.ReadUInt32();
                     if (imageSize > 0)
                     {
                         tile.ImageData = binaryReader.ReadBytes((int)imageSize).ToList();
                     }
 
-                    UInt32 layerTexturesCount = binaryReader.ReadUInt32();
+                    uint layerTexturesCount = binaryReader.ReadUInt32();
                     if (layerTexturesCount > 0)
                     {
                         tile.LayerTextures = binaryReader.ReadBytes((int)layerTexturesCount).ToList();
@@ -220,7 +219,7 @@ namespace Forgelight.Formats.Cnk
                 //Unknown Data
                 chunk.UnknownInt1 = binaryReader.ReadInt32();
 
-                UInt32 unknownCount = binaryReader.ReadUInt32();
+                uint unknownCount = binaryReader.ReadUInt32();
                 chunk.UnknownArray1 = new List<Unknown1>((int) unknownCount);
 
                 for (int i = 0; i < unknownCount; i++)
@@ -235,7 +234,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Indices
-                UInt32 indexCount = binaryReader.ReadUInt32();
+                uint indexCount = binaryReader.ReadUInt32();
                 chunk.Indices = new List<ushort>((int) indexCount);
 
                 for (int i = 0; i < indexCount; i++)
@@ -244,7 +243,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Verts
-                UInt32 vertCount = binaryReader.ReadUInt32();
+                uint vertCount = binaryReader.ReadUInt32();
                 chunk.Vertices = new List<Vertex>((int) vertCount);
 
                 for (int i = 0; i < vertCount; i++)
@@ -262,7 +261,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Render Batches
-                UInt32 renderBatchCount = binaryReader.ReadUInt32();
+                uint renderBatchCount = binaryReader.ReadUInt32();
                 chunk.RenderBatches = new List<RenderBatch>((int) renderBatchCount);
 
                 for (int i = 0; i < renderBatchCount; i++)
@@ -278,7 +277,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Optimized Draw
-                UInt32 optimizedDrawCount = binaryReader.ReadUInt32();
+                uint optimizedDrawCount = binaryReader.ReadUInt32();
                 chunk.OptimizedDraws = new List<OptimizedDraw>((int) optimizedDrawCount);
 
                 for (int i = 0; i < optimizedDrawCount; i++)
@@ -290,7 +289,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Unknown Data
-                UInt32 unknownShort1Count = binaryReader.ReadUInt32();
+                uint unknownShort1Count = binaryReader.ReadUInt32();
                 chunk.UnknownShorts1 = new List<ushort>((int) unknownShort1Count);
 
                 for (int i = 0; i < unknownShort1Count; i++)
@@ -299,7 +298,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Unknown Data
-                UInt32 unknownVectors1Count = binaryReader.ReadUInt32();
+                uint unknownVectors1Count = binaryReader.ReadUInt32();
                 chunk.UnknownVectors1 = new List<Vector3>((int) unknownVectors1Count);
 
                 for (int i = 0; i < unknownVectors1Count; i++)
@@ -308,7 +307,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Tile Occluder Info
-                UInt32 tileOccluderCount = binaryReader.ReadUInt32();
+                uint tileOccluderCount = binaryReader.ReadUInt32();
                 chunk.TileOccluderInfos = new List<TileOccluderInfo>((int) tileOccluderCount);
 
                 for (int i = 0; i < tileOccluderCount; i++)

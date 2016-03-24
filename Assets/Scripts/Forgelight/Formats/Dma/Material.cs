@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace Forgelight.Formats.Dma
 {
     public class Material
     {
-        public UInt32 NameHash { get; private set; }
-        public UInt32 DataLength { get; private set; }
-        public UInt32 MaterialDefinitionHash { get; private set; }
+        public uint NameHash { get; private set; }
+        public uint DataLength { get; private set; }
+        public uint MaterialDefinitionHash { get; private set; }
         public List<Parameter> Parameters { get; private set; }
 
         public static Material LoadFromStream(Stream stream)
@@ -21,10 +20,10 @@ namespace Forgelight.Formats.Dma
             material.DataLength = binaryReader.ReadUInt32();
             material.MaterialDefinitionHash = binaryReader.ReadUInt32();
 
-            UInt32 parameterCount = binaryReader.ReadUInt32();
-            material.Parameters = new List<Parameter>((Int32) parameterCount);
+            uint parameterCount = binaryReader.ReadUInt32();
+            material.Parameters = new List<Parameter>((int) parameterCount);
 
-            for (UInt32 j = 0; j < parameterCount; ++j)
+            for (uint j = 0; j < parameterCount; ++j)
             {
                 Parameter parameter = Parameter.LoadFromStream(stream);
 
@@ -84,14 +83,14 @@ namespace Forgelight.Formats.Dma
                 parameter.Class = (D3DXParameterClass) binaryReader.ReadUInt32();
                 parameter.Type = (D3DXParameterType) binaryReader.ReadUInt32();
 
-                UInt32 dataLength = binaryReader.ReadUInt32();
+                uint dataLength = binaryReader.ReadUInt32();
 
-                parameter.Data = binaryReader.ReadBytes((Int32) dataLength);
+                parameter.Data = binaryReader.ReadBytes((int) dataLength);
 
                 return parameter;
             }
 
-            public UInt32 NameHash { get; private set; }
+            public uint NameHash { get; private set; }
             public D3DXParameterClass Class { get; private set; }
             public D3DXParameterType Type { get; private set; }
             public byte[] Data { get; private set; }

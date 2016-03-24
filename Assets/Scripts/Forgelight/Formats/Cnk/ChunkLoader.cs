@@ -3,6 +3,7 @@ using System.IO;
 using Forgelight.Formats.Zone;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Forgelight.Formats.Cnk
 {
@@ -10,9 +11,9 @@ namespace Forgelight.Formats.Cnk
     {
         private const int chunkPosOffset = 32;
 
-        private bool running = false;
-        private int totalResources = 0;
-        private int resourcesProcessed = 0;
+        private bool running;
+        private int totalResources;
+        private int resourcesProcessed;
         private string currentChunk = "";
 
         public void DestroyTerrain()
@@ -21,7 +22,7 @@ namespace Forgelight.Formats.Cnk
 
             if (terrain != null)
             {
-                GameObject.DestroyImmediate(terrain);
+                Object.DestroyImmediate(terrain);
             }
         }
 
@@ -37,7 +38,7 @@ namespace Forgelight.Formats.Cnk
             if (!Directory.Exists(Application.dataPath + "/Resources/" + resourcePath))
             {
                 Debug.LogWarning("Could not find terrain for zone " + contPrefix);
-                GameObject.DestroyImmediate(terrainParent.gameObject);
+                Object.DestroyImmediate(terrainParent.gameObject);
                 return;
             }
 
@@ -69,7 +70,7 @@ namespace Forgelight.Formats.Cnk
             //Destroy the parent if we did not create any children.
             if (resourcesProcessed == 0)
             {
-                GameObject.DestroyImmediate(terrainParent.gameObject);
+                Object.DestroyImmediate(terrainParent.gameObject);
             }
 
             running = false;
@@ -95,7 +96,7 @@ namespace Forgelight.Formats.Cnk
                 int chunkPosX = -(Convert.ToInt32(nameElements[2]) * chunkPosOffset);
                 int chunkPosZ = (Convert.ToInt32(nameElements[1]) * chunkPosOffset);
 
-                GameObject instance = (GameObject) GameObject.Instantiate(chunk, new Vector3(chunkPosX, 0, chunkPosZ), Quaternion.identity);
+                GameObject instance = (GameObject) Object.Instantiate(chunk, new Vector3(chunkPosX, 0, chunkPosZ), Quaternion.identity);
 
                 instance.transform.parent = terrainParent;
 
@@ -128,7 +129,7 @@ namespace Forgelight.Formats.Cnk
         {
             if (running)
             {
-                float progress = (float)resourcesProcessed / (float)totalResources;
+                float progress = resourcesProcessed / (float)totalResources;
 
                 if (EditorUtility.DisplayCancelableProgressBar("Importing Forgelight Terrain Data",
                     currentChunk != "" ? currentChunk : "Importing Forgelight Terrain Data.", progress))

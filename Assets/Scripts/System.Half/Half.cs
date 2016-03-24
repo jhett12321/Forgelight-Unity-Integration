@@ -34,27 +34,27 @@ namespace System
         /// <summary>
         /// Represents the smallest positive System.Half value greater than zero. This field is constant.
         /// </summary>
-        public static readonly Half Epsilon = Half.ToHalf(0x0001);
+        public static readonly Half Epsilon = ToHalf(0x0001);
         /// <summary>
         /// Represents the largest possible value of System.Half. This field is constant.
         /// </summary>
-        public static readonly Half MaxValue = Half.ToHalf(0x7bff);
+        public static readonly Half MaxValue = ToHalf(0x7bff);
         /// <summary>
         /// Represents the smallest possible value of System.Half. This field is constant.
         /// </summary>
-        public static readonly Half MinValue = Half.ToHalf(0xfbff);
+        public static readonly Half MinValue = ToHalf(0xfbff);
         /// <summary>
         /// Represents not a number (NaN). This field is constant.
         /// </summary>
-        public static readonly Half NaN = Half.ToHalf(0xfe00);
+        public static readonly Half NaN = ToHalf(0xfe00);
         /// <summary>
         /// Represents negative infinity. This field is constant.
         /// </summary>
-        public static readonly Half NegativeInfinity = Half.ToHalf(0xfc00);
+        public static readonly Half NegativeInfinity = ToHalf(0xfc00);
         /// <summary>
         /// Represents positive infinity. This field is constant.
         /// </summary>
-        public static readonly Half PositiveInfinity = Half.ToHalf(0x7c00);
+        public static readonly Half PositiveInfinity = ToHalf(0x7c00);
         #endregion
 
         #region Constructors
@@ -163,28 +163,28 @@ namespace System
         /// <param name="half1">A System.Half.</param>
         /// <param name="half2">A System.Half.</param>
         /// <returns>The System.Half result of adding half1 and half2.</returns>
-        public static Half operator +(Half half1, Half half2) { return (Half)((float)half1 + (float)half2); }
+        public static Half operator +(Half half1, Half half2) { return (Half)(half1 + (float)half2); }
         /// <summary>
         /// Subtracts two specified System.Half values.
         /// </summary>
         /// <param name="half1">A System.Half.</param>
         /// <param name="half2">A System.Half.</param>
         /// <returns>The System.Half result of subtracting half1 and half2.</returns>
-        public static Half operator -(Half half1, Half half2) { return (Half)((float)half1 - (float)half2); }
+        public static Half operator -(Half half1, Half half2) { return (Half)(half1 - (float)half2); }
         /// <summary>
         /// Multiplies two specified System.Half values.
         /// </summary>
         /// <param name="half1">A System.Half.</param>
         /// <param name="half2">A System.Half.</param>
         /// <returns>The System.Half result of multiplying half1 by half2.</returns>
-        public static Half operator *(Half half1, Half half2) { return (Half)((float)half1 * (float)half2); }
+        public static Half operator *(Half half1, Half half2) { return (Half)(half1 * (float)half2); }
         /// <summary>
         /// Divides two specified System.Half values.
         /// </summary>
         /// <param name="half1">A System.Half (the dividend).</param>
         /// <param name="half2">A System.Half (the divisor).</param>
         /// <returns>The System.Half result of half1 by half2.</returns>
-        public static Half operator /(Half half1, Half half2) { return (Half)((float)half1 / (float)half2); }
+        public static Half operator /(Half half1, Half half2) { return (Half)(half1 / (float)half2); }
         /// <summary>
         /// Returns a value indicating whether two instances of System.Half are equal.
         /// </summary>
@@ -198,21 +198,21 @@ namespace System
         /// <param name="half1">A System.Half.</param>
         /// <param name="half2">A System.Half.</param>
         /// <returns>true if half1 and half2 are not equal; otherwise, false.</returns>
-        public static bool operator !=(Half half1, Half half2) { return !(half1.value == half2.value); }
+        public static bool operator !=(Half half1, Half half2) { return half1.value != half2.value; }
         /// <summary>
         /// Returns a value indicating whether a specified System.Half is less than another specified System.Half.
         /// </summary>
         /// <param name="half1">A System.Half.</param>
         /// <param name="half2">A System.Half.</param>
         /// <returns>true if half1 is less than half1; otherwise, false.</returns>
-        public static bool operator <(Half half1, Half half2) { return (float)half1 < (float)half2; }
+        public static bool operator <(Half half1, Half half2) { return half1 < (float)half2; }
         /// <summary>
         /// Returns a value indicating whether a specified System.Half is greater than another specified System.Half.
         /// </summary>
         /// <param name="half1">A System.Half.</param>
         /// <param name="half2">A System.Half.</param>
         /// <returns>true if half1 is greater than half2; otherwise, false.</returns>
-        public static bool operator >(Half half1, Half half2) { return (float)half1 > (float)half2; }
+        public static bool operator >(Half half1, Half half2) { return half1 > (float)half2; }
         /// <summary>
         /// Returns a value indicating whether a specified System.Half is less than or equal to another specified System.Half.
         /// </summary>
@@ -265,7 +265,7 @@ namespace System
         /// </summary>
         /// <param name="value">A single-precision floating-point number.</param>
         /// <returns>A System.Half that represents the converted single-precision floating point number.</returns>
-        public static explicit operator Half(float value) { return new Half((float)value); }
+        public static explicit operator Half(float value) { return new Half(value); }
         /// <summary>
         /// Converts a double-precision floating-point number to a System.Half.
         /// </summary>
@@ -313,13 +313,13 @@ namespace System
         /// </summary>
         /// <param name="value">A System.Half to convert.</param>
         /// <returns>A single-precision floating-point number that represents the converted System.Half.</returns>
-        public static implicit operator float(Half value) { return (float)HalfHelper.HalfToSingle(value); }
+        public static implicit operator float(Half value) { return HalfHelper.HalfToSingle(value); }
         /// <summary>
         /// Converts a System.Half to a double-precision floating-point number.
         /// </summary>
         /// <param name="value">A System.Half to convert.</param>
         /// <returns>A double-precision floating-point number that represents the converted System.Half.</returns>
-        public static implicit operator double(Half value) { return (double)(float)value; }
+        public static implicit operator double(Half value) { return (float)value; }
         /// <summary>
         /// Converts a System.Half to a decimal number.
         /// </summary>
@@ -423,7 +423,7 @@ namespace System
         /// <exception cref="System.ArgumentException">value is not a System.Half</exception>
         public int CompareTo(object obj)
         {
-            int result = 0;
+            int result;
             if (obj == null)
             {
                 result = 1;
@@ -522,7 +522,7 @@ namespace System
         /// <exception cref="System.ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
         public static Half ToHalf(byte[] value, int startIndex)
         {
-            return Half.ToHalf((ushort)BitConverter.ToInt16(value, startIndex));
+            return ToHalf((ushort)BitConverter.ToInt16(value, startIndex));
         }
         /// <summary>
         /// Returns a half-precision floating point number converted from its binary representation.
@@ -549,16 +549,13 @@ namespace System
             {
                 return -1;
             }
-            else if (value > 0)
+            if (value > 0)
             {
                 return 1;
             }
-            else
+            if (value != 0)
             {
-                if (value != 0)
-                {
-                    throw new ArithmeticException("Function does not accept floating point Not-a-Number values.");
-                }
+                throw new ArithmeticException("Function does not accept floating point Not-a-Number values.");
             }
 
             return 0;
@@ -827,7 +824,7 @@ namespace System
         #region IConvertible Members
         float IConvertible.ToSingle(IFormatProvider provider)
         {
-            return (float)this;
+            return this;
         }
         TypeCode IConvertible.GetTypeCode()
         {
@@ -835,11 +832,11 @@ namespace System
         }
         bool IConvertible.ToBoolean(IFormatProvider provider)
         {
-            return Convert.ToBoolean((float)this);
+            return Convert.ToBoolean(this);
         }
         byte IConvertible.ToByte(IFormatProvider provider)
         {
-            return Convert.ToByte((float)this);
+            return Convert.ToByte(this);
         }
         char IConvertible.ToChar(IFormatProvider provider)
         {
@@ -851,31 +848,31 @@ namespace System
         }
         decimal IConvertible.ToDecimal(IFormatProvider provider)
         {
-            return Convert.ToDecimal((float)this);
+            return Convert.ToDecimal(this);
         }
         double IConvertible.ToDouble(IFormatProvider provider)
         {
-            return Convert.ToDouble((float)this);
+            return Convert.ToDouble(this);
         }
         short IConvertible.ToInt16(IFormatProvider provider)
         {
-            return Convert.ToInt16((float)this);
+            return Convert.ToInt16(this);
         }
         int IConvertible.ToInt32(IFormatProvider provider)
         {
-            return Convert.ToInt32((float)this);
+            return Convert.ToInt32(this);
         }
         long IConvertible.ToInt64(IFormatProvider provider)
         {
-            return Convert.ToInt64((float)this);
+            return Convert.ToInt64(this);
         }
         sbyte IConvertible.ToSByte(IFormatProvider provider)
         {
-            return Convert.ToSByte((float)this);
+            return Convert.ToSByte(this);
         }
         string IConvertible.ToString(IFormatProvider provider)
         {
-            return Convert.ToString((float)this, CultureInfo.InvariantCulture);
+            return Convert.ToString(this, CultureInfo.InvariantCulture);
         }
         object IConvertible.ToType(Type conversionType, IFormatProvider provider)
         {
@@ -883,15 +880,15 @@ namespace System
         }
         ushort IConvertible.ToUInt16(IFormatProvider provider)
         {
-            return Convert.ToUInt16((float)this);
+            return Convert.ToUInt16(this);
         }
         uint IConvertible.ToUInt32(IFormatProvider provider)
         {
-            return Convert.ToUInt32((float)this);
+            return Convert.ToUInt32(this);
         }
         ulong IConvertible.ToUInt64(IFormatProvider provider)
         {
-            return Convert.ToUInt64((float)this);
+            return Convert.ToUInt64(this);
         }
         #endregion
     }

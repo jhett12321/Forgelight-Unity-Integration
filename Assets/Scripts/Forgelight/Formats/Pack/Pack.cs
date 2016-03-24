@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using Forgelight.Utils;
@@ -9,21 +8,21 @@ namespace Forgelight.Pack
     public class Pack
     {
         [Description("The path on disk to this pack file.")]
-        [ReadOnlyAttribute(true)]
+        [ReadOnly(true)]
         public string Path { get; private set; }
 
-        [BrowsableAttribute(false)]
+        [Browsable(false)]
         public List<Asset> Assets { get; private set; }
 
-        [BrowsableAttribute(false)]
-        public String Name
+        [Browsable(false)]
+        public string Name
         {
             get { return System.IO.Path.GetFileName(Path); }
         }
 
         public Dictionary<string, Asset> assetLookupCache = new Dictionary<string, Asset>();
 
-        private Pack(String path)
+        private Pack(string path)
         {
             Path = path;
             Assets = new List<Asset>();
@@ -37,7 +36,7 @@ namespace Forgelight.Pack
             {
                 BinaryReaderBigEndian binaryReader = new BinaryReaderBigEndian(fileStream);
 
-                UInt32 nextChunkAbsoluteOffset = 0;
+                uint nextChunkAbsoluteOffset = 0;
 
                 do
                 {
@@ -46,7 +45,7 @@ namespace Forgelight.Pack
                     nextChunkAbsoluteOffset = binaryReader.ReadUInt32();
                     uint fileCount = binaryReader.ReadUInt32();
 
-                    for (UInt32 i = 0; i < fileCount; ++i)
+                    for (uint i = 0; i < fileCount; ++i)
                     {
                         Asset file = Asset.LoadBinary(pack, binaryReader.BaseStream);
 
@@ -62,7 +61,7 @@ namespace Forgelight.Pack
 
         public MemoryStream CreateAssetMemoryStreamByName(string name)
         {
-            Asset asset = null;
+            Asset asset;
 
             if (!assetLookupCache.TryGetValue(name, out asset))
             {
@@ -74,7 +73,7 @@ namespace Forgelight.Pack
             byte[] buffer = new byte[asset.Size];
 
             file.Seek(asset.AbsoluteOffset, SeekOrigin.Begin);
-            file.Read(buffer, 0, (Int32) asset.Size);
+            file.Read(buffer, 0, (int) asset.Size);
 
             MemoryStream memoryStream = new MemoryStream(buffer);
 

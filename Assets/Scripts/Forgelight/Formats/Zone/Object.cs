@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Assets.Scripts.Forgelight.Utils;
 using UnityEngine;
@@ -13,7 +12,7 @@ namespace Forgelight.Formats.Zone
             public Vector4 Position { get; set; }
             public Vector4 Rotation { get; set; }
             public Vector4 Scale { get; set; }
-            public UInt32 ID { get; set; }
+            public uint ID { get; set; }
             public bool DontCastShadows { get; set; }
             public float LODMultiplier { get; set; }
         }
@@ -31,7 +30,7 @@ namespace Forgelight.Formats.Zone
             obj.RenderDistance = binaryReader.ReadSingle();
 
             obj.Instances = new List<Instance>();
-            UInt32 instancesLength = binaryReader.ReadUInt32();
+            uint instancesLength = binaryReader.ReadUInt32();
 
             for (uint i = 0; i < instancesLength; i++)
             {

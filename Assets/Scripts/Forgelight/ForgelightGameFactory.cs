@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using Forgelight.Utils;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -10,8 +9,6 @@ namespace Forgelight
     {
         //Active Forgelight Game
         public ForgelightGame ActiveForgelightGame { get; private set; }
-
-        public List<string> AvailableForgelightGames { get; private set; }
 
         public void OpenForgelightGameFolder()
         {
@@ -32,7 +29,13 @@ namespace Forgelight
         /// <param name="path"></param>
         private void LoadNewForgelightGame(string path)
         {
-            string alias = Directory.GetParent(path).Parent.Name;
+            DirectoryInfo directoryInfo = Directory.GetParent(path).Parent;
+            if (directoryInfo == null)
+            {
+                return;
+            }
+
+            string alias = directoryInfo.Name;
 
             if (ForgelightExtension.Instance.Config.GetForgelightGameInfo(alias) == null)
             {

@@ -9,6 +9,12 @@ namespace Forgelight.Formats.Cnk
         public static void ExportChunk(ForgelightGame forgelightGame, CnkLOD chunk, string directory)
         {
             string name = Path.GetFileNameWithoutExtension(chunk.Name);
+
+            if (name == null)
+            {
+                return;
+            }
+
             directory += "/" + name.Split('_')[0];
 
             if (!Directory.Exists(directory + "/Textures"))
@@ -140,6 +146,12 @@ namespace Forgelight.Formats.Cnk
         public static void ExportTextures(ForgelightGame forgelightGame, CnkLOD chunk, string directory)
         {
             string name = Path.GetFileNameWithoutExtension(chunk.Name);
+
+            if (name == null)
+            {
+                return;
+            }
+
             directory += "/" + name.Split('_')[0];
 
             MontageSettings montageSettings = new MontageSettings();
@@ -157,10 +169,8 @@ namespace Forgelight.Formats.Cnk
             {
                 using (MagickImageCollection stitchedColorMap = new MagickImageCollection())
                 {
-                    for (int i = 0; i < chunk.Textures.Count; i++)
+                    foreach (CnkLOD.Texture texture in chunk.Textures)
                     {
-                        CnkLOD.Texture texture = chunk.Textures[i];
-
                         MagickImage textureQuad = new MagickImage(texture.ColorNXMap.ToArray());
                         stitchedColorMap.Add(textureQuad);
                     }
@@ -180,10 +190,8 @@ namespace Forgelight.Formats.Cnk
             {
                 using (MagickImageCollection stitchedSpecMap = new MagickImageCollection())
                 {
-                    for (int i = 0; i < chunk.Textures.Count; i++)
+                    foreach (CnkLOD.Texture texture in chunk.Textures)
                     {
-                        CnkLOD.Texture texture = chunk.Textures[i];
-
                         MagickImage textureQuad = new MagickImage(texture.SpecNyMap.ToArray());
                         stitchedSpecMap.Add(textureQuad);
                     }

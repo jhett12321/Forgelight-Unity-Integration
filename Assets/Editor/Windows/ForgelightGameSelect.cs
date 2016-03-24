@@ -1,7 +1,7 @@
-﻿using UnityEditor;
-using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Forgelight.Utils;
+using UnityEditor;
+using UnityEngine;
 
 namespace Forgelight.Editor.Windows
 {
@@ -12,10 +12,10 @@ namespace Forgelight.Editor.Windows
 
         private Vector2 scroll;
 
-        [MenuItem("Forgelight/Windows/Forgelight Games")]
+        [MenuItem("Forgelight/Windows/Games")]
         public static void Init()
         {
-            GetWindow(typeof(ForgelightGameSelect), false, "Forgelight Games");
+            GetWindow(typeof(ForgelightGameSelect), false, "Games");
         }
 
         private void OnGUI()
@@ -46,11 +46,11 @@ namespace Forgelight.Editor.Windows
             {
                 if (searchString == null || gameName.ToLower().Contains(searchString.ToLower()))
                 {
-                    Rect position = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
+                    Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
 
                     if (Event.current.type == EventType.MouseDown)
                     {
-                        if (position.Contains(Event.current.mousePosition))
+                        if (rect.Contains(Event.current.mousePosition))
                         {
                             if (selectedGame != null && selectedGame == gameName)
                             {
@@ -67,7 +67,7 @@ namespace Forgelight.Editor.Windows
                     style.stretchWidth = true;
                     style.clipping = TextClipping.Overflow;
 
-                    EditorGUI.Foldout(position, false, gameName, true, style);
+                    EditorGUI.Foldout(rect, false, gameName, true, style);
                 }
             }
         }

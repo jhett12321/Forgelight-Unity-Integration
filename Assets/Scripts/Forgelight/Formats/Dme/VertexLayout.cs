@@ -20,10 +20,10 @@ namespace Forgelight.Formats.Dme
                 float16_2,
                 Short2,
                 Float1,
-                Short4,
+                Short4
             }
 
-            private static String[] dataTypeStrings =
+            private static string[] dataTypeStrings =
             {
                 "Float3",
                 "D3dcolor",
@@ -36,7 +36,7 @@ namespace Forgelight.Formats.Dme
                 "Short4"
             };
 
-            public static Int32[] dataTypeSizes =
+            public static int[] dataTypeSizes =
             {
                 12, //Float3
                 4, //D3dcolor
@@ -46,7 +46,7 @@ namespace Forgelight.Formats.Dme
                 8, //float16_2
                 4, //Short2
                 4, //Float1
-                8, //Short4
+                8 //Short4
             };
 
             public enum DataUsages
@@ -62,7 +62,7 @@ namespace Forgelight.Formats.Dme
                 Normal
             }
 
-            private static String[] dataUsageStrings =
+            private static string[] dataUsageStrings =
             {
                 "Position",
                 "Color",
@@ -74,16 +74,16 @@ namespace Forgelight.Formats.Dme
                 "Normal"
             };
 
-            public UInt32 Stream;
+            public uint Stream;
             public DataTypes DataType;
             public DataUsages DataUsage;
-            public UInt32 DataUsageIndex;
+            public uint DataUsageIndex;
 
-            public static void GetDataTypeFromString(String typeString, out DataTypes type)
+            public static void GetDataTypeFromString(string typeString, out DataTypes type)
             {
-                for (Int32 i = 0; i < dataTypeStrings.Length; ++i)
+                for (int i = 0; i < dataTypeStrings.Length; ++i)
                 {
-                    if (String.Compare(typeString, dataTypeStrings[i], true) == 0)
+                    if (string.Compare(typeString, dataTypeStrings[i], StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         type = (DataTypes) i;
                         return;
@@ -93,11 +93,11 @@ namespace Forgelight.Formats.Dme
                 type = DataTypes.None;
             }
 
-            public static void GetDataUsageFromString(String usageString, out DataUsages usage)
+            public static void GetDataUsageFromString(string usageString, out DataUsages usage)
             {
-                for (Int32 i = 0; i < dataUsageStrings.Length; ++i)
+                for (int i = 0; i < dataUsageStrings.Length; ++i)
                 {
-                    if (String.Compare(usageString, dataUsageStrings[i], true) == 0)
+                    if (string.Compare(usageString, dataUsageStrings[i], StringComparison.OrdinalIgnoreCase) == 0)
                     {
                         usage = (DataUsages) i;
                         return;
@@ -107,14 +107,14 @@ namespace Forgelight.Formats.Dme
                 usage = DataUsages.None;
             }
 
-            public static Int32 GetDataTypeSize(DataTypes type)
+            public static int GetDataTypeSize(DataTypes type)
             {
-                return dataTypeSizes[(Int32) type];
+                return dataTypeSizes[(int) type];
             }
         }
 
-        public String Name { get; private set; }
-        public UInt32 NameHash { get; private set; }
+        public string Name { get; private set; }
+        public uint NameHash { get; private set; }
         public List<Entry> Entries { get; private set; }
 
         private VertexLayout()
@@ -132,7 +132,7 @@ namespace Forgelight.Formats.Dme
             VertexLayout vertexLayout = new VertexLayout();
 
             //name
-            vertexLayout.Name = navigator.GetAttribute("Name", String.Empty);
+            vertexLayout.Name = navigator.GetAttribute("Name", string.Empty);
 
             //name hash
             vertexLayout.NameHash = Jenkins.OneAtATime(vertexLayout.Name);
@@ -144,21 +144,21 @@ namespace Forgelight.Formats.Dme
             {
                 navigator = entries.Current;
 
-                VertexLayout.Entry entry = new Entry();
+                Entry entry = new Entry();
 
                 //stream
-                entry.Stream = UInt32.Parse(navigator.GetAttribute("Stream", String.Empty));
+                entry.Stream = uint.Parse(navigator.GetAttribute("Stream", string.Empty));
 
                 //data type
-                String dataTypeString = navigator.GetAttribute("Type", String.Empty);
+                string dataTypeString = navigator.GetAttribute("Type", string.Empty);
                 Entry.GetDataTypeFromString(dataTypeString, out entry.DataType);
 
                 //data usage
-                String dataUsageString = navigator.GetAttribute("Usage", String.Empty);
+                string dataUsageString = navigator.GetAttribute("Usage", string.Empty);
                 Entry.GetDataUsageFromString(dataUsageString, out entry.DataUsage);
 
                 //data usage index
-                entry.DataUsageIndex = UInt32.Parse(navigator.GetAttribute("UsageIndex", String.Empty));
+                entry.DataUsageIndex = uint.Parse(navigator.GetAttribute("UsageIndex", string.Empty));
 
                 vertexLayout.Entries.Add(entry);
             }
@@ -171,13 +171,13 @@ namespace Forgelight.Formats.Dme
             return Name;
         }
 
-        public Boolean GetEntryInfoFromDataUsageAndUsageIndex(Entry.DataUsages dataUsage, Int32 usageIndex, out Entry.DataTypes dataType, out Int32 stream, out Int32 offset)
+        public bool GetEntryInfoFromDataUsageAndUsageIndex(Entry.DataUsages dataUsage, int usageIndex, out Entry.DataTypes dataType, out int stream, out int offset)
         {
             dataType = Entry.DataTypes.None;
             stream = 0;
             offset = 0;
 
-            UInt32 previousStream = 0;
+            uint previousStream = 0;
 
             foreach (Entry entry in Entries)
             {
@@ -186,7 +186,7 @@ namespace Forgelight.Formats.Dme
                     offset = 0;
                 }
 
-                stream = (Int32) entry.Stream;
+                stream = (int) entry.Stream;
 
                 if (entry.DataUsage == dataUsage && entry.DataUsageIndex == usageIndex)
                 {

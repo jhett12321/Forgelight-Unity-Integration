@@ -1,21 +1,20 @@
-﻿using System;
-using System.Xml.XPath;
+﻿using System.Xml.XPath;
 using Forgelight.Utils.Cryptography;
 
 namespace Forgelight.Formats.Dma
 {
     public class DrawStyle
     {
-        public String Name { get; private set; }
-        public UInt32 NameHash { get; private set; }
-        public String Effect { get; private set; }
-        public UInt32 VertexLayoutNameHash { get; private set; }
+        public string Name { get; private set; }
+        public uint NameHash { get; private set; }
+        public string Effect { get; private set; }
+        public uint VertexLayoutNameHash { get; private set; }
 
         private DrawStyle()
         {
-            Name = String.Empty;
+            Name = string.Empty;
             NameHash = 0;
-            Effect = String.Empty;
+            Effect = string.Empty;
             VertexLayoutNameHash = 0;
         }
 
@@ -29,14 +28,14 @@ namespace Forgelight.Formats.Dma
             DrawStyle drawStyle = new DrawStyle();
 
             //name
-            drawStyle.Name = navigator.GetAttribute("Name", String.Empty);
+            drawStyle.Name = navigator.GetAttribute("Name", string.Empty);
             drawStyle.NameHash = Jenkins.OneAtATime(drawStyle.Name);
 
             //effect
-            drawStyle.Effect = navigator.GetAttribute("Effect", String.Empty);
+            drawStyle.Effect = navigator.GetAttribute("Effect", string.Empty);
 
             //input layout
-            String vertexLayout = navigator.GetAttribute("InputLayout", String.Empty);
+            string vertexLayout = navigator.GetAttribute("InputLayout", string.Empty);
             drawStyle.VertexLayoutNameHash = Jenkins.OneAtATime(vertexLayout);
 
             return drawStyle;

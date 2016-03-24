@@ -1,6 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using Assets.Scripts.Forgelight.Utils;
 using UnityEngine;
 
@@ -13,7 +13,7 @@ namespace Forgelight.Formats.Zone
             public class Tint
             {
                 public Color Color { get; set; }
-                public UInt32 Percentage { get; set; }
+                public uint Percentage { get; set; }
             }
 
             public float Density { get; set; }
@@ -23,16 +23,16 @@ namespace Forgelight.Formats.Zone
             public float SlopeExtent { get; set; }
             public float MinElevation { get; set; }
             public float MaxElevation { get; set; }
-            public Byte MinAlpha { get; set; }
+            public byte MinAlpha { get; set; }
             public string Flora { get; set; }
             public List<Tint> Tints { get; set; }
         }
 
-        public UInt32 Index { get; private set; }
+        public uint Index { get; private set; }
         public string Name { get; private set; }
         public string ColorNXMap { get; private set; }
         public string SpecBlendNyMap { get; private set; }
-        public UInt32 DetailRepeat { get; private set; }
+        public uint DetailRepeat { get; private set; }
         public float BlendStrength { get; private set; }
         public float SpecMin { get; private set; }
         public float SpecMax { get; private set; }
@@ -61,7 +61,7 @@ namespace Forgelight.Formats.Zone
             eco.PhysicsMaterial = binaryReader.ReadNullTerminatedString();
 
             eco.Layers = new List<Layer>();
-            UInt32 layerCount = binaryReader.ReadUInt32();
+            uint layerCount = binaryReader.ReadUInt32();
 
             for (uint i = 0; i < layerCount; i++)
             {
@@ -77,16 +77,16 @@ namespace Forgelight.Formats.Zone
                 layer.Flora = binaryReader.ReadNullTerminatedString();
 
                 layer.Tints = new List<Layer.Tint>();
-                UInt32 tintCount = binaryReader.ReadUInt32();
+                uint tintCount = binaryReader.ReadUInt32();
 
                 for (uint j = 0; j < tintCount; j++)
                 {
                     Layer.Tint tint = new Layer.Tint();
 
-                    Byte r = binaryReader.ReadByte();
-                    Byte g = binaryReader.ReadByte();
-                    Byte b = binaryReader.ReadByte();
-                    Byte a = binaryReader.ReadByte();
+                    byte r = binaryReader.ReadByte();
+                    byte g = binaryReader.ReadByte();
+                    byte b = binaryReader.ReadByte();
+                    byte a = binaryReader.ReadByte();
 
                     tint.Color = new Color((float)r/255, (float)g/255, (float)b/255, (float)a/255);
 

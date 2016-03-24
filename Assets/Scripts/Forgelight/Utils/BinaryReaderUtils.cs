@@ -9,7 +9,7 @@ namespace Assets.Scripts.Forgelight.Utils
         {
             string str = "";
             char ch;
-            while ((int) (ch = binaryReader.ReadChar()) != 0)
+            while ((ch = binaryReader.ReadChar()) != 0)
             {
                 str = str + ch;
             }

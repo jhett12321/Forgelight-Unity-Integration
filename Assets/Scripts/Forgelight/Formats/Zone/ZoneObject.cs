@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Forgelight.Attributes;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Forgelight.Formats.Zone
@@ -8,7 +8,7 @@ namespace Forgelight.Formats.Zone
     [ExecuteInEditMode]
     public class ZoneObject : MonoBehaviour
     {
-        private string currentActorDef = null;
+        private string currentActorDef;
 
         public string actorDefinition;
         public float renderDistance;
@@ -61,7 +61,7 @@ namespace Forgelight.Formats.Zone
 
         public long ID { get; set; }
 
-        private bool visible = false;
+        private bool visible;
 
         private Renderer[] renderers;
         private List<GameObject> objectsToDestroy = new List<GameObject>();

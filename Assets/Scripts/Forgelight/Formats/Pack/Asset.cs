@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using Forgelight.Utils;
+using UnityEngine;
 
 namespace Forgelight.Pack
 {
@@ -32,12 +33,12 @@ namespace Forgelight.Pack
             XML,
             ZONE,
             Unknown
-        };
+        }
 
         private Asset(Pack pack)
         {
             Pack = pack;
-            Name = String.Empty;
+            Name = string.Empty;
             Size = 0;
             AbsoluteOffset = 0;
             Type = Types.Unknown;
@@ -49,8 +50,8 @@ namespace Forgelight.Pack
 
             Asset asset = new Asset(pack);
 
-            UInt32 count = reader.ReadUInt32();
-            asset.Name = new String(reader.ReadChars((Int32) count));
+            uint count = reader.ReadUInt32();
+            asset.Name = new string(reader.ReadChars((int) count));
             asset.AbsoluteOffset = reader.ReadUInt32();
             asset.Size = reader.ReadUInt32();
             asset.Crc32 = reader.ReadUInt32();
@@ -61,12 +62,12 @@ namespace Forgelight.Pack
                 string extension = Path.GetExtension(asset.Name).Substring(1);
                 try
                 {
-                    asset.Type = (Asset.Types) Enum.Parse(typeof (Types), extension, true);
+                    asset.Type = (Types) Enum.Parse(typeof (Types), extension, true);
                 }
-                catch (ArgumentException exception)
+                catch (ArgumentException)
                 {
                     // This extension isn't mapped in the enum
-                    System.Diagnostics.Debug.Write(exception.ToString());
+                    Debug.LogWarning("Unknown Forgelight File Type: " + extension);
                     asset.Type = Types.Unknown;
                 }
             }
@@ -82,11 +83,11 @@ namespace Forgelight.Pack
         [Browsable(false)]
         public Pack Pack { get; private set; }
 
-        public String Name { get; private set; }
-        public UInt32 Size { get; private set; }
-        public UInt32 AbsoluteOffset { get; private set; }
-        public UInt32 Crc32 { get; private set; }
+        public string Name { get; private set; }
+        public uint Size { get; private set; }
+        public uint AbsoluteOffset { get; private set; }
+        public uint Crc32 { get; private set; }
 
-        public Asset.Types Type { get; private set; }
+        public Types Type { get; private set; }
     }
 }

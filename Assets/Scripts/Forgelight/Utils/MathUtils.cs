@@ -1,4 +1,7 @@
-﻿namespace Forgelight.Utils
+﻿using System;
+using UnityEngine;
+
+namespace Forgelight.Utils
 {
     public class MathUtils
     {
@@ -7,7 +10,7 @@
             float retVal;
             float oldRange = 1.0f;
 
-            if (oldRange == 0)
+            if (Math.Abs(oldRange) < Mathf.Epsilon)
             {
                 retVal = targetMin;
             }

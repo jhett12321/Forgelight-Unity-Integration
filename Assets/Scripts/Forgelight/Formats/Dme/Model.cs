@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Forgelight.Utils.Cryptography;
 using UnityEngine;
+using Material = Forgelight.Formats.Dma.Material;
 
 namespace Forgelight.Formats.Dme
 {
@@ -16,12 +17,12 @@ namespace Forgelight.Formats.Dme
 
     public class Model
     {
-        public UInt32 Version { get; private set; }
-        public UInt32 ModelHeaderOffset { get; private set; }
+        public uint Version { get; private set; }
+        public uint ModelHeaderOffset { get; private set; }
 
-        public String Name { get; private set; }
+        public string Name { get; private set; }
 
-        public List<Dma.Material> Materials { get; private set; }
+        public List<Material> Materials { get; private set; }
 
         //Bounding Box
         private Vector3 min;
@@ -29,11 +30,11 @@ namespace Forgelight.Formats.Dme
         private Vector3 max;
         public Vector3 Max { get { return max; } }
 
-        public Mesh[] Meshes { get; private set; }
-        public List<String> TextureStrings { get; private set; }
-        public BoneMap[] BoneMaps { get; private set; }
+        public List<Mesh> Meshes { get; private set; }
+        public List<string> TextureStrings { get; private set; }
+        public List<BoneMap> BoneMaps { get; private set; }
 
-        public static Model LoadFromStream(String name, Stream stream)
+        public static Model LoadFromStream(string name, Stream stream)
         {
             BinaryReader binaryReader = new BinaryReader(stream);
 
@@ -61,8 +62,8 @@ namespace Forgelight.Formats.Dme
             model.Name = name;
 
             //materials
-            model.TextureStrings = new List<String>();
-            model.Materials = new List<Dma.Material>();
+            model.TextureStrings = new List<string>();
+            model.Materials = new List<Material>();
             Dma.Dma.LoadFromStream(binaryReader.BaseStream, model.TextureStrings, model.Materials);
 
             //Bounding Box
@@ -75,22 +76,22 @@ namespace Forgelight.Formats.Dme
             model.max.z = binaryReader.ReadSingle();
 
             //meshes
-            UInt32 meshCount = binaryReader.ReadUInt32();
+            uint meshCount = binaryReader.ReadUInt32();
 
-            model.Meshes = new Mesh[meshCount];
+            model.Meshes = new List<Mesh>((int) meshCount);
 
-            for (Int32 i = 0; i < meshCount; ++i)
+            for (int i = 0; i < meshCount; ++i)
             {
                 Mesh mesh = Mesh.LoadFromStream(binaryReader.BaseStream, model.Materials);
 
-                if (mesh != null)
+                if (mesh == null)
                 {
-                    model.Meshes[i] = mesh;
+                    continue;
                 }
 
                 //Textures
-                Dma.Material material = model.Materials[(int) mesh.MaterialIndex];
-                foreach (Dma.Material.Parameter parameter in material.Parameters)
+                Material material = model.Materials[(int) mesh.MaterialIndex];
+                foreach (Material.Parameter parameter in material.Parameters)
                 {
                     LookupTexture(mesh, parameter, model.TextureStrings);
 
@@ -99,42 +100,42 @@ namespace Forgelight.Formats.Dme
                         break;
                     }
                 }
+
+                model.Meshes.Add(mesh);
             }
 
             //bone maps
-            UInt32 boneMapCount = binaryReader.ReadUInt32();
+            uint boneMapCount = binaryReader.ReadUInt32();
+            model.BoneMaps = new List<BoneMap>((int) boneMapCount);
 
-            model.BoneMaps = new BoneMap[boneMapCount];
-
-            for (Int32 i = 0; i < boneMapCount; ++i)
+            for (int i = 0; i < boneMapCount; ++i)
             {
                 BoneMap boneMap = BoneMap.LoadFromStream(binaryReader.BaseStream);
 
                 if (boneMap != null)
                 {
-                    model.BoneMaps[i] = boneMap;
+                    model.BoneMaps.Add(boneMap);
                 }
             }
 
             //bone map entries
-            UInt32 boneMapEntryCount = binaryReader.ReadUInt32();
+            //uint boneMapEntryCount = binaryReader.ReadUInt32();
+            //BoneMapEntry[] boneMapEntries = new BoneMapEntry[boneMapEntryCount];
 
-            BoneMapEntry[] boneMapEntries = new BoneMapEntry[boneMapEntryCount];
+            //for (int i = 0; i < boneMapEntryCount; ++i)
+            //{
+            //    BoneMapEntry boneMapEntry = BoneMapEntry.LoadFromStream(binaryReader.BaseStream);
 
-            for (Int32 i = 0; i < boneMapEntryCount; ++i)
-            {
-                BoneMapEntry boneMapEntry = BoneMapEntry.LoadFromStream(binaryReader.BaseStream);
-
-                boneMapEntries[i] = boneMapEntry;
-            }
+            //    boneMapEntries[i] = boneMapEntry;
+            //}
 
             return model;
         }
 
-        private static void LookupTexture(Mesh mesh, Dma.Material.Parameter paramater, List<String> textureStrings)
+        private static void LookupTexture(Mesh mesh, Material.Parameter paramater, List<string> textureStrings)
         {
-            if (paramater.Data.Length != 4 && paramater.Type != Dma.Material.Parameter.D3DXParameterType.Texture ||
-                paramater.Class != Dma.Material.Parameter.D3DXParameterClass.Object)
+            if (paramater.Data.Length != 4 && paramater.Type != Material.Parameter.D3DXParameterType.Texture ||
+                paramater.Class != Material.Parameter.D3DXParameterClass.Object)
             {
                 return;
             }

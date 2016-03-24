@@ -5,12 +5,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.IO;
+using System.Text;
 using Forgelight.Utils;
 using Forgelight.Utils.Cryptography;
-using MiscUtil.IO;
 using MiscUtil.Conversion;
+using MiscUtil.IO;
 
 namespace Forgelight.Pack
 {
@@ -103,24 +103,24 @@ namespace Forgelight.Pack
 
                 string filename = file.Substring(file.LastIndexOf("\\") + 1);
 
-                FileHeader h = new FileHeader()
+                FileHeader h = new FileHeader
                 {
                     name_len = (uint)filename.Length,
                     name = Encoding.ASCII.GetBytes(filename),
                     offset = 0,
                     length = (uint)fdata.Length,
-                    crc32 = (uint)BitConverter.ToInt32(c, 0),
+                    crc32 = (uint)BitConverter.ToInt32(c, 0)
                 };
 
                 fheader.Add(h);
             }
 
             //Create a chunk header for the pack file
-            ChunkHeader header = new ChunkHeader()
+            ChunkHeader header = new ChunkHeader
             {
                 NextChunkOffset = 0,
                 FileCount = (uint)fileCount,
-                files = fheader.ToArray(),
+                files = fheader.ToArray()
             };
 
             //Update the files with the offset of each data chunk of the file
@@ -143,9 +143,9 @@ namespace Forgelight.Pack
                 byte[] ph = header.Encode();
                 wr.Write(ph);
 
-                for (int i = 0; i < fileData.Count; i++)
+                foreach (byte[] t in fileData)
                 {
-                    wr.Write(fileData[i]);
+                    wr.Write(t);
                 }
             }
 

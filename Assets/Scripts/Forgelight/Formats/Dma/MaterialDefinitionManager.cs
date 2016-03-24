@@ -8,13 +8,13 @@ namespace Forgelight.Formats.Dma
 {
     public class MaterialDefinitionManager
     {
-        public Dictionary<UInt32, MaterialDefinition> MaterialDefinitions { get; private set; }
-        public Dictionary<UInt32, VertexLayout> VertexLayouts { get; private set; }
+        public Dictionary<uint, MaterialDefinition> MaterialDefinitions { get; private set; }
+        public Dictionary<uint, VertexLayout> VertexLayouts { get; private set; }
 
         public MaterialDefinitionManager(ForgelightGame forgelightGame)
         {
-            MaterialDefinitions = new Dictionary<UInt32, MaterialDefinition>();
-            VertexLayouts = new Dictionary<UInt32, VertexLayout>();
+            MaterialDefinitions = new Dictionary<uint, MaterialDefinition>();
+            VertexLayouts = new Dictionary<uint, VertexLayout>();
 
             using (MemoryStream materialsXML = forgelightGame.CreateAssetMemoryStreamByName("materials_3.xml"))
             {
@@ -37,7 +37,7 @@ namespace Forgelight.Formats.Dma
             if (stringReader == null)
                 return;
 
-            XPathDocument document = null;
+            XPathDocument document;
 
             try
             {
@@ -61,7 +61,7 @@ namespace Forgelight.Formats.Dma
 
         private void LoadMaterialDefinitionsByXPathNavigator(XPathNavigator navigator)
         {
-            XPathNodeIterator materialDefinitions = null;
+            XPathNodeIterator materialDefinitions;
 
             try
             {
@@ -88,7 +88,7 @@ namespace Forgelight.Formats.Dma
         private void LoadVertexLayoutsByXPathNavigator(XPathNavigator navigator)
         {
             //material definitions
-            XPathNodeIterator vertexLayouts = null;
+            XPathNodeIterator vertexLayouts;
 
             try
             {

@@ -110,6 +110,12 @@ namespace Forgelight
         {
             CheckExtensionState();
             string directory = Path.GetDirectoryName(StatePath);
+
+            if (directory == null)
+            {
+                return;
+            }
+
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

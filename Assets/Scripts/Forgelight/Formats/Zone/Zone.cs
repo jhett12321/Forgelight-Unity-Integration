@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 
 namespace Forgelight.Formats.Zone
@@ -9,17 +8,17 @@ namespace Forgelight.Formats.Zone
         public string Name { get; set; }
 
         //Header
-        public UInt32 Version { get; private set; }
-        public Dictionary<string, UInt32> Offsets { get; private set; }
-        public UInt32 QuadsPerTile { get; private set; }
+        public uint Version { get; private set; }
+        public Dictionary<string, uint> Offsets { get; private set; }
+        public uint QuadsPerTile { get; private set; }
         public float TileSize { get; private set; }
         public float TileHeight { get; private set; }
-        public UInt32 VertsPerTile { get; private set; }
-        public UInt32 TilesPerChunk { get; private set; }
-        public Int32 StartX { get; private set; }
-        public Int32 StartY { get; private set; }
-        public UInt32 ChunksX { get; private set; }
-        public UInt32 ChunksY { get; private set; }
+        public uint VertsPerTile { get; private set; }
+        public uint TilesPerChunk { get; private set; }
+        public int StartX { get; private set; }
+        public int StartY { get; private set; }
+        public uint ChunksX { get; private set; }
+        public uint ChunksY { get; private set; }
 
         //Data
         public List<Eco> Ecos { get; private set; }
@@ -73,7 +72,7 @@ namespace Forgelight.Formats.Zone
 
             //Ecos
             zone.Ecos = new List<Eco>();
-            UInt32 ecosLength = binaryReader.ReadUInt32();
+            uint ecosLength = binaryReader.ReadUInt32();
 
             for (uint i = 0; i < ecosLength; i++)
             {
@@ -82,7 +81,7 @@ namespace Forgelight.Formats.Zone
 
             //Floras
             zone.Floras = new List<Flora>();
-            UInt32 florasLength = binaryReader.ReadUInt32();
+            uint florasLength = binaryReader.ReadUInt32();
 
             for (uint i = 0; i < florasLength; i++)
             {
@@ -91,7 +90,7 @@ namespace Forgelight.Formats.Zone
 
             //Invisible Walls
             zone.InvisibleWalls = new List<InvisibleWall>();
-            UInt32 invisibleWallsLength = binaryReader.ReadUInt32();
+            uint invisibleWallsLength = binaryReader.ReadUInt32();
 
             for (uint i = 0; i < invisibleWallsLength; i++)
             {
@@ -100,7 +99,7 @@ namespace Forgelight.Formats.Zone
 
             //Objects
             zone.Objects = new List<Object>();
-            UInt32 objectsLength = binaryReader.ReadUInt32();
+            uint objectsLength = binaryReader.ReadUInt32();
 
             for (uint i = 0; i < objectsLength; i++)
             {
@@ -109,7 +108,7 @@ namespace Forgelight.Formats.Zone
 
             //Lights
             zone.Lights = new List<Light>();
-            UInt32 lightsLength = binaryReader.ReadUInt32();
+            uint lightsLength = binaryReader.ReadUInt32();
 
             for (uint i = 0; i < lightsLength; i++)
             {
@@ -117,14 +116,14 @@ namespace Forgelight.Formats.Zone
             }
 
             //Unknowns
-            zone.Unknowns = new List<Unknown>();
-            UInt32 unknownsLength = binaryReader.ReadUInt32();
+            uint unknownsLength = binaryReader.ReadUInt32();
+            zone.Unknowns = new List<Unknown>((int) unknownsLength);
 
-            for (int i = 0; i < unknownsLength; i++)
-            {
-                //zone.Unknowns.Add(Unknown.ReadFromStream(binaryReader.BaseStream));
-                //???
-            }
+            //for (int i = 0; i < unknownsLength; i++)
+            //{
+            //    //zone.Unknowns.Add(Unknown.ReadFromStream(binaryReader.BaseStream));
+            //    //???
+            //}
 
             return zone;
         }
@@ -167,7 +166,7 @@ namespace Forgelight.Formats.Zone
             //binaryWriter.Write(zone.Offsets["lights"]);
             //binaryWriter.Write(zone.Offsets["unknowns"]);
 
-            Dictionary<string, UInt32> offsets = new Dictionary<string, uint>();
+            Dictionary<string, uint> offsets = new Dictionary<string, uint>();
 
             //Misc Header
             binaryWriter.Write(zone.QuadsPerTile);

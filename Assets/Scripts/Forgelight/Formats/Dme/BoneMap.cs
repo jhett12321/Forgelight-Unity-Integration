@@ -1,12 +1,11 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace Forgelight.Formats.Dme
 {
     public struct BoneMapEntry
     {
-        public UInt16 BoneIndex;
-        public UInt16 GlobalIndex;
+        public ushort BoneIndex;
+        public ushort GlobalIndex;
 
         public static BoneMapEntry LoadFromStream(Stream stream)
         {
@@ -23,15 +22,15 @@ namespace Forgelight.Formats.Dme
 
     public class BoneMap
     {
-        public UInt32 Unknown0 { get; private set; }
-        public UInt32 BoneStart { get; private set; }
-        public UInt32 BoneCount { get; private set; }
-        public UInt32 Delta { get; private set; }
-        public UInt32 Unknown1 { get; private set; }
-        public UInt32 BoneEnd { get; private set; }
-        public UInt32 VertexCount { get; private set; }
-        public UInt32 Unknown2 { get; private set; }
-        public UInt32 IndexCount { get; private set; }
+        public uint Unknown0 { get; private set; }
+        public uint BoneStart { get; private set; }
+        public uint BoneCount { get; private set; }
+        public uint Delta { get; private set; }
+        public uint Unknown1 { get; private set; }
+        public uint BoneEnd { get; private set; }
+        public uint VertexCount { get; private set; }
+        public uint Unknown2 { get; private set; }
+        public uint IndexCount { get; private set; }
 
         public static BoneMap LoadFromStream(Stream stream)
         {

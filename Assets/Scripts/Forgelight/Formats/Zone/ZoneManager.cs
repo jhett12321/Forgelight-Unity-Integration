@@ -1,17 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Forgelight.Formats.Cnk;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
+using MathUtils = Forgelight.Utils.MathUtils;
 
 namespace Forgelight.Formats.Zone
 {
     public class ZoneManager
     {
-        private bool running = false;
+        private bool running;
         public Zone LoadedZone { get; private set; }
 
         public void ChangeZone(ForgelightGame forgelightGame, Zone zone)
@@ -30,7 +28,7 @@ namespace Forgelight.Formats.Zone
             //Calculate the total objects we need to process.
             foreach (Object zoneObject in zone.Objects)
             {
-                totalObjects += zoneObject.Instances.Count();
+                totalObjects += zoneObject.Instances.Count;
             }
 
             ZoneObjectFactory ZoneObjectFactory = ForgelightExtension.Instance.ZoneObjectFactory;
@@ -53,7 +51,7 @@ namespace Forgelight.Formats.Zone
                     return;
                 }
 
-                ProgressBar(Utils.MathUtils.RemapProgress((float)objectsProcessed / (float)totalObjects, 0.0f, 0.50f), zoneObject.ActorDefinition);
+                ProgressBar(MathUtils.RemapProgress(objectsProcessed / (float)totalObjects, 0.0f, 0.50f), zoneObject.ActorDefinition);
             }
 
             ZoneObjectFactory.transform.localScale = new Vector3(-1, 1, 1);

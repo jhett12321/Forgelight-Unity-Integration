@@ -4,7 +4,6 @@ using System.Reflection;
 using Forgelight.Attributes;
 using UnityEditor;
 using UnityEngine;
-using Object = System.Object;
 
 namespace Forgelight.Editor.AttributeDrawers
 {
@@ -36,7 +35,7 @@ namespace Forgelight.Editor.AttributeDrawers
                         break;
 
                     case SerializedPropertyType.String:
-                        field.SetValue(EditorGUILayout.TextField(field.Name, (String)field.GetValue(), emptyOptions));
+                        field.SetValue(EditorGUILayout.TextField(field.Name, (string)field.GetValue(), emptyOptions));
                         break;
 
                     case SerializedPropertyType.Vector2:
@@ -106,7 +105,7 @@ namespace Forgelight.Editor.AttributeDrawers
 
     public class PropertyField
     {
-        Object instance;
+        object instance;
         PropertyInfo info;
         SerializedPropertyType type;
 
@@ -121,7 +120,7 @@ namespace Forgelight.Editor.AttributeDrawers
             }
         }
 
-        public String Name
+        public string Name
         {
             get
             {
@@ -129,7 +128,7 @@ namespace Forgelight.Editor.AttributeDrawers
             }
         }
 
-        public PropertyField(Object instance, PropertyInfo info, SerializedPropertyType type)
+        public PropertyField(object instance, PropertyInfo info, SerializedPropertyType type)
         {
             this.instance = instance;
             this.info = info;
@@ -139,12 +138,12 @@ namespace Forgelight.Editor.AttributeDrawers
             setter = this.info.GetSetMethod();
         }
 
-        public Object GetValue()
+        public object GetValue()
         {
             return getter.Invoke(instance, null);
         }
 
-        public void SetValue(Object value)
+        public void SetValue(object value)
         {
             setter.Invoke(instance, new[] { value });
         }

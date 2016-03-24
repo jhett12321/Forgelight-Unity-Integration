@@ -1,11 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace Forgelight.Formats.Zone
 {
     public class InvisibleWall
     {
-        public UInt32 UnknownUInt32 { get; private set; }
+        public uint UnknownUInt32 { get; private set; }
         public float UnknownFloat1 { get; private set; }
         public float UnknownFloat2 { get; private set; }
         public float UnknownFloat3 { get; private set; }

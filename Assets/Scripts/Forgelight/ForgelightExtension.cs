@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace Forgelight
@@ -89,12 +90,12 @@ namespace Forgelight
 
         private void Initialize()
         {
-            if (EditorSceneManager.loadedSceneCount > 0 && EditorSceneManager.GetActiveScene().name == lastScene)
+            if (EditorSceneManager.loadedSceneCount > 0 && SceneManager.GetActiveScene().name == lastScene)
             {
                 return;
             }
 
-            lastScene = EditorSceneManager.GetActiveScene().name;
+            lastScene = SceneManager.GetActiveScene().name;
 
             //Initializes any games we have loaded in the past.
             Config.LoadSavedState();

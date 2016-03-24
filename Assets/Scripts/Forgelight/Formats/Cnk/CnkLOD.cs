@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LzhamWrapper;
@@ -21,26 +20,26 @@ namespace Forgelight.Formats.Cnk
 
         public class HeightMap
         {
-            public Int16 Val1 { get; set; }
+            public short Val1 { get; set; }
             public byte Val2 { get; set; }
             public byte Val3 { get; set; }
         }
 
         public class Vertex
         {
-            public Int16 X { get; set; }
-            public Int16 Y { get; set; }
-            public Int16 HeightFar { get; set; }
-            public Int16 HeightNear { get; set; }
-            public UInt32 Color { get; set; }
+            public short X { get; set; }
+            public short Y { get; set; }
+            public short HeightFar { get; set; }
+            public short HeightNear { get; set; }
+            public uint Color { get; set; }
         }
 
         public class RenderBatch
         {
-            public UInt32 IndexOffset { get; set; }
-            public UInt32 IndexCount { get; set; }
-            public UInt32 VertexOffset { get; set; }
-            public UInt32 VertexCount { get; set; }
+            public uint IndexOffset { get; set; }
+            public uint IndexCount { get; set; }
+            public uint VertexOffset { get; set; }
+            public uint VertexCount { get; set; }
         }
 
         public class OptimizedDraw
@@ -55,20 +54,20 @@ namespace Forgelight.Formats.Cnk
 
         //Header
         public string Name { get; private set; }
-        public UInt32 Version { get; private set; }
-        public UInt32 UncompressedSize { get; private set; }
-        public UInt32 CompressedSize { get; private set; }
+        public uint Version { get; private set; }
+        public uint DecompressedSize { get; private set; }
+        public uint CompressedSize { get; private set; }
 
         //Textures
         public List<Texture> Textures { get; private set; }
 
         //Verts per side
-        public UInt32 VertsPerSide { get; private set; }
+        public uint VertsPerSide { get; private set; }
 
         public Dictionary<int, Dictionary<int, HeightMap>> HeightMaps = new Dictionary<int, Dictionary<int, HeightMap>>();
 
         //Indices
-        public List<UInt16> Indices { get; private set; }
+        public List<ushort> Indices { get; private set; }
 
         //Verts
         public List<Vertex> Vertices { get; private set; }
@@ -80,7 +79,7 @@ namespace Forgelight.Formats.Cnk
         public List<OptimizedDraw> OptimizedDraws { get; private set; }
 
         //Unknown Data
-        public List<UInt16> UnknownShorts1 { get; private set; }
+        public List<ushort> UnknownShorts1 { get; private set; }
 
         //Unknown Data
         public List<Vector3> UnknownVectors1 { get; private set; }
@@ -107,14 +106,14 @@ namespace Forgelight.Formats.Cnk
 
             chunk.Version = binaryReader.ReadUInt32();
 
-            UInt32 decompressedSize = binaryReader.ReadUInt32();
-            UInt32 compressedSize = binaryReader.ReadUInt32();
+            chunk.DecompressedSize = binaryReader.ReadUInt32();
+            chunk.CompressedSize = binaryReader.ReadUInt32();
 
             //Decompression
-            byte[] compressedBuffer = binaryReader.ReadBytes((int) compressedSize);
-            byte[] decompressedBuffer = new byte[decompressedSize];
+            byte[] compressedBuffer = binaryReader.ReadBytes((int) chunk.CompressedSize);
+            byte[] decompressedBuffer = new byte[chunk.DecompressedSize];
 
-            InflateReturnCode result = LzhamInterop.DecompressForgelightData(compressedBuffer, compressedSize, decompressedBuffer, decompressedSize);
+            InflateReturnCode result = LzhamInterop.DecompressForgelightData(compressedBuffer, chunk.CompressedSize, decompressedBuffer, chunk.DecompressedSize);
 
             if (result != InflateReturnCode.LZHAM_Z_STREAM_END && result != InflateReturnCode.LZHAM_Z_OK)
             {
@@ -127,44 +126,44 @@ namespace Forgelight.Formats.Cnk
                 binaryReader = new BinaryReader(decompressedStream);
 
                 //Textures
-                UInt32 textureCount = binaryReader.ReadUInt32();
+                uint textureCount = binaryReader.ReadUInt32();
                 chunk.Textures = new List<Texture>((int)textureCount);
 
                 for (int i = 0; i < textureCount; i++)
                 {
                     Texture texture = new Texture();
 
-                    UInt32 colorNxMapSize = binaryReader.ReadUInt32();
+                    uint colorNxMapSize = binaryReader.ReadUInt32();
                     if (colorNxMapSize > 0)
                     {
                         texture.ColorNXMap = binaryReader.ReadBytes((int)colorNxMapSize).ToList();
                     }
 
-                    UInt32 specNyMapSize = binaryReader.ReadUInt32();
+                    uint specNyMapSize = binaryReader.ReadUInt32();
                     if (specNyMapSize > 0)
                     {
                         texture.SpecNyMap = binaryReader.ReadBytes((int)specNyMapSize).ToList();
                     }
 
-                    UInt32 extraData1Size = binaryReader.ReadUInt32();
+                    uint extraData1Size = binaryReader.ReadUInt32();
                     if (extraData1Size > 0)
                     {
                         texture.ExtraData1 = binaryReader.ReadBytes((int)extraData1Size).ToList();
                     }
 
-                    UInt32 extraData2Size = binaryReader.ReadUInt32();
+                    uint extraData2Size = binaryReader.ReadUInt32();
                     if (extraData2Size > 0)
                     {
                         texture.ExtraData2 = binaryReader.ReadBytes((int)extraData2Size).ToList();
                     }
 
-                    UInt32 extraData3Size = binaryReader.ReadUInt32();
+                    uint extraData3Size = binaryReader.ReadUInt32();
                     if (extraData3Size > 0)
                     {
                         texture.ExtraData3 = binaryReader.ReadBytes((int)extraData3Size).ToList();
                     }
 
-                    UInt32 extraData4Size = binaryReader.ReadUInt32();
+                    uint extraData4Size = binaryReader.ReadUInt32();
                     if (extraData4Size > 0)
                     {
                         texture.ExtraData4 = binaryReader.ReadBytes((int)extraData4Size).ToList();
@@ -177,7 +176,7 @@ namespace Forgelight.Formats.Cnk
                 chunk.VertsPerSide = binaryReader.ReadUInt32();
 
                 //Height Maps
-                UInt32 heightMapCount = binaryReader.ReadUInt32();
+                uint heightMapCount = binaryReader.ReadUInt32();
 
                 int n = (int)(heightMapCount / 4);
 
@@ -208,7 +207,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Indices
-                UInt32 indexCount = binaryReader.ReadUInt32();
+                uint indexCount = binaryReader.ReadUInt32();
                 chunk.Indices = new List<ushort>((int)indexCount);
 
                 for (int i = 0; i < indexCount; i++)
@@ -217,7 +216,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Verts
-                UInt32 vertCount = binaryReader.ReadUInt32();
+                uint vertCount = binaryReader.ReadUInt32();
                 chunk.Vertices = new List<Vertex>((int)vertCount);
 
                 for (int i = 0; i < vertCount; i++)
@@ -234,7 +233,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Render Batches
-                UInt32 renderBatchCount = binaryReader.ReadUInt32();
+                uint renderBatchCount = binaryReader.ReadUInt32();
                 chunk.RenderBatches = new List<RenderBatch>((int)renderBatchCount);
 
                 for (int i = 0; i < renderBatchCount; i++)
@@ -250,7 +249,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Optimized Draw
-                UInt32 optimizedDrawCount = binaryReader.ReadUInt32();
+                uint optimizedDrawCount = binaryReader.ReadUInt32();
                 chunk.OptimizedDraws = new List<OptimizedDraw>((int)optimizedDrawCount);
 
                 for (int i = 0; i < optimizedDrawCount; i++)
@@ -262,7 +261,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Unknown Data
-                UInt32 unknownShort1Count = binaryReader.ReadUInt32();
+                uint unknownShort1Count = binaryReader.ReadUInt32();
                 chunk.UnknownShorts1 = new List<ushort>((int)unknownShort1Count);
 
                 for (int i = 0; i < unknownShort1Count; i++)
@@ -271,7 +270,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Unknown Data
-                UInt32 unknownVectors1Count = binaryReader.ReadUInt32();
+                uint unknownVectors1Count = binaryReader.ReadUInt32();
                 chunk.UnknownVectors1 = new List<Vector3>((int)unknownVectors1Count);
 
                 for (int i = 0; i < unknownVectors1Count; i++)
@@ -280,7 +279,7 @@ namespace Forgelight.Formats.Cnk
                 }
 
                 //Tile Occluder Info
-                UInt32 tileOccluderCount = binaryReader.ReadUInt32();
+                uint tileOccluderCount = binaryReader.ReadUInt32();
                 chunk.TileOccluderInfos = new List<TileOccluderInfo>((int)tileOccluderCount);
 
                 for (int i = 0; i < tileOccluderCount; i++)

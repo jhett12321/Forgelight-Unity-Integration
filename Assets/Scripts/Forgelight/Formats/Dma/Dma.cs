@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Forgelight.Formats.Dma
 {
     public static class Dma
     {
-        public static void LoadFromStream(Stream stream, ICollection<String> textures, ICollection<Material> materials)
+        public static void LoadFromStream(Stream stream, ICollection<string> textures, ICollection<Material> materials)
         {
             if (stream == null || textures == null || materials == null)
                 return;
@@ -25,7 +23,7 @@ namespace Forgelight.Formats.Dma
                 return;
             }
 
-            UInt32 version = binaryReader.ReadUInt32();
+            uint version = binaryReader.ReadUInt32();
 
             if (version != 1)
             {
@@ -33,17 +31,17 @@ namespace Forgelight.Formats.Dma
             }
 
             //textures
-            UInt32 texturesLength = binaryReader.ReadUInt32();
-            char[] buffer = binaryReader.ReadChars((Int32) texturesLength);
-            Int32 startIndex = 0;
+            uint texturesLength = binaryReader.ReadUInt32();
+            char[] buffer = binaryReader.ReadChars((int) texturesLength);
+            int startIndex = 0;
 
-            for (Int32 i = 0; i < buffer.Count(); ++i)
+            for (int i = 0; i < buffer.Length; ++i)
             {
                 if (buffer[i] == '\0')
                 {
-                    Int32 length = i - startIndex;
+                    int length = i - startIndex;
 
-                    String textureName = new String(buffer, startIndex, length);
+                    string textureName = new string(buffer, startIndex, length);
                     startIndex = i + 1;
 
                     textures.Add(textureName);
@@ -51,9 +49,9 @@ namespace Forgelight.Formats.Dma
             }
 
             //materials
-            UInt32 materialCount = binaryReader.ReadUInt32();
+            uint materialCount = binaryReader.ReadUInt32();
 
-            for (Int32 i = 0; i < materialCount; ++i)
+            for (int i = 0; i < materialCount; ++i)
             {
                 Material material = Material.LoadFromStream(stream);
                 materials.Add(material);
