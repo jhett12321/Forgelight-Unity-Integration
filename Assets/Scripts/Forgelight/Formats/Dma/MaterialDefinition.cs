@@ -6,11 +6,13 @@ namespace Forgelight.Formats.Dma
 {
     public class MaterialDefinition
     {
+        #region Structure
         public string Name { get; private set; }
         public uint NameHash { get; private set; }
         public string Type { get; private set; }
         public uint TypeHash { get; private set; }
         public List<DrawStyle> DrawStyles { get; private set; }
+        #endregion
 
         private MaterialDefinition()
         {

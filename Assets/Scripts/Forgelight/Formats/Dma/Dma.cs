@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace Forgelight.Formats.Dma
 {
@@ -27,6 +28,7 @@ namespace Forgelight.Formats.Dma
 
             if (version != 1)
             {
+                Debug.LogWarning("Could not decode dma. Unknown dma version " + version);
                 return;
             }
 

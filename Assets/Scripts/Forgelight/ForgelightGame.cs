@@ -83,15 +83,18 @@ namespace Forgelight
                     string zoneName = Path.GetFileNameWithoutExtension(path);
                     Zone zone = Zone.LoadFromStream(Path.GetFileName(path), fileStream);
 
-                    zoneName = zoneName + " (" + path + ")";
-                    AvailableZones[zoneName] = zone;
-
-                    if (DialogUtils.DisplayCancelableDialog("Change Zones", "Would you like to load this zone now?"))
+                    if (zone != null)
                     {
-                        ForgelightExtension.Instance.ZoneManager.ChangeZone(ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame, zone);
-                    }
+                        zoneName = zoneName + " (" + path + ")";
+                        AvailableZones[zoneName] = zone;
 
-                    return true;
+                        if (DialogUtils.DisplayCancelableDialog("Change Zones", "Would you like to load this zone now?"))
+                        {
+                            ForgelightExtension.Instance.ZoneManager.ChangeZone(ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame, zone);
+                        }
+
+                        return true;
+                    }
                 }
             }
             catch (Exception e)
@@ -221,11 +224,15 @@ namespace Forgelight
                 MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
                 Zone zone = Zone.LoadFromStream(asset.Name, memoryStream);
 
-                lock (listLock)
+                if (zone != null)
                 {
-                    zoneName = zoneName + " (" + asset.Pack.Name + ")";
-                    AvailableZones[zoneName] = zone;
+                    lock (listLock)
+                    {
+                        zoneName = zoneName + " (" + asset.Pack.Name + ")";
+                        AvailableZones[zoneName] = zone;
+                    }
                 }
+
             });
 
             while (backgroundWorker.IsBusy)
@@ -314,7 +321,10 @@ namespace Forgelight
 
                     CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
 
-                    ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
+                    if (chunk != null)
+                    {
+                        ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
+                    }
 
                     Interlocked.Increment(ref chunksProcessed);
                 }
@@ -327,18 +337,21 @@ namespace Forgelight
                 {
                     CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
 
-                    ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
+                    if (chunk != null)
+                    {
+                        ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
+                    }
 
                     texturesProcessed++;
 
-                    assetProcessing = chunk.Name;
-                    ProgressBar(MathUtils.RemapProgress(texturesProcessed + chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk: " + assetProcessing);
+                    assetProcessing = asset.Name;
+                    ProgressBar(MathUtils.RemapProgress((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
                 }
             }
 
             while (backgroundWorker.IsBusy)
             {
-                ProgressBar(MathUtils.RemapProgress(texturesProcessed + chunksProcessed / (float)terrainAssetsCnk1.Count * 2, progress0, progress100), "Exporting Chunk: " + assetProcessing);
+                ProgressBar(MathUtils.RemapProgress((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
             }
 
             backgroundWorker.Dispose();

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LzhamWrapper;
@@ -8,6 +9,18 @@ namespace Forgelight.Formats.Cnk
 {
     public class CnkLOD
     {
+        public string Name { get; private set; }
+        public ChunkType ChunkType { get; private set; }
+
+        #region Structure
+        //Header
+        public uint Version { get; private set; }
+
+        public uint DecompressedSize { get; private set; }
+        public uint CompressedSize { get; private set; }
+
+        //Textures
+        public List<Texture> Textures { get; private set; }
         public class Texture
         {
             public List<byte> ColorNXMap { get; set; }
@@ -18,6 +31,10 @@ namespace Forgelight.Formats.Cnk
             public List<byte> ExtraData4 { get; set; }
         }
 
+        //Verts per side
+        public uint VertsPerSide { get; private set; }
+
+        public Dictionary<int, Dictionary<int, HeightMap>> HeightMaps = new Dictionary<int, Dictionary<int, HeightMap>>();
         public class HeightMap
         {
             public short Val1 { get; set; }
@@ -25,6 +42,11 @@ namespace Forgelight.Formats.Cnk
             public byte Val3 { get; set; }
         }
 
+        //Indices
+        public List<ushort> Indices { get; private set; }
+
+        //Verts
+        public List<Vertex> Vertices { get; private set; }
         public class Vertex
         {
             public short X { get; set; }
@@ -34,49 +56,23 @@ namespace Forgelight.Formats.Cnk
             public uint Color { get; set; }
         }
 
+        //Render Batches
+        public List<RenderBatch> RenderBatches { get; private set; }
         public class RenderBatch
         {
+            public uint Unknown { get; set; }
             public uint IndexOffset { get; set; }
             public uint IndexCount { get; set; }
             public uint VertexOffset { get; set; }
             public uint VertexCount { get; set; }
         }
 
+        //Optimized Draw
+        public List<OptimizedDraw> OptimizedDraws { get; private set; }
         public class OptimizedDraw
         {
             public List<byte> Data { get; set; }
         }
-
-        public class TileOccluderInfo
-        {
-            public List<byte> Data { get; set; }
-        }
-
-        //Header
-        public string Name { get; private set; }
-        public uint Version { get; private set; }
-        public uint DecompressedSize { get; private set; }
-        public uint CompressedSize { get; private set; }
-
-        //Textures
-        public List<Texture> Textures { get; private set; }
-
-        //Verts per side
-        public uint VertsPerSide { get; private set; }
-
-        public Dictionary<int, Dictionary<int, HeightMap>> HeightMaps = new Dictionary<int, Dictionary<int, HeightMap>>();
-
-        //Indices
-        public List<ushort> Indices { get; private set; }
-
-        //Verts
-        public List<Vertex> Vertices { get; private set; }
-
-        //Render Batches
-        public List<RenderBatch> RenderBatches { get; private set; }
-
-        //Optimized Draw
-        public List<OptimizedDraw> OptimizedDraws { get; private set; }
 
         //Unknown Data
         public List<ushort> UnknownShorts1 { get; private set; }
@@ -86,6 +82,11 @@ namespace Forgelight.Formats.Cnk
 
         //Tile Occluder Info
         public List<TileOccluderInfo> TileOccluderInfos { get; private set; }
+        public class TileOccluderInfo
+        {
+            public List<byte> Data { get; set; }
+        }
+        #endregion
 
         public static CnkLOD LoadFromStream(string name, MemoryStream stream)
         {
@@ -106,11 +107,19 @@ namespace Forgelight.Formats.Cnk
 
             chunk.Version = binaryReader.ReadUInt32();
 
+            if (!Enum.IsDefined(typeof(ChunkType), (int)chunk.Version))
+            {
+                Debug.LogWarning("Could not decode chunk " + name + ". Unknown cnk version " + chunk.Version);
+                return null;
+            }
+
+            chunk.ChunkType = (ChunkType)chunk.Version;
+
             chunk.DecompressedSize = binaryReader.ReadUInt32();
             chunk.CompressedSize = binaryReader.ReadUInt32();
 
             //Decompression
-            byte[] compressedBuffer = binaryReader.ReadBytes((int) chunk.CompressedSize);
+            byte[] compressedBuffer = binaryReader.ReadBytes((int)chunk.CompressedSize);
             byte[] decompressedBuffer = new byte[chunk.DecompressedSize];
 
             InflateReturnCode result = LzhamInterop.DecompressForgelightData(compressedBuffer, chunk.CompressedSize, decompressedBuffer, chunk.DecompressedSize);
@@ -239,6 +248,11 @@ namespace Forgelight.Formats.Cnk
                 for (int i = 0; i < renderBatchCount; i++)
                 {
                     RenderBatch renderBatch = new RenderBatch();
+
+                    if (chunk.ChunkType == ChunkType.H1Z1)
+                    {
+                        renderBatch.Unknown = binaryReader.ReadUInt32();
+                    }
 
                     renderBatch.IndexOffset = binaryReader.ReadUInt32();
                     renderBatch.IndexCount = binaryReader.ReadUInt32();

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.IO;
 using Forgelight.Utils;
 using UnityEngine;
@@ -53,8 +52,21 @@ namespace Forgelight.Pack
             XSSB,   //Shader?
             XRSB,   //Shader?
             PLAYERSTUDIO,
+            CUR,    //Cursors
+            GNF,    //Images?
+            AMR,    //Model Related
+            PSD,    //Photoshop?
             Unknown
         }
+
+        public Pack Pack { get; private set; }
+
+        public string Name { get; private set; }
+        public uint Size { get; private set; }
+        public uint AbsoluteOffset { get; private set; }
+        public uint Crc32 { get; private set; }
+
+        public Types Type { get; private set; }
 
         private Asset(Pack pack)
         {
@@ -81,6 +93,7 @@ namespace Forgelight.Pack
             {
                 // First get the extension without the leading '.'
                 string extension = Path.GetExtension(asset.Name).Substring(1);
+
                 try
                 {
                     asset.Type = (Types) Enum.Parse(typeof (Types), extension, true);
@@ -100,15 +113,5 @@ namespace Forgelight.Pack
         {
             return Name;
         }
-
-        [Browsable(false)]
-        public Pack Pack { get; private set; }
-
-        public string Name { get; private set; }
-        public uint Size { get; private set; }
-        public uint AbsoluteOffset { get; private set; }
-        public uint Crc32 { get; private set; }
-
-        public Types Type { get; private set; }
     }
 }

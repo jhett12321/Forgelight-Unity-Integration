@@ -5,10 +5,12 @@ namespace Forgelight.Formats.Dma
 {
     public class DrawStyle
     {
+        #region Structure
         public string Name { get; private set; }
         public uint NameHash { get; private set; }
         public string Effect { get; private set; }
         public uint VertexLayoutNameHash { get; private set; }
+        #endregion
 
         private DrawStyle()
         {

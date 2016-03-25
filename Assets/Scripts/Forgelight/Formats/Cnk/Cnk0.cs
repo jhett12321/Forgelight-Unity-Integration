@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using LzhamWrapper;
@@ -8,6 +9,17 @@ namespace Forgelight.Formats.Cnk
 {
     public class Cnk0
     {
+        public string Name { get; private set; }
+        public ChunkType ChunkType { get; private set; }
+
+        #region Structure
+        //Header
+        public uint Version { get; private set; }
+        public uint DecompressedSize { get; private set; }
+        public uint CompressedSize { get; private set; }
+
+        //Tiles
+        public List<Tile> Tiles { get; private set; }
         public class Tile
         {
             public class Eco
@@ -36,9 +48,11 @@ namespace Forgelight.Formats.Cnk
             public uint UnknownInt3 { get; set; } //TODO Verify if this is an int or uint
             public List<byte> ImageData { get; set; }
             public List<byte> LayerTextures { get; set; }
-
         }
 
+        //Unknown Data
+        public int UnknownInt1 { get; private set; }
+        public List<Unknown1> UnknownArray1 { get; private set; }
         public class Unknown1
         {
             public short Height { get; set; }
@@ -46,6 +60,11 @@ namespace Forgelight.Formats.Cnk
             public byte UnknownByte2 { get; set; }
         }
 
+        //Indices
+        public List<ushort> Indices { get; private set; }
+
+        //Verts
+        public List<Vertex> Vertices { get; private set; }
         public class Vertex
         {
             public short X { get; set; }
@@ -56,6 +75,8 @@ namespace Forgelight.Formats.Cnk
             public uint Color2 { get; set; }
         }
 
+        //Render Batches
+        public List<RenderBatch> RenderBatches { get; private set; }
         public class RenderBatch
         {
             public uint IndexOffset { get; set; }
@@ -64,40 +85,12 @@ namespace Forgelight.Formats.Cnk
             public uint VertexCount { get; set; }
         }
 
+        //Optimized Draw
+        public List<OptimizedDraw> OptimizedDraws { get; private set; }
         public class OptimizedDraw
         {
             public List<byte> Data { get; set; }
         }
-
-        public class TileOccluderInfo
-        {
-            public List<byte> Data { get; set; }
-        }
-
-        //Header
-        public string Name { get; private set; }
-        public uint Version { get; private set; }
-        public uint DecompressedSize { get; private set; }
-        public uint CompressedSize { get; private set; }
-
-        //Tiles
-        public List<Tile> Tiles { get; private set; }
-
-        //Unknown Data
-        public int UnknownInt1 { get; private set; }
-        public List<Unknown1> UnknownArray1 { get; private set; }
-
-        //Indices
-        public List<ushort> Indices { get; private set; }
-
-        //Verts
-        public List<Vertex> Vertices { get; private set; }
-
-        //Render Batches
-        public List<RenderBatch> RenderBatches { get; private set; }
-
-        //Optimized Draw
-        public List<OptimizedDraw> OptimizedDraws { get; private set; }
 
         //Unknown Data
         public List<ushort> UnknownShorts1 { get; private set; }
@@ -107,6 +100,11 @@ namespace Forgelight.Formats.Cnk
 
         //Tile Occluder Info
         public List<TileOccluderInfo> TileOccluderInfos { get; private set; }
+        public class TileOccluderInfo
+        {
+            public List<byte> Data { get; set; }
+        }
+        #endregion
 
         public static Cnk0 LoadFromStream(string name, MemoryStream stream)
         {
@@ -126,6 +124,14 @@ namespace Forgelight.Formats.Cnk
             }
 
             chunk.Version = binaryReader.ReadUInt32();
+
+            if (!Enum.IsDefined(typeof(ChunkType), (int)chunk.Version))
+            {
+                Debug.LogWarning("Could not decode chunk " + name + ". Unknown cnk version " + chunk.Version);
+                return null;
+            }
+
+            chunk.ChunkType = (ChunkType)chunk.Version;
 
             chunk.DecompressedSize = binaryReader.ReadUInt32();
             chunk.CompressedSize = binaryReader.ReadUInt32();

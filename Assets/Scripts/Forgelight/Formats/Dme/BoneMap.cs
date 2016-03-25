@@ -2,13 +2,20 @@
 
 namespace Forgelight.Formats.Dme
 {
-    public struct BoneMapEntry
+    public class BoneMapEntry
     {
+        #region Structure
         public ushort BoneIndex;
         public ushort GlobalIndex;
+        #endregion
 
         public static BoneMapEntry LoadFromStream(Stream stream)
         {
+            if (stream == null)
+            {
+                return null;
+            }
+
             BinaryReader binaryReader = new BinaryReader(stream);
 
             BoneMapEntry boneMapEntry = new BoneMapEntry();
@@ -22,6 +29,7 @@ namespace Forgelight.Formats.Dme
 
     public class BoneMap
     {
+        #region Structure
         public uint Unknown0 { get; private set; }
         public uint BoneStart { get; private set; }
         public uint BoneCount { get; private set; }
@@ -31,11 +39,14 @@ namespace Forgelight.Formats.Dme
         public uint VertexCount { get; private set; }
         public uint Unknown2 { get; private set; }
         public uint IndexCount { get; private set; }
+        #endregion
 
         public static BoneMap LoadFromStream(Stream stream)
         {
             if (stream == null)
+            {
                 return null;
+            }
 
             BinaryReader binaryReader = new BinaryReader(stream);
 

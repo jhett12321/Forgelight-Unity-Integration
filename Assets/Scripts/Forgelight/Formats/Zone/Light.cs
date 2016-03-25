@@ -6,6 +6,7 @@ namespace Forgelight.Formats.Zone
 {
     public class Light
     {
+        #region Structure
         public string Name { get; private set; }
         public string ColorName { get; private set; }
         public byte Type { get; private set; }
@@ -23,6 +24,7 @@ namespace Forgelight.Formats.Zone
         public Vector4 UnknownVector1 { get; private set; }
         public string UnknownString1 { get; private set; }
         public uint ID { get; private set; }
+        #endregion
 
         public static Light ReadFromStream(Stream stream)
         {

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using Forgelight.Utils;
 
@@ -7,14 +6,9 @@ namespace Forgelight.Pack
 {
     public class Pack
     {
-        [Description("The path on disk to this pack file.")]
-        [ReadOnly(true)]
         public string Path { get; private set; }
-
-        [Browsable(false)]
         public List<Asset> Assets { get; private set; }
 
-        [Browsable(false)]
         public string Name
         {
             get { return System.IO.Path.GetFileName(Path); }

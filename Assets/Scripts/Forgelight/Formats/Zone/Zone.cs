@@ -1,12 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace Forgelight.Formats.Zone
 {
     public class Zone
     {
         public string Name { get; set; }
+        public ZoneType ZoneType { get; private set; }
 
+        #region Structure
         //Header
         public uint Version { get; private set; }
         public Dictionary<string, uint> Offsets { get; private set; }
@@ -27,8 +31,11 @@ namespace Forgelight.Formats.Zone
         public List<Object> Objects { get; private set; }
         public List<Light> Lights { get; private set; }
         public List<Unknown> Unknowns { get; private set; }
+        public List<Decal> Decals { get; private set; }
 
-        public static Zone LoadFromStream(string Name, Stream stream)
+        #endregion
+
+        public static Zone LoadFromStream(string name, Stream stream)
         {
             BinaryReader binaryReader = new BinaryReader(stream);
 
@@ -44,12 +51,20 @@ namespace Forgelight.Formats.Zone
             }
 
             Zone zone = new Zone();
-            zone.Name = Name;
+            zone.Name = name;
             zone.Version = binaryReader.ReadUInt32();
 
-            if (zone.Version != 1)
+            if (!Enum.IsDefined(typeof(ZoneType), (int)zone.Version))
             {
+                Debug.LogWarning("Could not decode zone " + name + ". Unknown ZONE version " + zone.Version);
                 return null;
+            }
+
+            zone.ZoneType = (ZoneType) (int) zone.Version;
+
+            if (zone.ZoneType == ZoneType.H1Z1)
+            {
+                binaryReader.ReadUInt32();
             }
 
             zone.Offsets = new Dictionary<string, uint>();
@@ -59,6 +74,11 @@ namespace Forgelight.Formats.Zone
             zone.Offsets["objects"] = binaryReader.ReadUInt32();
             zone.Offsets["lights"] = binaryReader.ReadUInt32();
             zone.Offsets["unknowns"] = binaryReader.ReadUInt32();
+
+            if (zone.ZoneType == ZoneType.H1Z1)
+            {
+                zone.Offsets["decals"] = binaryReader.ReadUInt32();
+            }
 
             zone.QuadsPerTile = binaryReader.ReadUInt32();
             zone.TileSize = binaryReader.ReadSingle();
@@ -85,7 +105,7 @@ namespace Forgelight.Formats.Zone
 
             for (uint i = 0; i < florasLength; i++)
             {
-                zone.Floras.Add(Flora.ReadFromStream(binaryReader.BaseStream));
+                zone.Floras.Add(Flora.ReadFromStream(binaryReader.BaseStream, zone.ZoneType));
             }
 
             //Invisible Walls
@@ -103,7 +123,7 @@ namespace Forgelight.Formats.Zone
 
             for (uint i = 0; i < objectsLength; i++)
             {
-                zone.Objects.Add(Object.ReadFromStream(binaryReader.BaseStream));
+                zone.Objects.Add(Object.ReadFromStream(binaryReader.BaseStream, zone.ZoneType));
             }
 
             //Lights
@@ -124,6 +144,18 @@ namespace Forgelight.Formats.Zone
             //    //zone.Unknowns.Add(Unknown.ReadFromStream(binaryReader.BaseStream));
             //    //???
             //}
+
+            //Decals
+            if (zone.ZoneType == ZoneType.H1Z1)
+            {
+                uint decalsLength = binaryReader.ReadUInt32();
+                zone.Decals = new List<Decal>((int) decalsLength);
+
+                for (int i = 0; i < decalsLength; i++)
+                {
+                    zone.Decals.Add(Decal.ReadFromStream(binaryReader.BaseStream));
+                }
+            }
 
             return zone;
         }
@@ -194,7 +226,7 @@ namespace Forgelight.Formats.Zone
 
             foreach (Flora flora in zone.Floras)
             {
-                flora.WriteToStream(binaryWriter);
+                flora.WriteToStream(binaryWriter, zone.ZoneType);
             }
 
             offsets["invisibleWalls"] = (uint) binaryWriter.BaseStream.Position;
@@ -210,7 +242,7 @@ namespace Forgelight.Formats.Zone
 
             foreach (Object obj in zone.Objects)
             {
-                obj.WriteToStream(binaryWriter);
+                obj.WriteToStream(binaryWriter, zone.ZoneType);
             }
 
             offsets["lights"] = (uint) binaryWriter.BaseStream.Position;
@@ -229,6 +261,16 @@ namespace Forgelight.Formats.Zone
             //{
 
             //}
+            if (zone.ZoneType == ZoneType.H1Z1)
+            {
+                offsets["decals"] = (uint)binaryWriter.BaseStream.Position;
+                binaryWriter.Write((uint) zone.Decals.Count);
+
+                foreach (Decal decal in zone.Decals)
+                {
+                    decal.WriteToStream(binaryWriter);
+                }
+            }
 
             //Update offset values.
             binaryWriter.BaseStream.Seek(offsetsPosition, SeekOrigin.Begin);
@@ -238,6 +280,11 @@ namespace Forgelight.Formats.Zone
             binaryWriter.Write(offsets["objects"]);
             binaryWriter.Write(offsets["lights"]);
             binaryWriter.Write(offsets["unknowns"]);
+
+            if (zone.ZoneType == ZoneType.H1Z1)
+            {
+                binaryWriter.Write(offsets["decals"]);
+            }
         }
     }
 }

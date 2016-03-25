@@ -7,38 +7,47 @@ using Material = Forgelight.Formats.Dma.Material;
 
 namespace Forgelight.Formats.Dme
 {
-    enum TextureType
-    {
-        Invalid,
-        Diffuse,
-        Bump,
-        Spec
-    }
-
     public class Model
     {
+        public string Name { get; private set; }
+        public ModelType ModelType { get; private set; }
+
+        private enum TextureType
+        {
+            Invalid,
+            Diffuse,
+            Bump,
+            Spec
+        }
+
+        #region Structure
+        //Header
         public uint Version { get; private set; }
         public uint ModelHeaderOffset { get; private set; }
 
-        public string Name { get; private set; }
-
+        //DMA
+        public List<string> TextureStrings { get; private set; }
         public List<Material> Materials { get; private set; }
 
         //Bounding Box
-        private Vector3 min;
-        public Vector3 Min { get { return min; } }
-        private Vector3 max;
-        public Vector3 Max { get { return max; } }
+        public Vector3 Min { get; private set; }
+        public Vector3 Max { get; private set; }
 
+        //Meshes
         public List<Mesh> Meshes { get; private set; }
-        public List<string> TextureStrings { get; private set; }
+
+        //Bone Maps
         public List<BoneMap> BoneMaps { get; private set; }
+
+        //Bone Map Entries
+        public List<BoneMapEntry> BoneMapEntries { get; private set; }
+        #endregion
 
         public static Model LoadFromStream(string name, Stream stream)
         {
             BinaryReader binaryReader = new BinaryReader(stream);
 
-            //header
+            //Header
             byte[] magic = binaryReader.ReadBytes(4);
 
             if (magic[0] != 'D' ||
@@ -52,30 +61,28 @@ namespace Forgelight.Formats.Dme
 
             model.Version = binaryReader.ReadUInt32();
 
-            if (model.Version != 4)
+            if (!Enum.IsDefined(typeof(ModelType), (int)model.Version))
             {
+                Debug.LogWarning("Could not decode model " + name + ". Unknown DME version " + model.Version);
                 return null;
             }
 
-            model.ModelHeaderOffset = binaryReader.ReadUInt32();
+            model.ModelType = (ModelType)model.Version;
 
             model.Name = name;
 
-            //materials
+            model.ModelHeaderOffset = binaryReader.ReadUInt32();
+
+            //DMA
             model.TextureStrings = new List<string>();
             model.Materials = new List<Material>();
             Dma.Dma.LoadFromStream(binaryReader.BaseStream, model.TextureStrings, model.Materials);
 
             //Bounding Box
-            model.min.x = binaryReader.ReadSingle();
-            model.min.y = binaryReader.ReadSingle();
-            model.min.z = binaryReader.ReadSingle();
+            model.Min = new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());
+            model.Max = new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());
 
-            model.max.x = binaryReader.ReadSingle();
-            model.max.y = binaryReader.ReadSingle();
-            model.max.z = binaryReader.ReadSingle();
-
-            //meshes
+            //Meshes
             uint meshCount = binaryReader.ReadUInt32();
 
             model.Meshes = new List<Mesh>((int) meshCount);
@@ -89,11 +96,10 @@ namespace Forgelight.Formats.Dme
                     continue;
                 }
 
-                //Textures
                 Material material = model.Materials[(int) mesh.MaterialIndex];
                 foreach (Material.Parameter parameter in material.Parameters)
                 {
-                    LookupTexture(mesh, parameter, model.TextureStrings);
+                    LookupTextures(mesh, parameter, model.TextureStrings);
 
                     if (mesh.BaseDiffuse != null && mesh.BumpMap != null && mesh.SpecMap != null)
                     {
@@ -104,7 +110,7 @@ namespace Forgelight.Formats.Dme
                 model.Meshes.Add(mesh);
             }
 
-            //bone maps
+            //Bone Maps
             uint boneMapCount = binaryReader.ReadUInt32();
             model.BoneMaps = new List<BoneMap>((int) boneMapCount);
 
@@ -118,36 +124,44 @@ namespace Forgelight.Formats.Dme
                 }
             }
 
-            //bone map entries
-            //uint boneMapEntryCount = binaryReader.ReadUInt32();
-            //BoneMapEntry[] boneMapEntries = new BoneMapEntry[boneMapEntryCount];
+            //Bone Map Entries
+            uint boneMapEntryCount = binaryReader.ReadUInt32();
+            model.BoneMapEntries = new List<BoneMapEntry>((int) boneMapEntryCount);
 
-            //for (int i = 0; i < boneMapEntryCount; ++i)
-            //{
-            //    BoneMapEntry boneMapEntry = BoneMapEntry.LoadFromStream(binaryReader.BaseStream);
+            for (int i = 0; i < boneMapEntryCount; ++i)
+            {
+                BoneMapEntry boneMapEntry = BoneMapEntry.LoadFromStream(binaryReader.BaseStream);
 
-            //    boneMapEntries[i] = boneMapEntry;
-            //}
+                if (boneMapEntry != null)
+                {
+                    model.BoneMapEntries.Add(boneMapEntry);
+                }
+            }
 
             return model;
         }
 
-        private static void LookupTexture(Mesh mesh, Material.Parameter paramater, List<string> textureStrings)
+        /// <summary>
+        /// Finds the correct diffuse, specular and packed normal maps for the given mesh.
+        /// </summary>
+        /// <param name="mesh">The origin mesh.</param>
+        /// <param name="parameter">The material parameter containing the hashed texture name, or some other parameter.</param>
+        /// <param name="textureStrings">A list of available textures for this mesh.</param>
+        private static void LookupTextures(Mesh mesh, Material.Parameter parameter, List<string> textureStrings)
         {
-            if (paramater.Data.Length != 4 && paramater.Type != Material.Parameter.D3DXParameterType.Texture ||
-                paramater.Class != Material.Parameter.D3DXParameterClass.Object)
+            if (parameter.Data.Length != 4 && parameter.Type != Material.Parameter.D3DXParameterType.Texture || parameter.Class != Material.Parameter.D3DXParameterClass.Object)
             {
                 return;
             }
 
-            TextureType textureType = GetTextureType(paramater.NameHash);
+            TextureType textureType = GetTextureType(parameter.NameHash);
 
             if (textureType == TextureType.Invalid)
             {
                 return;
             }
 
-            uint textureHash = BitConverter.ToUInt32(paramater.Data, 0);
+            uint textureHash = BitConverter.ToUInt32(parameter.Data, 0);
 
             foreach (string textureString in textureStrings)
             {

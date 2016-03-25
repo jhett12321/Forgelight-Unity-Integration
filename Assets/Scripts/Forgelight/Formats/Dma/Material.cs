@@ -5,34 +5,11 @@ namespace Forgelight.Formats.Dma
 {
     public class Material
     {
+        #region Structure
         public uint NameHash { get; private set; }
         public uint DataLength { get; private set; }
         public uint MaterialDefinitionHash { get; private set; }
         public List<Parameter> Parameters { get; private set; }
-
-        public static Material LoadFromStream(Stream stream)
-        {
-            BinaryReader binaryReader = new BinaryReader(stream);
-
-            Material material = new Material();
-
-            material.NameHash = binaryReader.ReadUInt32();
-            material.DataLength = binaryReader.ReadUInt32();
-            material.MaterialDefinitionHash = binaryReader.ReadUInt32();
-
-            uint parameterCount = binaryReader.ReadUInt32();
-            material.Parameters = new List<Parameter>((int) parameterCount);
-
-            for (uint j = 0; j < parameterCount; ++j)
-            {
-                Parameter parameter = Parameter.LoadFromStream(stream);
-
-                material.Parameters.Add(parameter);
-            }
-
-            return material;
-        }
-
         public class Parameter
         {
             //http://msdn.microsoft.com/en-us/library/windows/desktop/bb205378(v=vs.85).aspx
@@ -73,27 +50,41 @@ namespace Forgelight.Formats.Dma
                 ForceDword = 0x7fffffff
             }
 
-            public static Parameter LoadFromStream(Stream stream)
+            public uint NameHash { get; set; }
+            public D3DXParameterClass Class { get; set; }
+            public D3DXParameterType Type { get; set; }
+            public byte[] Data { get; set; }
+        }
+        #endregion
+
+        public static Material LoadFromStream(Stream stream)
+        {
+            BinaryReader binaryReader = new BinaryReader(stream);
+
+            Material material = new Material();
+
+            material.NameHash = binaryReader.ReadUInt32();
+            material.DataLength = binaryReader.ReadUInt32();
+            material.MaterialDefinitionHash = binaryReader.ReadUInt32();
+
+            uint parameterCount = binaryReader.ReadUInt32();
+            material.Parameters = new List<Parameter>((int) parameterCount);
+
+            for (uint j = 0; j < parameterCount; ++j)
             {
                 Parameter parameter = new Parameter();
 
-                BinaryReader binaryReader = new BinaryReader(stream);
-
                 parameter.NameHash = binaryReader.ReadUInt32();
-                parameter.Class = (D3DXParameterClass) binaryReader.ReadUInt32();
-                parameter.Type = (D3DXParameterType) binaryReader.ReadUInt32();
+                parameter.Class = (Parameter.D3DXParameterClass)binaryReader.ReadUInt32();
+                parameter.Type = (Parameter.D3DXParameterType)binaryReader.ReadUInt32();
 
                 uint dataLength = binaryReader.ReadUInt32();
+                parameter.Data = binaryReader.ReadBytes((int)dataLength);
 
-                parameter.Data = binaryReader.ReadBytes((int) dataLength);
-
-                return parameter;
+                material.Parameters.Add(parameter);
             }
 
-            public uint NameHash { get; private set; }
-            public D3DXParameterClass Class { get; private set; }
-            public D3DXParameterType Type { get; private set; }
-            public byte[] Data { get; private set; }
+            return material;
         }
     }
 }

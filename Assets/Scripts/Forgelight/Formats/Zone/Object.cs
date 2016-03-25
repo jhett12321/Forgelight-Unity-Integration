@@ -7,6 +7,10 @@ namespace Forgelight.Formats.Zone
 {
     public class Object
     {
+        #region Structure
+        public string ActorDefinition { get; set; }
+        public float RenderDistance { get; set; }
+        public List<Instance> Instances { get; set; }
         public class Instance
         {
             public Vector4 Position { get; set; }
@@ -15,13 +19,17 @@ namespace Forgelight.Formats.Zone
             public uint ID { get; set; }
             public bool DontCastShadows { get; set; }
             public float LODMultiplier { get; set; }
+
+            public uint UnknownDword1 { get; set; }
+            public uint UnknownDword2 { get; set; }
+            public uint UnknownDword3 { get; set; }
+            public uint UnknownDword4 { get; set; }
+            public uint UnknownDword5 { get; set; }
+
         }
+        #endregion
 
-        public string ActorDefinition { get; set; }
-        public float RenderDistance { get; set; }
-        public List<Instance> Instances { get; set; }
-
-        public static Object ReadFromStream(Stream stream)
+        public static Object ReadFromStream(Stream stream, ZoneType zoneType)
         {
             Object obj = new Object();
             BinaryReader binaryReader = new BinaryReader(stream);
@@ -43,13 +51,22 @@ namespace Forgelight.Formats.Zone
                 instance.DontCastShadows = binaryReader.ReadBoolean();
                 instance.LODMultiplier = binaryReader.ReadSingle();
 
+                if (zoneType == ZoneType.H1Z1)
+                {
+                    instance.UnknownDword1 = binaryReader.ReadUInt32();
+                    instance.UnknownDword2 = binaryReader.ReadUInt32();
+                    instance.UnknownDword3 = binaryReader.ReadUInt32();
+                    instance.UnknownDword4 = binaryReader.ReadUInt32();
+                    instance.UnknownDword5 = binaryReader.ReadUInt32();
+                }
+
                 obj.Instances.Add(instance);
             }
 
             return obj;
         }
 
-        public void WriteToStream(BinaryWriter binaryWriter)
+        public void WriteToStream(BinaryWriter binaryWriter, ZoneType zoneType)
         {
             binaryWriter.WriteNullTerminiatedString(ActorDefinition);
             binaryWriter.Write(RenderDistance);
@@ -79,6 +96,15 @@ namespace Forgelight.Formats.Zone
                 binaryWriter.Write(instance.ID);
                 binaryWriter.Write(instance.DontCastShadows);
                 binaryWriter.Write(instance.LODMultiplier);
+
+                if (zoneType == ZoneType.H1Z1)
+                {
+                    binaryWriter.Write(instance.UnknownDword1);
+                    binaryWriter.Write(instance.UnknownDword2);
+                    binaryWriter.Write(instance.UnknownDword3);
+                    binaryWriter.Write(instance.UnknownDword4);
+                    binaryWriter.Write(instance.UnknownDword5);
+                }
             }
         }
     }

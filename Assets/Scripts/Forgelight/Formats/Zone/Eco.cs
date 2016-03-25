@@ -8,6 +8,19 @@ namespace Forgelight.Formats.Zone
 {
     public class Eco
     {
+        #region Structure
+        public uint Index { get; private set; }
+        public string Name { get; private set; }
+        public string ColorNXMap { get; private set; }
+        public string SpecBlendNyMap { get; private set; }
+        public uint DetailRepeat { get; private set; }
+        public float BlendStrength { get; private set; }
+        public float SpecMin { get; private set; }
+        public float SpecMax { get; private set; }
+        public float SpecSmoothnessMin { get; private set; }
+        public float SpecSmoothnessMax { get; private set; }
+        public string PhysicsMaterial { get; private set; }
+        public List<Layer> Layers { get; private set; }
         public class Layer
         {
             public class Tint
@@ -27,19 +40,7 @@ namespace Forgelight.Formats.Zone
             public string Flora { get; set; }
             public List<Tint> Tints { get; set; }
         }
-
-        public uint Index { get; private set; }
-        public string Name { get; private set; }
-        public string ColorNXMap { get; private set; }
-        public string SpecBlendNyMap { get; private set; }
-        public uint DetailRepeat { get; private set; }
-        public float BlendStrength { get; private set; }
-        public float SpecMin { get; private set; }
-        public float SpecMax { get; private set; }
-        public float SpecSmoothnessMin { get; private set; }
-        public float SpecSmoothnessMax { get; private set; }
-        public string PhysicsMaterial { get; private set; }
-        public List<Layer> Layers { get; private set; }
+        #endregion
 
         public static Eco ReadFromStream(Stream stream)
         {

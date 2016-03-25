@@ -14,50 +14,50 @@ using MiscUtil.IO;
 
 namespace Forgelight.Pack
 {
-    class FileHeader
-    {
-        public uint name_len;
-        public byte[] name;
-        public uint offset;
-        public uint length;
-        public uint crc32;
-
-        public byte[] Encode()
-        {
-            EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, new MemoryStream());
-            wr.Write(name_len);
-            wr.Write(name);
-            wr.Write(offset);
-            wr.Write(length);
-            wr.Write(crc32);
-
-            return ((MemoryStream)wr.BaseStream).ToArray();
-        }
-    }
-
-    class ChunkHeader
-    {
-        public uint NextChunkOffset;
-        public uint FileCount;
-        public FileHeader[] files;
-
-        public byte[] Encode()
-        {
-            EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, new MemoryStream());
-            wr.Write(NextChunkOffset);
-            wr.Write(FileCount);
-
-            foreach (FileHeader h in files)
-            {
-                wr.Write(h.Encode());
-            }
-
-            return ((MemoryStream)wr.BaseStream).ToArray();
-        }
-    }
-
     public class PackCreator
     {
+        private class FileHeader
+        {
+            public uint name_len;
+            public byte[] name;
+            public uint offset;
+            public uint length;
+            public uint crc32;
+
+            public byte[] Encode()
+            {
+                EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, new MemoryStream());
+                wr.Write(name_len);
+                wr.Write(name);
+                wr.Write(offset);
+                wr.Write(length);
+                wr.Write(crc32);
+
+                return ((MemoryStream)wr.BaseStream).ToArray();
+            }
+        }
+
+        private class ChunkHeader
+        {
+            public uint NextChunkOffset;
+            public uint FileCount;
+            public FileHeader[] files;
+
+            public byte[] Encode()
+            {
+                EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, new MemoryStream());
+                wr.Write(NextChunkOffset);
+                wr.Write(FileCount);
+
+                foreach (FileHeader h in files)
+                {
+                    wr.Write(h.Encode());
+                }
+
+                return ((MemoryStream)wr.BaseStream).ToArray();
+            }
+        }
+
         public static void CreatePackFromDirectory()
         {
             string sourceFolder = DialogUtils.OpenDirectory(

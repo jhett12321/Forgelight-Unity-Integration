@@ -6,37 +6,6 @@ namespace Forgelight.Formats.Dme
 {
     public class Mesh
     {
-        public class VertexStream
-        {
-            public static VertexStream LoadFromStream(Stream stream, int vertexCount, int bytesPerVertex)
-            {
-                VertexStream vertexStream = new VertexStream();
-
-                vertexStream.BytesPerVertex = bytesPerVertex;
-
-                BinaryReader binaryReader = new BinaryReader(stream);
-
-                vertexStream.Data = binaryReader.ReadBytes(vertexCount*bytesPerVertex);
-
-                return vertexStream;
-            }
-
-            public int BytesPerVertex { get; private set; }
-            public byte[] Data { get; private set; }
-        }
-
-        public VertexStream[] VertexStreams { get; private set; }
-        public byte[] IndexData { get; private set; }
-
-        public uint MaterialIndex { get; set; }
-        public uint Unknown1 { get; set; }
-        public uint Unknown2 { get; set; }
-        public uint Unknown3 { get; set; }
-        public uint Unknown4 { get; set; }
-        public uint VertexCount { get; set; }
-        public uint IndexCount { get; private set; }
-        public uint IndexSize { get; private set; }
-
         //The diffuse map. Forgelight Ref: BaseDiffuse, baseDiffuse
         public string BaseDiffuse { get; set; }
 
@@ -45,6 +14,25 @@ namespace Forgelight.Formats.Dme
 
         //The specular map. Forgelight Ref: Spec
         public string SpecMap { get; set; }
+
+        #region Structure
+        public uint MaterialIndex { get; set; }
+        public uint Unknown1 { get; set; }
+        public uint Unknown2 { get; set; }
+        public uint Unknown3 { get; set; }
+        public uint IndexSize { get; private set; }
+        public uint IndexCount { get; private set; }
+        public uint VertexCount { get; set; }
+
+        public VertexStream[] VertexStreams { get; private set; }
+        public class VertexStream
+        {
+            public int BytesPerVertex { get; set; }
+            public byte[] Data { get;  set; }
+        }
+
+        public byte[] IndexData { get; private set; }
+        #endregion
 
         public static Mesh LoadFromStream(Stream stream, ICollection<Material> materials)
         {
@@ -68,13 +56,12 @@ namespace Forgelight.Formats.Dme
             {
                 uint bytesPerVertex = binaryReader.ReadUInt32();
 
-                VertexStream vertexStream = VertexStream.LoadFromStream(binaryReader.BaseStream,
-                    (int) mesh.VertexCount, (int) bytesPerVertex);
+                VertexStream vertexStream = new VertexStream();
 
-                if (vertexStream != null)
-                {
-                    mesh.VertexStreams[j] = vertexStream;
-                }
+                vertexStream.BytesPerVertex = (int) bytesPerVertex;
+                vertexStream.Data = binaryReader.ReadBytes((int) (mesh.VertexCount * bytesPerVertex));
+
+                mesh.VertexStreams[j] = vertexStream;
             }
 
             // read indices
