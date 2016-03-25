@@ -35,23 +35,23 @@ namespace Forgelight.Pack
             INI,    //Text/Configuration File.
             XML,    //XML Document.
             ZONE,   //Object, Light and other placement data - https://github.com/psemu/ps2ls/wiki/Zone
-            AGR,
-            CDT,
-            CRC,
+            AGR,    //Model Group
+            CDT,    //Collision (non-vehicle)
+            CRC,    //Scaleform
             DSK,
-            TOME,
-            DEF,
+            TOME,   //Occlusion
+            DEF,    //File name is Color?
             FXD,
             AGS,
-            APX,
-            MRN,
-            PSSB,
-            PRSB,
-            APB,
-            VNFO,
+            APX,    //Collision (dynamic)
+            MRN,    //Animations
+            PSSB,   //Shader?
+            PRSB,   //Shader?
+            APB,    //Apex databases
+            VNFO,   //Occlusion
             DB,
-            XSSB,
-            XRSB,
+            XSSB,   //Shader?
+            XRSB,   //Shader?
             PLAYERSTUDIO,
             Unknown
         }
