@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -8,7 +9,9 @@ using Forgelight.Formats.Dma;
 using Forgelight.Formats.Dme;
 using Forgelight.Formats.Zone;
 using Forgelight.Pack;
+using Forgelight.Utils;
 using UnityEditor;
+using Debug = UnityEngine.Debug;
 using MathUtils = Forgelight.Utils.MathUtils;
 
 namespace Forgelight
@@ -69,6 +72,34 @@ namespace Forgelight
                     }
                 }
             }
+        }
+
+        public bool LoadZoneFromFile(string path)
+        {
+            try
+            {
+                using (FileStream fileStream = File.OpenRead(path))
+                {
+                    string zoneName = Path.GetFileNameWithoutExtension(path);
+                    Zone zone = Zone.LoadFromStream(Path.GetFileName(path), fileStream);
+
+                    zoneName = zoneName + " (" + path + ")";
+                    AvailableZones[zoneName] = zone;
+
+                    if (DialogUtils.DisplayCancelableDialog("Change Zones", "Would you like to load this zone now?"))
+                    {
+                        ForgelightExtension.Instance.ZoneManager.ChangeZone(ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame, zone);
+                    }
+
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("An error occurred while importing zone at: " + path + ". " + e.Message);
+            }
+
+            return false;
         }
 
         public MemoryStream CreateAssetMemoryStreamByName(string name)
@@ -178,8 +209,7 @@ namespace Forgelight
 
             BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, zones, asset =>
             {
-                string rawZoneName = Path.GetFileNameWithoutExtension(asset.Name);
-                string zoneName = rawZoneName;
+                string zoneName = Path.GetFileNameWithoutExtension(asset.Name);
 
                 lastAssetProcessed = zoneName;
 
@@ -193,11 +223,7 @@ namespace Forgelight
 
                 lock (listLock)
                 {
-                    if (AvailableZones.ContainsKey(zoneName))
-                    {
-                        zoneName = rawZoneName + " (" + asset.Pack.Name + ")";
-                    }
-
+                    zoneName = zoneName + " (" + asset.Pack.Name + ")";
                     AvailableZones[zoneName] = zone;
                 }
             });
