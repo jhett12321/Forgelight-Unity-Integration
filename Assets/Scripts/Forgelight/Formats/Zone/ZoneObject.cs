@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Forgelight.Attributes;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -85,6 +86,11 @@ namespace Forgelight.Formats.Zone
 
                 currentActorDef = actorDefinition;
             }
+
+            else
+            {
+                CheckVisibility();
+            }
         }
 
         private void OnRenderObject()
@@ -94,26 +100,18 @@ namespace Forgelight.Formats.Zone
                 target = Time.realtimeSinceStartup + gracePeriod;
             }
 
-            if (Time.realtimeSinceStartup >= target)
+            if (Time.realtimeSinceStartup >= target || Selection.activeGameObject == gameObject)
             {
-                Vector3 offset = transform.position - ForgelightExtension.Instance.LastCameraPos;
-
-                float sqrMagnitude = offset.sqrMagnitude;
-                if (sqrMagnitude <= renderDistance * renderDistance)
-                {
-                    Show();
-                }
-
-                else
-                {
-                    Hide();
-                }
-
-                target = float.MaxValue; //We don't need to update until we move again.
+                CheckVisibility();
             }
 
             foreach (Transform child in transform)
             {
+                if (child.gameObject == Selection.activeGameObject)
+                {
+                    Selection.activeGameObject = gameObject;
+                }
+
                 //Check to see if the user has accidentally moved a child object and not the parent.
                 if (child.transform.localPosition != Vector3.zero)
                 {
@@ -132,6 +130,24 @@ namespace Forgelight.Formats.Zone
 
                 Resources.UnloadUnusedAssets();
             }
+        }
+
+        private void CheckVisibility()
+        {
+            Vector3 offset = transform.position - ForgelightExtension.Instance.LastCameraPos;
+
+            float sqrMagnitude = offset.sqrMagnitude;
+            if (sqrMagnitude <= renderDistance * renderDistance)
+            {
+                Show();
+            }
+
+            else
+            {
+                Hide();
+            }
+
+            target = float.MaxValue; //We don't need to update until we move again.
         }
 
         public void Hide()
