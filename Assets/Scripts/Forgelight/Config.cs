@@ -74,7 +74,7 @@ namespace Forgelight
             gameElement.Add("resource_directory", forgelightGame.ResourceDirectory);
             gameElement.Add("is_active_game", true);
 
-            ((JObject)extensionState["forgelight_games"]).Add(forgelightGame.Name, gameElement);
+            ((JObject)extensionState["forgelight_games"])[forgelightGame.Name] = gameElement;
 
             WriteStateToDisk();
         }

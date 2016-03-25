@@ -37,24 +37,21 @@ namespace Forgelight
 
             string alias = directoryInfo.Name;
 
-            if (ForgelightExtension.Instance.Config.GetForgelightGameInfo(alias) == null)
-            {
-                string resourceDirectory = Application.dataPath + "/Resources/" + alias;
+            string resourceDirectory = Application.dataPath + "/Resources/" + alias;
 
-                ForgelightGame forgelightGame = new ForgelightGame(alias, path, resourceDirectory);
+            ForgelightGame forgelightGame = new ForgelightGame(alias, path, resourceDirectory);
 
-                forgelightGame.LoadPackFiles(0.0f, 0.25f);
-                forgelightGame.InitializeMaterialDefinitionManager();
-                forgelightGame.ExportModels(0.3f, 0.6f);
-                forgelightGame.ExportTerrain(0.6f, 0.9f);
-                forgelightGame.UpdateActors(0.9f, 0.95f);
-                forgelightGame.UpdateZones(0.95f, 1.0f);
+            forgelightGame.LoadPackFiles(0.0f, 0.25f);
+            forgelightGame.InitializeMaterialDefinitionManager();
+            forgelightGame.ExportModels(0.3f, 0.6f);
+            forgelightGame.ExportTerrain(0.6f, 0.9f);
+            forgelightGame.UpdateActors(0.9f, 0.95f);
+            forgelightGame.UpdateZones(0.95f, 1.0f);
 
-                forgelightGame.OnLoadComplete();
-                ForgelightExtension.Instance.Config.SaveNewForgelightGame(forgelightGame);
+            forgelightGame.OnLoadComplete();
+            ForgelightExtension.Instance.Config.SaveNewForgelightGame(forgelightGame);
 
-                UpdateActiveForgelightGame(forgelightGame);
-            }
+            UpdateActiveForgelightGame(forgelightGame);
         }
 
         /// <summary>
