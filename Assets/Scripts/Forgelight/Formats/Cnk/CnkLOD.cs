@@ -241,67 +241,134 @@ namespace Forgelight.Formats.Cnk
                     chunk.Vertices.Add(vertex);
                 }
 
-                //Render Batches
-                uint renderBatchCount = binaryReader.ReadUInt32();
-                chunk.RenderBatches = new List<RenderBatch>((int)renderBatchCount);
-
-                for (int i = 0; i < renderBatchCount; i++)
+                //TODO HACK - Daybreak, why are some chunks (that have a version 2 header) actually version 1?
+                long offset = binaryReader.BaseStream.Position;
+                try
                 {
-                    RenderBatch renderBatch = new RenderBatch();
+                    //Render Batches
+                    uint renderBatchCount = binaryReader.ReadUInt32();
+                    chunk.RenderBatches = new List<RenderBatch>((int)renderBatchCount);
 
-                    if (chunk.ChunkType == ChunkType.H1Z1)
+                    for (int i = 0; i < renderBatchCount; i++)
                     {
-                        renderBatch.Unknown = binaryReader.ReadUInt32();
+                        RenderBatch renderBatch = new RenderBatch();
+
+                        if (chunk.ChunkType == ChunkType.H1Z1_Planetside2V2)
+                        {
+                            renderBatch.Unknown = binaryReader.ReadUInt32();
+                        }
+
+                        renderBatch.IndexOffset = binaryReader.ReadUInt32();
+                        renderBatch.IndexCount = binaryReader.ReadUInt32();
+                        renderBatch.VertexOffset = binaryReader.ReadUInt32();
+                        renderBatch.VertexCount = binaryReader.ReadUInt32();
+
+                        chunk.RenderBatches.Add(renderBatch);
                     }
 
-                    renderBatch.IndexOffset = binaryReader.ReadUInt32();
-                    renderBatch.IndexCount = binaryReader.ReadUInt32();
-                    renderBatch.VertexOffset = binaryReader.ReadUInt32();
-                    renderBatch.VertexCount = binaryReader.ReadUInt32();
+                    //Optimized Draw
+                    uint optimizedDrawCount = binaryReader.ReadUInt32();
+                    chunk.OptimizedDraws = new List<OptimizedDraw>((int)optimizedDrawCount);
 
-                    chunk.RenderBatches.Add(renderBatch);
+                    for (int i = 0; i < optimizedDrawCount; i++)
+                    {
+                        OptimizedDraw optimizedDraw = new OptimizedDraw();
+                        optimizedDraw.Data = binaryReader.ReadBytes(320).ToList();
+
+                        chunk.OptimizedDraws.Add(optimizedDraw);
+                    }
+
+                    //Unknown Data
+                    uint unknownShort1Count = binaryReader.ReadUInt32();
+                    chunk.UnknownShorts1 = new List<ushort>((int)unknownShort1Count);
+
+                    for (int i = 0; i < unknownShort1Count; i++)
+                    {
+                        chunk.UnknownShorts1.Add(binaryReader.ReadUInt16());
+                    }
+
+                    //Unknown Data
+                    uint unknownVectors1Count = binaryReader.ReadUInt32();
+                    chunk.UnknownVectors1 = new List<Vector3>((int)unknownVectors1Count);
+
+                    for (int i = 0; i < unknownVectors1Count; i++)
+                    {
+                        chunk.UnknownVectors1.Add(new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle()));
+                    }
+
+                    //Tile Occluder Info
+                    uint tileOccluderCount = binaryReader.ReadUInt32();
+                    chunk.TileOccluderInfos = new List<TileOccluderInfo>((int)tileOccluderCount);
+
+                    for (int i = 0; i < tileOccluderCount; i++)
+                    {
+                        TileOccluderInfo tileOccluderInfo = new TileOccluderInfo();
+                        tileOccluderInfo.Data = binaryReader.ReadBytes(64).ToList();
+
+                        chunk.TileOccluderInfos.Add(tileOccluderInfo);
+                    }
                 }
-
-                //Optimized Draw
-                uint optimizedDrawCount = binaryReader.ReadUInt32();
-                chunk.OptimizedDraws = new List<OptimizedDraw>((int)optimizedDrawCount);
-
-                for (int i = 0; i < optimizedDrawCount; i++)
+                catch (Exception)
                 {
-                    OptimizedDraw optimizedDraw = new OptimizedDraw();
-                    optimizedDraw.Data = binaryReader.ReadBytes(320).ToList();
+                    binaryReader.BaseStream.Position = offset;
 
-                    chunk.OptimizedDraws.Add(optimizedDraw);
-                }
+                    //Render Batches
+                    uint renderBatchCount = binaryReader.ReadUInt32();
+                    chunk.RenderBatches = new List<RenderBatch>((int)renderBatchCount);
 
-                //Unknown Data
-                uint unknownShort1Count = binaryReader.ReadUInt32();
-                chunk.UnknownShorts1 = new List<ushort>((int)unknownShort1Count);
+                    for (int i = 0; i < renderBatchCount; i++)
+                    {
+                        RenderBatch renderBatch = new RenderBatch();
 
-                for (int i = 0; i < unknownShort1Count; i++)
-                {
-                    chunk.UnknownShorts1.Add(binaryReader.ReadUInt16());
-                }
+                        renderBatch.IndexOffset = binaryReader.ReadUInt32();
+                        renderBatch.IndexCount = binaryReader.ReadUInt32();
+                        renderBatch.VertexOffset = binaryReader.ReadUInt32();
+                        renderBatch.VertexCount = binaryReader.ReadUInt32();
 
-                //Unknown Data
-                uint unknownVectors1Count = binaryReader.ReadUInt32();
-                chunk.UnknownVectors1 = new List<Vector3>((int)unknownVectors1Count);
+                        chunk.RenderBatches.Add(renderBatch);
+                    }
 
-                for (int i = 0; i < unknownVectors1Count; i++)
-                {
-                    chunk.UnknownVectors1.Add(new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle()));
-                }
+                    //Optimized Draw
+                    uint optimizedDrawCount = binaryReader.ReadUInt32();
+                    chunk.OptimizedDraws = new List<OptimizedDraw>((int)optimizedDrawCount);
 
-                //Tile Occluder Info
-                uint tileOccluderCount = binaryReader.ReadUInt32();
-                chunk.TileOccluderInfos = new List<TileOccluderInfo>((int)tileOccluderCount);
+                    for (int i = 0; i < optimizedDrawCount; i++)
+                    {
+                        OptimizedDraw optimizedDraw = new OptimizedDraw();
+                        optimizedDraw.Data = binaryReader.ReadBytes(320).ToList();
 
-                for (int i = 0; i < tileOccluderCount; i++)
-                {
-                    TileOccluderInfo tileOccluderInfo = new TileOccluderInfo();
-                    tileOccluderInfo.Data = binaryReader.ReadBytes(64).ToList();
+                        chunk.OptimizedDraws.Add(optimizedDraw);
+                    }
 
-                    chunk.TileOccluderInfos.Add(tileOccluderInfo);
+                    //Unknown Data
+                    uint unknownShort1Count = binaryReader.ReadUInt32();
+                    chunk.UnknownShorts1 = new List<ushort>((int)unknownShort1Count);
+
+                    for (int i = 0; i < unknownShort1Count; i++)
+                    {
+                        chunk.UnknownShorts1.Add(binaryReader.ReadUInt16());
+                    }
+
+                    //Unknown Data
+                    uint unknownVectors1Count = binaryReader.ReadUInt32();
+                    chunk.UnknownVectors1 = new List<Vector3>((int)unknownVectors1Count);
+
+                    for (int i = 0; i < unknownVectors1Count; i++)
+                    {
+                        chunk.UnknownVectors1.Add(new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle()));
+                    }
+
+                    //Tile Occluder Info
+                    uint tileOccluderCount = binaryReader.ReadUInt32();
+                    chunk.TileOccluderInfos = new List<TileOccluderInfo>((int)tileOccluderCount);
+
+                    for (int i = 0; i < tileOccluderCount; i++)
+                    {
+                        TileOccluderInfo tileOccluderInfo = new TileOccluderInfo();
+                        tileOccluderInfo.Data = binaryReader.ReadBytes(64).ToList();
+
+                        chunk.TileOccluderInfos.Add(tileOccluderInfo);
+                    }
                 }
             }
 

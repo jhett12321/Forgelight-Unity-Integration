@@ -3,6 +3,6 @@
     public enum ChunkType
     {
         Planetside2 = 1,
-        H1Z1 = 2
+        H1Z1_Planetside2V2 = 2,
     }
 }
