@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using Forgelight.Formats.Cnk;
@@ -33,7 +32,7 @@ namespace Forgelight
         public MaterialDefinitionManager MaterialDefinitionManager { get; private set; }
 
         // Internal cache to check whether a pack has already been loaded
-        private ConcurrentDictionary<int, Pack.Pack> packLookupCache = new ConcurrentDictionary<int, Pack.Pack>();
+        private ConcurrentDictionary<string, Pack.Pack> packLookupCache = new ConcurrentDictionary<string, Pack.Pack>();
 
         //Progress
         private float lastProgress = 0.0f;
@@ -46,28 +45,28 @@ namespace Forgelight
 
             Packs = new List<Pack.Pack>();
             AssetsByType = new ConcurrentDictionary<Asset.Types, List<Asset>>();
+
+            foreach (Enum type in Enum.GetValues(typeof(Asset.Types)))
+            {
+                AssetsByType.TryAdd((Asset.Types) type, new List<Asset>());
+            }
         }
 
         public void LoadPack(string path)
         {
             Pack.Pack pack;
 
-            if (!packLookupCache.TryGetValue(path.GetHashCode(), out pack))
+            if (!packLookupCache.TryGetValue(path, out pack))
             {
                 pack = Pack.Pack.LoadBinary(path);
 
                 if (pack != null)
                 {
-                    packLookupCache.TryAdd(path.GetHashCode(), pack);
+                    packLookupCache.TryAdd(path, pack);
                     Packs.Add(pack);
 
                     foreach (Asset asset in pack.Assets)
                     {
-                        if (!AssetsByType.ContainsKey(asset.Type))
-                        {
-                            AssetsByType.TryAdd(asset.Type, new List<Asset>());
-                        }
-
                         AssetsByType[asset.Type].Add(asset);
                     }
                 }
@@ -146,20 +145,22 @@ namespace Forgelight
             int packsProcessed = 0;
             string assetProcessing = "";
 
-            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, files, file =>
+            Parallel.AsyncForEach<string> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(files, file =>
             {
                 assetProcessing = Path.GetFileName(file);
 
                 LoadPack(file);
                 Interlocked.Increment(ref packsProcessed);
-            });
+            }, null, null);
 
-            while (backgroundWorker.IsBusy)
+            while (!result.IsCompleted)
             {
                 ProgressBar(MathUtils.RemapProgress(packsProcessed / (float)files.Length, progress0, progress100), "Loading Pack File: " + assetProcessing);
             }
 
-            backgroundWorker.Dispose();
+            parallelTask.EndInvoke(result);
         }
 
         public void InitializeMaterialDefinitionManager()
@@ -178,7 +179,9 @@ namespace Forgelight
             string assetProcessing = "";
             object listLock = new object();
 
-            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, actors, asset =>
+            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(actors, asset =>
             {
                 assetProcessing = asset.Name;
 
@@ -188,14 +191,14 @@ namespace Forgelight
                 }
 
                 Interlocked.Increment(ref actorsProcessed);
-            });
+            }, null, null);
 
-            while (backgroundWorker.IsBusy)
+            while (!result.IsCompleted)
             {
                 ProgressBar(MathUtils.RemapProgress(actorsProcessed / (float)actors.Count, progress0, progress100), "Updating Actors List: " + assetProcessing);
             }
 
-            backgroundWorker.Dispose();
+            parallelTask.EndInvoke(result);
             AvailableActors.Sort();
         }
 
@@ -210,7 +213,9 @@ namespace Forgelight
             string lastAssetProcessed = "";
             object listLock = new object();
 
-            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, zones, asset =>
+            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(zones, asset =>
             {
                 string zoneName = Path.GetFileNameWithoutExtension(asset.Name);
 
@@ -233,12 +238,14 @@ namespace Forgelight
                     }
                 }
 
-            });
+            }, null, null);
 
-            while (backgroundWorker.IsBusy)
+            while (!result.IsCompleted)
             {
                 ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)zones.Count, progress0, progress100), "Updating Zone: " + lastAssetProcessed);
             }
+
+            parallelTask.EndInvoke(result);
         }
 
         public void ExportModels(float progress0, float progress100)
@@ -249,7 +256,9 @@ namespace Forgelight
             int assetsProcessed = 0;
             string lastAssetProcessed = "";
 
-            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, modelAssets, asset =>
+            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(modelAssets, asset =>
             {
                 //Ignore auto-generated LOD's and Don't export if the file already exists.
                 if (!asset.Name.EndsWith("Auto.dme") && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
@@ -268,14 +277,14 @@ namespace Forgelight
                 }
 
                 Interlocked.Increment(ref assetsProcessed);
-            });
+            }, null, null);
 
-            while (backgroundWorker.IsBusy)
+            while (!result.IsCompleted)
             {
                 ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
             }
 
-            backgroundWorker.Dispose();
+            parallelTask.EndInvoke(result);
         }
 
         //TODO Less Code Duplication.
@@ -313,7 +322,9 @@ namespace Forgelight
             //CNK1 (Geo)
             List<Asset> terrainAssetsCnk1 = AssetsByType[Asset.Types.CNK1];
 
-            BackgroundWorker backgroundWorker = Parallel.AsyncForEach(false, terrainAssetsCnk1, asset =>
+            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk1, asset =>
             {
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
@@ -328,7 +339,7 @@ namespace Forgelight
 
                     Interlocked.Increment(ref chunksProcessed);
                 }
-            });
+            }, null, null);
 
             //CNK1 (Textures)
             foreach (Asset asset in terrainAssetsCnk1)
@@ -349,12 +360,12 @@ namespace Forgelight
                 }
             }
 
-            while (backgroundWorker.IsBusy)
+            while (!result.IsCompleted)
             {
                 ProgressBar(MathUtils.RemapProgress((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
             }
 
-            backgroundWorker.Dispose();
+            parallelTask.EndInvoke(result);
 
             ////CNK2
             //ProgressBar(progress0 + MathUtils.RemapProgress(0.50f, progress0, progress100), "Exporting Terrain Data (LOD 2)...");

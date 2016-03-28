@@ -121,7 +121,13 @@ namespace Forgelight.Formats.Dme
                                         mtl.Add("bump " + mesh.BumpMap);
                                     }
 
-                                    File.WriteAllLines(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl", mtl.ToArray());
+                                    try
+                                    {
+                                        File.WriteAllLines(directory + @"\" + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + @".mtl", mtl.ToArray());
+                                    }
+
+                                    //Another thread is already writing this material. No need to take any further action.
+                                    catch (IOException) {}
                                 }
 
                                 streamWriter.WriteLine("mtllib " + Path.GetFileNameWithoutExtension(mesh.BaseDiffuse) + ".mtl");
