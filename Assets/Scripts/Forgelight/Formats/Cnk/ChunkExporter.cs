@@ -154,6 +154,11 @@ namespace Forgelight.Formats.Cnk
 
             directory += "/" + name.Split('_')[0];
 
+            if (!Directory.Exists(directory + @"/Textures"))
+            {
+                Directory.CreateDirectory(directory + @"/Textures");
+            }
+
             MontageSettings montageSettings = new MontageSettings();
             montageSettings.TileGeometry = new MagickGeometry(2, 2);
             montageSettings.Geometry = new MagickGeometry(512, 512);
@@ -163,7 +168,7 @@ namespace Forgelight.Formats.Cnk
 
             //TODO Code Duplication
             //Color Map
-            string colorMapPath = directory + @"\Textures\" + name + "_colornx" + ".dds";
+            string colorMapPath = directory + @"/Textures/" + name + "_colornx" + ".dds";
 
             if (!File.Exists(colorMapPath))
             {
@@ -184,7 +189,7 @@ namespace Forgelight.Formats.Cnk
 
             //TODO code duplication
             //Specular map
-            string specMapPath = directory + @"\Textures\" + name + "_specny" + ".dds";
+            string specMapPath = directory + @"/Textures/" + name + "_specny" + ".dds";
 
             if (!File.Exists(specMapPath))
             {
