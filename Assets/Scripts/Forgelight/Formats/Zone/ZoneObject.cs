@@ -1,21 +1,20 @@
 ﻿using System.Collections.Generic;
 using Forgelight.Attributes;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Forgelight.Formats.Zone
 {
     [ExecuteInEditMode]
+    [SelectionBase]
     public class ZoneObject : MonoBehaviour
     {
-        private string currentActorDef;
-
-        public string actorDefinition;
+        [Header("Actor Settings (Global)")]
         public float renderDistance;
 
-        private const float gracePeriod = 3.0f;
-        private float target = 3.0f;
+        [Header("Instance Settings")]
+        [ReadOnly]
+        public string actorDefinition;
 
         /// <summary>
         /// Indicates whether an object should cast shadows. We mostly turn this on (on indicates don't cast shadows, oddly) when an object is indoors (being indoors, shadows don't really matter).
@@ -58,6 +57,10 @@ namespace Forgelight.Formats.Zone
 
         public long ID { get; set; }
 
+        //Editor Rendering.
+        private const float gracePeriod = 3.0f;
+        private float target = 3.0f;
+
         private bool visible;
 
         private Renderer[] renderers;
@@ -72,25 +75,9 @@ namespace Forgelight.Formats.Zone
 
         private void OnValidate()
         {
-            if (actorDefinition != currentActorDef)
-            {
-                if (currentActorDef != null)
-                {
-                    ForgelightGame activeForgelightGame = ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame;
-
-                    if (activeForgelightGame != null)
-                    {
-                        ForgelightExtension.Instance.ZoneObjectFactory.UpdateForgelightObject(activeForgelightGame, this, actorDefinition);
-                    }
-                }
-
-                currentActorDef = actorDefinition;
-            }
-
-            else
-            {
-                CheckVisibility();
-            }
+            //We call the render check function as we may have changed the render distance.
+            //TODO update other actors that are also using this prefab.
+            CheckVisibility();
         }
 
         private void OnRenderObject()
@@ -100,18 +87,13 @@ namespace Forgelight.Formats.Zone
                 target = Time.realtimeSinceStartup + gracePeriod;
             }
 
-            if (Time.realtimeSinceStartup >= target || Selection.activeGameObject == gameObject)
+            if (Time.realtimeSinceStartup >= target)
             {
                 CheckVisibility();
             }
 
             foreach (Transform child in transform)
             {
-                if (child.gameObject == Selection.activeGameObject)
-                {
-                    Selection.activeGameObject = gameObject;
-                }
-
                 //Check to see if the user has accidentally moved a child object and not the parent.
                 if (child.transform.localPosition != Vector3.zero)
                 {

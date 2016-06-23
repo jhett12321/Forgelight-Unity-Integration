@@ -27,7 +27,6 @@ namespace Forgelight.Editor.Windows
         private bool dragging;
         private float splitterWidth = 5;
 
-        [MenuItem("Forgelight/Windows/Create")]
         public static void Init()
         {
             Create window = (Create) GetWindow(typeof (Create), false, "Create");

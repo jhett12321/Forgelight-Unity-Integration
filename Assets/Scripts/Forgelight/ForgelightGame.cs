@@ -295,36 +295,41 @@ namespace Forgelight
             int texturesProcessed = 0;
             string assetProcessing = "";
 
-            //CNK0
-            //ProgressBar(progress0, "Exporting Terrain Data (LOD 0)...");
-            //List<Asset> terrainAssetsCnk0 = AssetsByType[Asset.Types.CNK0];
-            //int terrainAssetsCnk0Processed = 0;
+            //CNK0 (Geo)
+            List<Asset> terrainAssetsCnk0 = AssetsByType[Asset.Types.CNK0];
 
-            //foreach (Asset asset in terrainAssetsCnk0)
-            //{
-            //    using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
-            //    {
-            //        Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
-            //    }
-            //}
+            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+            IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk0, asset =>
+            {
+                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+                {
+                    assetProcessing = asset.Name;
 
-            //Parallel.ForEach(terrainAssetsCnk0, asset =>
-            //{
-            //    using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
-            //    {
-            //        Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
-            //    }
+                    Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
 
-            //    Interlocked.Increment(ref terrainAssetsCnk0Processed);
-            //    //ProgressBar(MathUtils.RemapProgress((float)terrainAssetsCnk0Processed / (float)terrainAssetsCnk0.Count, progress0, progress100), "Exporting Chunk (LOD0): " + Path.GetFileName(asset.Name));
-            //});
+                    //if (chunk != null)
+                    //{
+                    //    ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
+                    //}
+
+                    Interlocked.Increment(ref chunksProcessed);
+                }
+            }, null, null);
+
+            while (!result.IsCompleted)
+            {
+                ProgressBar(MathUtils.RemapProgress(chunksProcessed / ((float)terrainAssetsCnk0.Count), progress0, progress100), "Exporting Chunk: " + assetProcessing);
+            }
+
+            chunksProcessed = 0;
+            texturesProcessed = 0;
 
             //CNK1 (Geo)
             List<Asset> terrainAssetsCnk1 = AssetsByType[Asset.Types.CNK1];
 
-            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+            parallelTask = System.Threading.Tasks.Parallel.ForEach;
 
-            IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk1, asset =>
+            result = parallelTask.BeginInvoke(terrainAssetsCnk1, asset =>
             {
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {

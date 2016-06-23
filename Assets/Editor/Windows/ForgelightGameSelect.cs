@@ -12,7 +12,6 @@ namespace Forgelight.Editor.Windows
 
         private Vector2 scroll;
 
-        [MenuItem("Forgelight/Windows/Games")]
         public static void Init()
         {
             GetWindow(typeof(ForgelightGameSelect), false, "Games");

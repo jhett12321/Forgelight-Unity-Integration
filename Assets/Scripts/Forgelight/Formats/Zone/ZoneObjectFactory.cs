@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
+using Forgelight.Attributes;
 using UnityEditor;
 
 namespace Forgelight.Formats.Zone
@@ -8,7 +9,6 @@ namespace Forgelight.Formats.Zone
     public class ZoneObjectFactory : MonoBehaviour
     {
         private List<long> usedIDs = new List<long>();
-        private Dictionary<ForgelightGame, Dictionary<string, GameObject>> cachedActors = new Dictionary<ForgelightGame, Dictionary<string, GameObject>>();
 
         public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation)
         {
@@ -19,39 +19,7 @@ namespace Forgelight.Formats.Zone
 
         public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, float renderDistance, float lodMultiplier, bool dontCastShadows, uint id)
         {
-            GameObject baseActor;
-            GameObject instance;
-
-            if (!cachedActors.ContainsKey(forgelightGame))
-            {
-                cachedActors[forgelightGame] = new Dictionary<string, GameObject>();
-            }
-
-            if (!cachedActors[forgelightGame].ContainsKey(actorDefinition))
-            {
-                baseActor = InitializeBaseActor(forgelightGame, actorDefinition);
-
-                instance = baseActor;
-                cachedActors[forgelightGame][actorDefinition] = baseActor;
-            }
-
-            else
-            {
-                baseActor = cachedActors[forgelightGame][actorDefinition];
-
-                if (baseActor == null)
-                {
-                    baseActor = InitializeBaseActor(forgelightGame, actorDefinition);
-
-                    instance = baseActor;
-                    cachedActors[forgelightGame][actorDefinition] = baseActor;
-                }
-
-                else
-                {
-                    instance = Instantiate(baseActor);
-                }
-            }
+            GameObject instance = InitializeActor(forgelightGame, actorDefinition);
 
             if (instance != null)
             {
@@ -76,62 +44,51 @@ namespace Forgelight.Formats.Zone
             DestroyImmediate(gameObject);
         }
 
-        public void UpdateForgelightObject(ForgelightGame forgelightGame, ZoneObject forgeLightObject, string newActorDefinition)
-        {
-            GameObject baseActor = InitializeBaseActor(forgelightGame, newActorDefinition);
-
-            foreach (Transform child in forgeLightObject.transform)
-            {
-                forgeLightObject.DestroyObject(child.gameObject);
-            }
-
-            foreach (Transform child in baseActor.transform)
-            {
-                GameObject mesh = (GameObject) Instantiate(child.gameObject, child.position, child.rotation);
-                mesh.transform.SetParent(forgeLightObject.transform, false);
-            }
-
-            forgeLightObject.name = baseActor.name;
-        }
-
-        private GameObject InitializeBaseActor(ForgelightGame forgelightGame, string actorDef)
+        private GameObject InitializeActor(ForgelightGame forgelightGame, string actorDef)
         {
             GameObject resourceObj = GetForgelightObject(forgelightGame, actorDef);
 
-            GameObject baseActor;
-            Renderer baseActorRenderer;
+            GameObject actor = null;
+            Renderer[] baseActorRenderers;
 
             if (resourceObj != null)
             {
-                baseActor = Instantiate(resourceObj);
+                actor = (GameObject) PrefabUtility.InstantiatePrefab(resourceObj);
 
-                if (baseActor == null)
+                if (actor != null)
                 {
-                    return null;
-                }
+                    baseActorRenderers = actor.GetComponentsInChildren<Renderer>();
 
-                baseActorRenderer = baseActor.GetComponentInChildren<Renderer>();
+                    if (baseActorRenderers == null)
+                    {
+                        DestroyImmediate(actor);
 
-                if (baseActorRenderer == null)
-                {
-                    DestroyImmediate(baseActor);
+                        Debug.LogWarning("Warning: Forgelight Object " + actorDef + " Failed to instantiate. Ignoring object.");
 
-                    Debug.LogWarning("Warning: Forgelight Object " + actorDef + " Failed to instantiate. Ignoring object.");
-
-                    return null;
+                        actor = null;
+                    }
                 }
             }
 
-            else
+            if (actor == null)
             {
                 //This model does not exist.
-                baseActor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                actor = GameObject.CreatePrimitive(PrimitiveType.Cube);
 
-                baseActorRenderer = baseActor.GetComponent<Renderer>();
-                baseActorRenderer.sharedMaterial.color = Color.magenta;
+                baseActorRenderers = actor.GetComponents<Renderer>();
+                baseActorRenderers[0].sharedMaterial.color = Color.magenta;
             }
 
-            return baseActor;
+            int layer = LayerMask.NameToLayer("ForgelightZoneObject");
+
+            actor.layer = layer;
+
+            foreach (Transform child in actor.transform)
+            {
+                child.gameObject.layer = layer;
+            }
+
+            return actor;
         }
 
         private void InitializeInstance(GameObject instance, Vector3 position, Quaternion rotation, Vector3 scale, string actorDef, float renderDistance, float lodBias, bool dontCastShadows, long id)
@@ -149,6 +106,13 @@ namespace Forgelight.Formats.Zone
             if (zoneObject == null)
             {
                 zoneObject = instance.AddComponent<ZoneObject>();
+            }
+
+            CullableObject cObject = instance.GetComponent<CullableObject>();
+
+            if (cObject == null)
+            {
+                instance.AddComponent<CullableObject>();
             }
 
             zoneObject.actorDefinition = actorDef;

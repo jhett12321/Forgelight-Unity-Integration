@@ -13,7 +13,6 @@ namespace Forgelight.Editor.Windows
 
         private Zone selectedZone;
 
-        [MenuItem("Forgelight/Windows/Zones")]
         public static void Init()
         {
             GetWindow(typeof(ZoneLoader), false, "Zones");

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Forgelight.Attributes;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -93,15 +94,27 @@ namespace Forgelight.Formats.Cnk
                 int chunkPosX = -(Convert.ToInt32(nameElements[2]) * chunkPosOffset);
                 int chunkPosZ = (Convert.ToInt32(nameElements[1]) * chunkPosOffset);
 
-                GameObject instance = (GameObject) Object.Instantiate(chunk, new Vector3(chunkPosX, 0, chunkPosZ), Quaternion.identity);
+                GameObject instance = (GameObject) PrefabUtility.InstantiatePrefab(chunk);
+                instance.transform.position = new Vector3(chunkPosX, 0, chunkPosZ);
 
-                instance.transform.parent = terrainParent;
+                instance.transform.SetParent(terrainParent);
+
+                //Used for cull purposes.
+                instance.AddComponent<CullableObject>();
 
                 //instance.isStatic = true;
                 //foreach (Transform child in instance.transform)
                 //{
                 //    child.gameObject.isStatic = true;
                 //}
+
+                int layer = LayerMask.NameToLayer("ForgelightTerrain");
+                instance.layer = layer;
+
+                foreach (Transform child in instance.transform)
+                {
+                    child.gameObject.layer = layer;
+                }
             }
         }
 

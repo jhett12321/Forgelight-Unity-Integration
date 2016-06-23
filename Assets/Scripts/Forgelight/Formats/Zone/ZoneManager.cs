@@ -66,7 +66,7 @@ namespace Forgelight.Formats.Zone
         }
 
         /// <summary>
-        /// Merges the current scene into the
+        /// Merges the current scene into the loaded Zone instance.
         /// </summary>
         public void ApplySceneChangesToZone()
         {
@@ -75,8 +75,11 @@ namespace Forgelight.Formats.Zone
             //Check to make sure we don't have duplicate ID's
             ForgelightExtension.Instance.ZoneObjectFactory.ValidateObjectUIDs();
 
-            foreach (ZoneObject zoneObject in UnityEngine.Object.FindObjectsOfType<ZoneObject>())
+            foreach (ZoneObject zoneObject in Resources.FindObjectsOfTypeAll<ZoneObject>())
             {
+                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave)
+                    continue;
+
                 string actorDef = zoneObject.actorDefinition;
                 if (!actorInstances.ContainsKey(actorDef))
                 {
