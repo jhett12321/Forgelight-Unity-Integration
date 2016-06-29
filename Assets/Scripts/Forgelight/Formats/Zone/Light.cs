@@ -1,29 +1,36 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Assets.Scripts.Forgelight.Utils;
 using UnityEngine;
 
 namespace Forgelight.Formats.Zone
 {
+    public enum LightType
+    {
+        Pointlight = 1,
+        Spotlight = 2,
+    }
+
     public class Light
     {
         #region Structure
-        public string Name { get; private set; }
-        public string ColorName { get; private set; }
-        public byte Type { get; private set; }
-        public float UnknownFloat1 { get; private set; }
-        public Vector4 Position { get; private set; }
-        public Vector4 Rotation { get; private set; }
-        public float Range { get; private set; }
-        public float InnerRange { get; private set; }
-        public Color Color { get; private set; }
-        public byte UnknownByte1 { get; private set; }
-        public byte UnknownByte2 { get; private set; }
-        public byte UnknownByte3 { get; private set; }
-        public byte UnknownByte4 { get; private set; }
-        public byte UnknownByte5 { get; private set; }
-        public Vector4 UnknownVector1 { get; private set; }
-        public string UnknownString1 { get; private set; }
-        public uint ID { get; private set; }
+        public string Name { get; set; }
+        public string ColorName { get; set; }
+        public LightType Type { get; set; }
+        public float UnknownFloat1 { get; set; }
+        public Vector4 Position { get; set; }
+        public Vector4 Rotation { get; set; }
+        public float Range { get; set; }
+        public float InnerRange { get; set; }
+        public Color Color { get; set; }
+        public byte UnknownByte1 { get; set; }
+        public byte UnknownByte2 { get; set; }
+        public byte UnknownByte3 { get; set; }
+        public byte UnknownByte4 { get; set; }
+        public byte UnknownByte5 { get; set; }
+        public Vector4 UnknownVector1 { get; set; }
+        public string UnknownString1 { get; set; }
+        public uint ID { get; set; }
         #endregion
 
         public static Light ReadFromStream(Stream stream)
@@ -33,7 +40,7 @@ namespace Forgelight.Formats.Zone
 
             light.Name = binaryReader.ReadNullTerminatedString();
             light.ColorName = binaryReader.ReadNullTerminatedString();
-            light.Type = binaryReader.ReadByte();
+            light.Type = (LightType)binaryReader.ReadByte();
             light.UnknownFloat1 = binaryReader.ReadSingle();
             light.Position = new Vector4(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());
             light.Rotation = new Vector4(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());
@@ -45,7 +52,7 @@ namespace Forgelight.Formats.Zone
             byte g = binaryReader.ReadByte();
             byte b = binaryReader.ReadByte();
 
-            light.Color = new Color((float)r/255, (float)g/255, (float)b/255, (float)a/255);
+            light.Color = new Color(r/255.0f, g/255.0f, b/255.0f, a/255.0f);
             light.UnknownByte1 = binaryReader.ReadByte();
             light.UnknownByte2 = binaryReader.ReadByte();
             light.UnknownByte3 = binaryReader.ReadByte();
@@ -63,7 +70,7 @@ namespace Forgelight.Formats.Zone
         {
             binaryWriter.WriteNullTerminiatedString(Name);
             binaryWriter.WriteNullTerminiatedString(ColorName);
-            binaryWriter.Write(Type);
+            binaryWriter.Write((byte)Type);
             binaryWriter.Write(UnknownFloat1);
 
             binaryWriter.Write(Position.x);

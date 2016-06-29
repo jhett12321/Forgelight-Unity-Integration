@@ -1,22 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Forgelight.Formats.Zone;
+using Forgelight.Formats.Areas;
 using Forgelight.Utils;
 using UnityEditor;
 using UnityEngine;
 
 namespace Forgelight.Editor.Windows
 {
-    public class ZoneLoader : EditorWindow
+    public class AreaLoader : EditorWindow
     {
         private string searchString = "";
         private Vector2 scroll;
 
-        private string selectedZone;
+        private string selectedAreas;
 
         public static void Init()
         {
-            GetWindow(typeof(ZoneLoader), false, "Zones");
+            GetWindow(typeof(AreaLoader), false, "Areas");
         }
 
         private void OnGUI()
@@ -38,10 +38,11 @@ namespace Forgelight.Editor.Windows
 
                     if (activeForgelightGame != null)
                     {
-                        List<string> zones = activeForgelightGame.AvailableZones.Keys.ToList();
-                        zones.Sort();
+                        List<string> areas = activeForgelightGame.AvailableAreaDefinitions.Keys.ToList();
 
-                        ShowAvailableZones(activeForgelightGame, zones);
+                        areas.Sort();
+
+                        ShowAvailableAreaDefs(activeForgelightGame, areas);
                     }
                 }
                 EditorGUILayout.EndScrollView();
@@ -49,11 +50,11 @@ namespace Forgelight.Editor.Windows
             EditorGUILayout.EndHorizontal();
         }
 
-        private void ShowAvailableZones(ForgelightGame forgelightGame, List<string> availableZones)
+        private void ShowAvailableAreaDefs(ForgelightGame forgelightGame, List<string> availableAreas)
         {
-            foreach (string zone in availableZones)
+            foreach (string areaDef in availableAreas)
             {
-                if (searchString == null || zone.ToLower().Contains(searchString.ToLower()))
+                if (searchString == null || areaDef.ToLower().Contains(searchString.ToLower()))
                 {
                     Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
 
@@ -61,13 +62,13 @@ namespace Forgelight.Editor.Windows
                     {
                         if (rect.Contains(Event.current.mousePosition))
                         {
-                            if (selectedZone != null && selectedZone == zone)
+                            if (selectedAreas != null && selectedAreas == areaDef)
                             {
-                                OnZoneSelected(forgelightGame, forgelightGame.AvailableZones[zone]);
-                                selectedZone = null;
+                                OnAreasSelected(forgelightGame.AvailableAreaDefinitions[areaDef]);
+                                selectedAreas = null;
                             }
 
-                            selectedZone = zone;
+                            selectedAreas = areaDef;
                         }
                     }
 
@@ -76,16 +77,17 @@ namespace Forgelight.Editor.Windows
                     style.stretchWidth = true;
                     style.clipping = TextClipping.Overflow;
 
-                    EditorGUI.Foldout(rect, false, zone, true, style);
+                    EditorGUI.Foldout(rect, false, areaDef, true, style);
                 }
             }
         }
 
-        private void OnZoneSelected(ForgelightGame forgelightGame, Zone zone)
+        private void OnAreasSelected(Areas areas)
         {
-            if (DialogUtils.DisplayCancelableDialog("Changing Zone", "You have selected a new zone. Changing zones will DESTROY all objects and terrain in the current scene, and you will lose any unsaved changes. Are you sure you wish to continue?"))
+            if (DialogUtils.DisplayCancelableDialog("Changing Area Definitions", "You have selected a new area definitions file. This will replace any areas currently loaded. Are you sure you wish to continue?"))
             {
-                ForgelightExtension.Instance.ZoneManager.ChangeZone(forgelightGame, zone);
+                ForgelightExtension.Instance.ZoneManager.AreaObjectFactory.DestroyAreas();
+                ForgelightExtension.Instance.ZoneManager.AreaObjectFactory.LoadAreaDefinitions(areas, 0.0f, 1.0f);
             }
         }
     }

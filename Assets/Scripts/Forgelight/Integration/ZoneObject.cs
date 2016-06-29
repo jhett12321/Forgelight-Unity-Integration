@@ -3,7 +3,7 @@ using Forgelight.Attributes;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Forgelight.Formats.Zone
+namespace Forgelight.Editor
 {
     [ExecuteInEditMode]
     [SelectionBase]

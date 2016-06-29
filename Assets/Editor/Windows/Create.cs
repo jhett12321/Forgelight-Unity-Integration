@@ -112,7 +112,7 @@ namespace Forgelight.Editor.Windows
                             {
                                 BeginDrag(forgelightGame, actor);
                                 DestroyImmediate(previewWindowEditor);
-                                selectedActor = ForgelightExtension.Instance.ZoneObjectFactory.GetForgelightObject(forgelightGame, actor);
+                                selectedActor = ForgelightExtension.Instance.ZoneManager.ZoneObjectFactory.GetForgelightObject(forgelightGame, actor);
                             }
                         }
 
@@ -187,7 +187,7 @@ namespace Forgelight.Editor.Windows
                     //We have entered the scene. Create the forgelight object at our current position.
                     if (draggedObj.instantiatedGameObject == null)
                     {
-                        draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneObjectFactory.CreateForgelightObject(draggedObj.forgelightGame, draggedObj.actorDefinition, ray.GetPoint(objectCreationDistance), Quaternion.identity);
+                        draggedObj.instantiatedGameObject = ForgelightExtension.Instance.ZoneManager.ZoneObjectFactory.CreateForgelightObject(draggedObj.forgelightGame, draggedObj.actorDefinition, ray.GetPoint(objectCreationDistance), Quaternion.identity);
                     }
 
                     else

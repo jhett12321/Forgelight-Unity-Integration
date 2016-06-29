@@ -3,40 +3,53 @@ using System.IO;
 using Forgelight.Attributes;
 using UnityEditor;
 using UnityEngine;
+using MathUtils = Forgelight.Utils.MathUtils;
 using Object = UnityEngine.Object;
 
-namespace Forgelight.Formats.Cnk
+namespace Forgelight.Integration
 {
-    public class ChunkLoader
+    public class TerrainFactory
     {
         private const int chunkPosOffset = 32;
 
-        private bool running;
+        private Transform parent;
+        private Transform Parent
+        {
+            get
+            {
+                if (parent == null)
+                {
+                    parent = new GameObject("Forgelight Terrain").transform;
+                    parent.gameObject.layer = LayerMask.NameToLayer("ForgelightTerrain");
+                    parent.tag = "ForgelightTerrain";
+                }
+
+                return parent;
+            }
+        }
 
         public void DestroyTerrain()
         {
-            GameObject terrain = GameObject.FindWithTag("Terrain");
-
-            if (terrain != null)
+            if (parent != null)
             {
-                Object.DestroyImmediate(terrain);
+                Object.DestroyImmediate(parent.gameObject);
+            }
+            else
+            {
+                Object.DestroyImmediate(GameObject.FindGameObjectWithTag("ForgelightTerrain"));
             }
         }
 
         public void LoadTerrain(ForgelightGame forgelightGame, string contPrefix, float progressMin, float progressMax)
         {
-            running = true;
-
-            Transform terrainParent = new GameObject("Forgelight Terrain - " + contPrefix).transform;
-            terrainParent.tag = "Terrain";
-            //terrainParent.gameObject.isStatic = true;
+            Parent.name += " - " + contPrefix;
 
             string resourcePath = forgelightGame.Name + "/Terrain/" + contPrefix;
 
             if (!Directory.Exists(Application.dataPath + "/Resources/" + resourcePath))
             {
                 Debug.LogWarning("Could not find terrain for zone " + contPrefix);
-                Object.DestroyImmediate(terrainParent.gameObject);
+
                 return;
             }
 
@@ -49,35 +62,26 @@ namespace Forgelight.Formats.Cnk
 
             foreach (string resource in resources)
             {
-                if (running)
-                {
-                    string chunkName = Path.GetFileNameWithoutExtension(resource);
-                    currentChunk = chunkName;
+                string chunkName = Path.GetFileNameWithoutExtension(resource);
+                currentChunk = chunkName;
 
-                    ProgressBar(Utils.MathUtils.RemapProgress((float) resourcesProcessed / totalResources, progressMin, progressMax), currentChunk);
+                EditorUtility.DisplayProgressBar("Loading Zone: " + contPrefix, "Loading Terrain: " + currentChunk, MathUtils.RemapProgress((float)totalResources / totalResources, progressMin, progressMax));
 
-                    CreateChunk(resourcePath + "/" + chunkName, terrainParent);
+                CreateChunk(resourcePath + "/" + chunkName, Parent);
 
-                    resourcesProcessed++;
-                }
-
-                else
-                {
-                    OnLoadComplete(false);
-                }
+                resourcesProcessed++;
             }
 
             //The terrain uses a different scale and coordinate system. We need to flip the x axis and multiply by 2.
-            terrainParent.localScale = new Vector3(2, 2, 2);
+            Parent.localScale = new Vector3(2, 2, 2);
 
             //Destroy the parent if we did not create any children.
             if (resourcesProcessed == 0)
             {
-                Object.DestroyImmediate(terrainParent.gameObject);
+                Object.DestroyImmediate(Parent.gameObject);
             }
 
-            running = false;
-            OnLoadComplete(true);
+            Resources.UnloadUnusedAssets();
         }
 
         private void CreateChunk(string chunkPath, Transform terrainParent)
@@ -116,19 +120,6 @@ namespace Forgelight.Formats.Cnk
                     child.gameObject.layer = layer;
                 }
             }
-        }
-
-        public void OnLoadComplete(bool completed)
-        {
-            //Unload any unused assets.
-            Resources.UnloadUnusedAssets();
-
-            EditorUtility.ClearProgressBar();
-        }
-
-        private void ProgressBar(float progress, string currentTask)
-        {
-            EditorUtility.DisplayProgressBar("Loading Zone: " + ForgelightExtension.Instance.ZoneManager.LoadedZone.Name, currentTask, progress);
         }
     }
 }

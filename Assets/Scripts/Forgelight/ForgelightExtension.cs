@@ -1,6 +1,7 @@
 ﻿using Forgelight.Attributes;
-using Forgelight.Formats.Cnk;
+using Forgelight.Editor;
 using Forgelight.Formats.Zone;
+using Forgelight.Integration;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -24,31 +25,8 @@ namespace Forgelight
         //Zone Manager
         public ZoneManager ZoneManager { get; private set; }
 
-        //Chunk Loading
-        public ChunkLoader ChunkLoader { get; private set; }
-
         //Asset Cache/Loading
         public ForgelightGameFactory ForgelightGameFactory { get; private set; }
-
-        //Zone Editing
-        private ZoneObjectFactory zoneObjectFactory;
-        public ZoneObjectFactory ZoneObjectFactory
-        {
-            get
-            {
-                if (zoneObjectFactory == null)
-                {
-                    zoneObjectFactory = (ZoneObjectFactory)Object.FindObjectOfType(typeof(ZoneObjectFactory));
-
-                    if (zoneObjectFactory == null)
-                    {
-                        zoneObjectFactory = new GameObject("Forgelight Zone Objects").AddComponent<ZoneObjectFactory>();
-                    }
-                }
-
-                return zoneObjectFactory;
-            }
-        }
 
         //Zone Exporting
         public ZoneExporter ZoneExporter { get; private set; }
@@ -64,7 +42,6 @@ namespace Forgelight
                 Instance = new ForgelightExtension
                 {
                     ForgelightGameFactory = new ForgelightGameFactory(),
-                    ChunkLoader = new ChunkLoader(),
                     ZoneExporter = new ZoneExporter(),
                     Config = new Config(),
                     ZoneManager = new ZoneManager()

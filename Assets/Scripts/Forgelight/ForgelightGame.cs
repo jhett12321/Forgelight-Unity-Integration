@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Forgelight.Formats.Areas;
 using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Dma;
 using Forgelight.Formats.Dme;
@@ -25,6 +26,7 @@ namespace Forgelight
         //Available Assets
         public List<string> AvailableActors { get; private set; }
         public Dictionary<string, Zone> AvailableZones { get; private set; }
+        public Dictionary<string, Areas> AvailableAreaDefinitions { get; private set; }
 
         //Data
         public List<Pack.Pack> Packs { get; private set; }
@@ -108,8 +110,20 @@ namespace Forgelight
         {
             MemoryStream memoryStream = null;
 
+            if (name == null)
+            {
+                Debug.LogError("Asset Name is null");
+            }
+
+
+
             foreach (Pack.Pack pack in Packs)
             {
+                if (pack == null)
+                {
+                    Debug.LogError("Pack is null");
+                }
+
                 memoryStream = pack.CreateAssetMemoryStreamByName(name);
 
                 if (memoryStream != null)
@@ -183,10 +197,14 @@ namespace Forgelight
 
             IAsyncResult result = parallelTask.BeginInvoke(actors, asset =>
             {
-                assetProcessing = asset.Name;
+                if (asset == null)
+                {
+                    return;
+                }
 
                 lock (listLock)
                 {
+                    assetProcessing = asset.Name;
                     AvailableActors.Add(asset.Name);
                 }
 
@@ -217,14 +235,12 @@ namespace Forgelight
 
             IAsyncResult result = parallelTask.BeginInvoke(zones, asset =>
             {
-                string zoneName = Path.GetFileNameWithoutExtension(asset.Name);
-
-                lastAssetProcessed = zoneName;
-
-                if (zoneName == null)
+                if (asset == null)
                 {
                     return;
                 }
+
+                string zoneName = Path.GetFileNameWithoutExtension(asset.Name);
 
                 MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
                 Zone zone = Zone.LoadFromStream(asset.Name, memoryStream);
@@ -233,6 +249,7 @@ namespace Forgelight
                 {
                     lock (listLock)
                     {
+                        lastAssetProcessed = zoneName;
                         zoneName = zoneName + " (" + asset.Pack.Name + ")";
                         AvailableZones[zoneName] = zone;
                     }
@@ -243,6 +260,57 @@ namespace Forgelight
             while (!result.IsCompleted)
             {
                 ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)zones.Count, progress0, progress100), "Updating Zone: " + lastAssetProcessed);
+            }
+
+            parallelTask.EndInvoke(result);
+        }
+
+        public void UpdateAreas(float progress0, float progress100)
+        {
+            ProgressBar(progress0, "Loading Area Definitions");
+
+            List<Asset> xmlFiles = AssetsByType[Asset.Types.XML];
+
+            AvailableAreaDefinitions = new Dictionary<string, Areas>();
+
+            int assetsProcessed = 0;
+            string lastAssetProcessed = "";
+            object listLock = new object();
+
+            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(xmlFiles, asset =>
+            {
+                if (asset == null)
+                {
+                    return;
+                }
+
+                string areaDefinitionsXML = Path.GetFileNameWithoutExtension(asset.Name);
+
+                if (!areaDefinitionsXML.EndsWith("Areas"))
+                {
+                    return;
+                }
+
+                MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
+                Areas areas = Areas.LoadFromStream(asset.Name, memoryStream);
+
+                if (areas != null)
+                {
+                    lock (listLock)
+                    {
+                        lastAssetProcessed = areaDefinitionsXML;
+                        areaDefinitionsXML = areaDefinitionsXML + " (" + asset.Pack.Name + ")";
+                        AvailableAreaDefinitions[areaDefinitionsXML] = areas;
+                    }
+                }
+
+            }, null, null);
+
+            while (!result.IsCompleted)
+            {
+                ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)xmlFiles.Count, progress0, progress100), "Loading Area Definitions: " + lastAssetProcessed);
             }
 
             parallelTask.EndInvoke(result);
@@ -260,8 +328,13 @@ namespace Forgelight
 
             IAsyncResult result = parallelTask.BeginInvoke(modelAssets, asset =>
             {
+                if (asset == null)
+                {
+                    return;
+                }
+
                 //Ignore auto-generated LOD's and Don't export if the file already exists.
-                if (!asset.Name.EndsWith("Auto.dme") && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
+                if (asset.Name.EndsWith("LOD0.dme", StringComparison.OrdinalIgnoreCase) && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
                 {
                     lastAssetProcessed = asset.Name;
 
@@ -301,11 +374,16 @@ namespace Forgelight
             Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
             IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk0, asset =>
             {
+                if (asset == null)
+                {
+                    return;
+                }
+
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
                     assetProcessing = asset.Name;
 
-                    Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
+                    //Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
 
                     //if (chunk != null)
                     //{
@@ -331,6 +409,11 @@ namespace Forgelight
 
             result = parallelTask.BeginInvoke(terrainAssetsCnk1, asset =>
             {
+                if (asset == null)
+                {
+                    return;
+                }
+
                 using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
                     assetProcessing = asset.Name;

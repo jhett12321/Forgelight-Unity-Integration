@@ -28,10 +28,16 @@ public class ForgelightMenu : Editor
     {
         ZoneLoader.Init();
     }
+
+    [MenuItem("Forgelight/Windows/Areas", false, 10003)]
+    public static void AreasWindow()
+    {
+        AreaLoader.Init();
+    }
     #endregion
 
     #region Draw
-    [MenuItem("Forgelight/Draw/Cull World from Current Position", false, 10100)]
+    [MenuItem("Forgelight/Draw/Cull World from Current Position", false, 10004)]
     public static void CullWorld()
     {
         ResetCulling(); //Make sure we have not already culled the world.
@@ -54,7 +60,7 @@ public class ForgelightMenu : Editor
         }
     }
 
-    [MenuItem("Forgelight/Draw/Draw All", false, 10150)]
+    [MenuItem("Forgelight/Draw/Draw All", false, 10050)]
     public static void ResetCulling()
     {
         foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
@@ -66,19 +72,19 @@ public class ForgelightMenu : Editor
         }
     }
 
-    [MenuItem("Forgelight/Draw/Hide Terrain", false, 10151)]
+    [MenuItem("Forgelight/Draw/Hide Terrain", false, 10051)]
     public static void HideTerrain()
     {
 
     }
 
-    [MenuItem("Forgelight/Draw/Hide Objects", false, 10152)]
+    [MenuItem("Forgelight/Draw/Hide Objects", false, 10052)]
     public static void HideObjects()
     {
 
     }
 
-    [MenuItem("Forgelight/Draw/Cull Settings (See Inspector Window)...", false, 10199)]
+    [MenuItem("Forgelight/Draw/Cull Settings", false, 10100)]
     public static void CullSettings()
     {
         ForgelightSettings();
@@ -100,13 +106,13 @@ public class ForgelightMenu : Editor
     #endregion
 
     #region Load
-    [MenuItem("Forgelight/Load/Load Forgelight Game Data...", false, 10300)]
+    [MenuItem("Forgelight/Load/Load Forgelight Game Data...", false, 10202)]
     public static void SelectGameDirectory()
     {
         ForgelightExtension.Instance.ForgelightGameFactory.OpenForgelightGameFolder();
     }
 
-    [MenuItem("Forgelight/Load/Load Zone File...", false, 10301)]
+    [MenuItem("Forgelight/Load/Load Zone File...", false, 10203)]
     public static void LoadZoneFile()
     {
         if (ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame == null)
@@ -132,8 +138,7 @@ public class ForgelightMenu : Editor
     {
         if (DialogUtils.DisplayCancelableDialog("Destroy Zone", "This will destroy all objects and terrain in the current scene, and you will lose any unsaved changes. This cannot be undone. Are you sure you wish to continue?"))
         {
-            ForgelightExtension.Instance.ChunkLoader.DestroyTerrain();
-            ForgelightExtension.Instance.ZoneObjectFactory.DestroyAllObjects();
+            ForgelightExtension.Instance.ZoneManager.DestroyActiveZone();
         }
     }
 
