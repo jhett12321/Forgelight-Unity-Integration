@@ -56,7 +56,7 @@ namespace Forgelight.Editor
                 {
                     foreach (Object.Instance instance in zoneObject.Instances)
                     {
-                        Matrix4x4 correctedTransform = MathUtils.ConvertTransform(instance.Position, instance.Rotation, instance.Scale, true, true);
+                        Matrix4x4 correctedTransform = MathUtils.InvertTransform(instance.Position, instance.Rotation, instance.Scale, true, RotationMode.Object);
 
                         CreateForgelightObject(forgelightGame, zoneObject.ActorDefinition, correctedTransform.ExtractTranslationFromMatrix(), correctedTransform.ExtractRotationFromMatrix(), correctedTransform.ExtractScaleFromMatrix(), zoneObject.RenderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
                     }
@@ -175,6 +175,9 @@ namespace Forgelight.Editor
             zoneObject.DontCastShadows = dontCastShadows;
             zoneObject.ID = id;
 
+            //Apply any changes we may have made.
+            zoneObject.OnValidate();
+
             //instance.isStatic = true;
 
             //Add the ID to our used list.
@@ -251,7 +254,7 @@ namespace Forgelight.Editor
                 {
                     Object.Instance instance = new Object.Instance();
 
-                    Matrix4x4 correctedTransform = MathUtils.ConvertTransform(zoneObject.transform.position, zoneObject.transform.rotation.eulerAngles, zoneObject.transform.localScale, false, true);
+                    Matrix4x4 correctedTransform = MathUtils.InvertTransform(zoneObject.transform.position, zoneObject.transform.rotation.eulerAngles, zoneObject.transform.localScale, false, RotationMode.Object);
 
                     instance.Position = correctedTransform.ExtractTranslationFromMatrix();
                     instance.Rotation = correctedTransform.ExtractRotationFromMatrix().eulerAngles.ToRadians();

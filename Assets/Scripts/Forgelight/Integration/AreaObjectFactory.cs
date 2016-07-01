@@ -60,9 +60,11 @@ namespace Forgelight.Integration
                     case "sphere":
                         instance = GameObject.CreatePrimitive(PrimitiveType.Sphere).AddComponent<AreaObject>();
 
-                        Matrix4x4 correctedSphereTransform = MathUtils.ConvertTransform(areaDefinition.Pos1, Vector4.zero, new Vector4(areaDefinition.Radius, areaDefinition.Radius, areaDefinition.Radius), false, false);
-                        instance.transform.position = correctedSphereTransform.ExtractTranslationFromMatrix();
-                        instance.transform.localScale = correctedSphereTransform.ExtractScaleFromMatrix();
+                        Matrix4x4 correctedSphereMatrix = MathUtils.InvertTransform(areaDefinition.Pos1, Vector4.zero, new Vector4(areaDefinition.Radius, areaDefinition.Radius, areaDefinition.Radius), false, RotationMode.Standard);
+                        correctedSphereMatrix.ApplyToTransform(instance.transform);
+
+                        //instance.transform.position = correctedSphereTransform.ExtractTranslationFromMatrix();
+                        //instance.transform.localScale = correctedSphereTransform.ExtractScaleFromMatrix();
 
                         instance.Radius = areaDefinition.Radius;
                         break;
@@ -79,10 +81,11 @@ namespace Forgelight.Integration
                         Vector3 fPos = (pos1 + pos2) * 0.5f;
                         Vector4 fRot = areaDefinition.Rot;
 
-                        Matrix4x4 correctedBoxTransform = MathUtils.ConvertTransform(fPos, fRot, fScale, true, false);
-                        instance.transform.position = correctedBoxTransform.ExtractTranslationFromMatrix();
-                        instance.transform.rotation = correctedBoxTransform.ExtractRotationFromMatrix();
-                        instance.transform.localScale = correctedBoxTransform.ExtractScaleFromMatrix();
+                        Matrix4x4 correctedBoxMatrix = MathUtils.InvertTransform(fPos, fRot, fScale, true, RotationMode.Standard);
+                        correctedBoxMatrix.ApplyToTransform(instance.transform);
+                        //instance.transform.position = correctedBoxTransform.ExtractTranslationFromMatrix();
+                        //instance.transform.rotation = correctedBoxTransform.ExtractRotationFromMatrix();
+                        //instance.transform.localScale = correctedBoxTransform.ExtractScaleFromMatrix();
 
                         instance.Pos2 = areaDefinition.Pos2;
                         instance.Rot = areaDefinition.Rot;

@@ -3,6 +3,13 @@ using UnityEngine;
 
 namespace Forgelight.Utils
 {
+    public enum RotationMode
+    {
+        Object,
+        Light,
+        Standard
+    }
+
     public static class MathUtils
     {
         public static float RemapProgress(float val, float targetMin, float targetMax)
@@ -56,7 +63,7 @@ namespace Forgelight.Utils
             return new Vector3(eulerAngles.x * Mathf.Deg2Rad, eulerAngles.y * Mathf.Deg2Rad, eulerAngles.z * Mathf.Deg2Rad);
         }
 
-        public static Matrix4x4 ConvertTransform(Vector3 pos, Vector3 rot, Vector3 scale, bool radians, bool swapRotXY)
+        public static Matrix4x4 InvertTransform(Vector3 pos, Vector3 rot, Vector3 scale, bool radians, RotationMode rotationMode)
         {
             if (radians)
             {
@@ -65,12 +72,30 @@ namespace Forgelight.Utils
                 rot.z *= Mathf.Rad2Deg;
             }
 
-            if (swapRotXY)
+            switch (rotationMode)
             {
-                float rotX = rot.y;
+                case RotationMode.Object:
+                {
+                    //X,Y are switched.
+                    float rotX = rot.y;
 
-                rot.y = rot.x;
-                rot.x = rotX;
+                    rot.y = rot.x;
+                    rot.x = rotX;
+                    break;
+                }
+                case RotationMode.Light:
+                {
+                    //x becomes z, y becomes x, z becomes y.
+                    float rotX = -rot.z;
+                    float rotY = -rot.x;
+                    float rotZ = -rot.y;
+
+                    rot.x = rotX;
+                    rot.y = rotY;
+                    rot.z = rotZ;
+
+                    break;
+                }
             }
 
             Quaternion rotation = Quaternion.Euler(rot);
@@ -97,8 +122,6 @@ namespace Forgelight.Utils
         /// <summary>
         /// Extract rotation quaternion from transform matrix.
         /// </summary>
-        /// <param name="matrix">Transform matrix. This parameter is passed by reference
-        /// to improve performance; no changes will be made to it.</param>
         /// <returns>
         /// Quaternion representation of rotation transform.
         /// </returns>
@@ -120,8 +143,6 @@ namespace Forgelight.Utils
         /// <summary>
         /// Extract scale from transform matrix.
         /// </summary>
-        /// <param name="matrix">Transform matrix. This parameter is passed by reference
-        /// to improve performance; no changes will be made to it.</param>
         /// <returns>
         /// Scale vector.
         /// </returns>
@@ -136,6 +157,7 @@ namespace Forgelight.Utils
             {
                 scale.x *= -1;
             }
+
             return scale;
         }
 
@@ -156,7 +178,7 @@ namespace Forgelight.Utils
         /// Set transform component from TRS matrix.
         /// </summary>
         /// <param name="transform">Transform component.</param>
-        public static void SetTransformFromMatrix(this Matrix4x4 matrix, Transform transform)
+        public static void ApplyToTransform(this Matrix4x4 matrix, Transform transform)
         {
             transform.localPosition = matrix.ExtractTranslationFromMatrix();
             transform.localRotation = matrix.ExtractRotationFromMatrix();

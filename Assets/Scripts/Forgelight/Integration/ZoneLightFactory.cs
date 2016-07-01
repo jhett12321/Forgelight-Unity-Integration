@@ -51,17 +51,14 @@ namespace Forgelight.Integration
 
                 ZoneLight instance = new GameObject(lightData.Name).AddComponent<ZoneLight>();
 
-                GameObject childLight = new GameObject("Light");
-                UnityEngine.Light lightComponent = childLight.AddComponent<UnityEngine.Light>();
+                UnityEngine.Light lightComponent = instance.gameObject.AddComponent<UnityEngine.Light>();
                 lightComponent.intensity = 4.0f;
                 lightComponent.bounceIntensity = 0.0f;
-
-                childLight.transform.SetParent(instance.transform, false);
 
                 instance.lightObject = lightComponent;
 
                 //Params
-                Matrix4x4 correctedTransform = MathUtils.ConvertTransform(lightData.Position, lightData.Rotation, Vector3.one, true, false);
+                Matrix4x4 correctedTransform = MathUtils.InvertTransform(lightData.Position, lightData.Rotation, Vector3.one, true, RotationMode.Light);
 
                 instance.transform.position = correctedTransform.ExtractTranslationFromMatrix();
                 instance.transform.rotation = correctedTransform.ExtractRotationFromMatrix();
@@ -83,6 +80,9 @@ namespace Forgelight.Integration
                 instance.ID = lightData.ID;
 
                 instance.transform.parent = Parent;
+
+                //Apply any changes we may have made.
+                instance.OnValidate();
 
                 int layer = LayerMask.NameToLayer("ForgelightZoneLight");
                 instance.gameObject.layer = layer;
@@ -147,7 +147,7 @@ namespace Forgelight.Integration
 
                 Light light = new Light();
 
-                Matrix4x4 correctedTransform = MathUtils.ConvertTransform(zoneLight.transform.position, zoneLight.transform.rotation.eulerAngles, Vector3.one, false, false);
+                Matrix4x4 correctedTransform = MathUtils.InvertTransform(zoneLight.transform.position, zoneLight.transform.rotation.eulerAngles, Vector3.one, false, RotationMode.Light);
                 light.Position = correctedTransform.ExtractTranslationFromMatrix();
                 light.Rotation = correctedTransform.ExtractRotationFromMatrix().eulerAngles.ToRadians();
 

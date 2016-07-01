@@ -19,36 +19,7 @@ namespace Forgelight.Editor
         /// <summary>
         /// Indicates whether an object should cast shadows. We mostly turn this on (on indicates don't cast shadows, oddly) when an object is indoors (being indoors, shadows don't really matter).
         /// </summary>
-        private bool dontCastShadows;
-        [ExposeProperty]
-        public bool DontCastShadows
-        {
-            get
-            {
-                return dontCastShadows;
-            }
-            set
-            {
-                if (renderers == null || renderers.Length == 0)
-                {
-                    renderers = GetComponentsInChildren<Renderer>();
-                }
-
-                foreach (Renderer renderer in renderers)
-                {
-                    if (value)
-                    {
-                        renderer.shadowCastingMode = ShadowCastingMode.Off;
-                    }
-                    else
-                    {
-                        renderer.shadowCastingMode = ShadowCastingMode.On;
-                    }
-                }
-
-                dontCastShadows = value;
-            }
-        }
+        public bool DontCastShadows;
 
         /// <summary>
         /// LOD multiplier. Basically allows the designers bias the LOD distance farther or closer on a per-object basis. We generally try to avoid using it and leave it at the default 1.
@@ -73,8 +44,25 @@ namespace Forgelight.Editor
             forgelightExtension = ForgelightExtension.Instance;
         }
 
-        private void OnValidate()
+        public void OnValidate()
         {
+            if (renderers == null || renderers.Length == 0)
+            {
+                renderers = GetComponentsInChildren<Renderer>();
+            }
+
+            foreach (Renderer renderer in renderers)
+            {
+                if (DontCastShadows)
+                {
+                    renderer.shadowCastingMode = ShadowCastingMode.Off;
+                }
+                else
+                {
+                    renderer.shadowCastingMode = ShadowCastingMode.On;
+                }
+            }
+
             //We call the render check function as we may have changed the render distance.
             //TODO update other actors that are also using this prefab.
             CheckVisibility();

@@ -10,9 +10,15 @@ public class ZoneLight : MonoBehaviour
     public Light lightObject;
 
     public string Name;
-    public string ColorName;
+
+    #region Representable Parameters
+    [Header("Representable Parameters")]
+    public LightType Type;
+    public float Range;
+    public Color Color;
 
     [Header("Other Parameters")]
+    public string ColorName;
     public float UnknownFloat1;
     //public Vector4 Position { get; private set; }
     //public Vector4 Rotation { get; private set; }
@@ -25,70 +31,31 @@ public class ZoneLight : MonoBehaviour
     public Vector4 UnknownVector1;
     public string UnknownString1;
     public uint ID;
-
-    #region Representable Parameters
-    [Header("Representable Parameters")]
-    private LightType type;
-    [ExposeProperty]
-    public LightType Type
-    {
-        get { return type; }
-        set
-        {
-            if (lightObject == null)
-            {
-                return;
-            }
-
-            switch (value)
-            {
-                case LightType.Pointlight:
-                    lightObject.type = UnityEngine.LightType.Point;
-                    break;
-                case LightType.Spotlight:
-                    lightObject.type = UnityEngine.LightType.Spot;
-                    break;
-            }
-
-            type = value;
-        }
-    }
-
-    private float range;
-    [ExposeProperty]
-    public float Range
-    {
-        get
-        {
-            return range;
-        }
-        set
-        {
-            if (lightObject == null)
-            {
-                return;
-            }
-
-            lightObject.range = value;
-            range = value;
-        }
-    }
-
-    private Color color;
-    public Color Color
-    {
-        get { return color; }
-        set
-        {
-            if (lightObject == null)
-            {
-                return;
-            }
-
-            lightObject.color = value;
-            color = value;
-        }
-    }
-
     #endregion
+
+    public void OnValidate()
+    {
+        if (lightObject == null)
+        {
+            return;
+        }
+
+        switch (Type)
+        {
+            case LightType.Pointlight:
+                lightObject.type = UnityEngine.LightType.Point;
+                break;
+            case LightType.Spotlight:
+                lightObject.type = UnityEngine.LightType.Spot;
+                break;
+        }
+
+        if (lightObject == null)
+        {
+            return;
+        }
+
+        lightObject.range = Range;
+        lightObject.color = Color;
+    }
 }
