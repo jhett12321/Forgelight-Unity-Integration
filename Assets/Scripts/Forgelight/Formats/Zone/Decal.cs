@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using Assets.Scripts.Forgelight.Utils;
-using Forgelight.Formats.Dme;
 using UnityEngine;
 
 namespace Forgelight.Formats.Zone

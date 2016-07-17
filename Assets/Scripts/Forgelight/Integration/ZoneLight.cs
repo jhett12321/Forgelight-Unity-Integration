@@ -1,5 +1,4 @@
-﻿using Forgelight.Attributes;
-using UnityEngine;
+﻿using UnityEngine;
 using LightType = Forgelight.Formats.Zone.LightType;
 
 [ExecuteInEditMode]

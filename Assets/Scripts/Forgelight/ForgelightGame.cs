@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using Forgelight.Formats.Adr;
 using Forgelight.Formats.Areas;
 using Forgelight.Formats.Cnk;
 using Forgelight.Formats.Dma;
@@ -24,9 +25,9 @@ namespace Forgelight
         public string ResourceDirectory { get; private set; }
 
         //Available Assets
-        public List<string> AvailableActors { get; private set; }
-        public Dictionary<string, Zone> AvailableZones { get; private set; }
-        public Dictionary<string, Areas> AvailableAreaDefinitions { get; private set; }
+        public SortedDictionary<string, Adr> AvailableActors { get; private set; }
+        public SortedDictionary<string, Zone> AvailableZones { get; private set; }
+        public SortedDictionary<string, Areas> AvailableAreaDefinitions { get; private set; }
 
         //Data
         public List<Pack.Pack> Packs { get; private set; }
@@ -37,7 +38,7 @@ namespace Forgelight
         private ConcurrentDictionary<string, Pack.Pack> packLookupCache = new ConcurrentDictionary<string, Pack.Pack>();
 
         //Progress
-        private float lastProgress = 0.0f;
+        private float lastProgress;
 
         public ForgelightGame(string name, string packDirectory, string resourceDirectory)
         {
@@ -137,11 +138,13 @@ namespace Forgelight
 
         private void ProgressBar(float progress, string currentTask)
         {
-            if (progress != lastProgress)
+            if (progress == lastProgress)
             {
-                EditorUtility.DisplayProgressBar("Forgelight - " + Name, currentTask, progress);
-                lastProgress = progress;
+                return;
             }
+
+            EditorUtility.DisplayProgressBar("Forgelight - " + Name, currentTask, progress);
+            lastProgress = progress;
         }
 
         public void OnLoadComplete()
@@ -171,7 +174,7 @@ namespace Forgelight
 
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.RemapProgress(packsProcessed / (float)files.Length, progress0, progress100), "Loading Pack File: " + assetProcessing);
+                ProgressBar(MathUtils.Remap01(packsProcessed / (float)files.Length, progress0, progress100), "Loading Pack File: " + assetProcessing);
             }
 
             parallelTask.EndInvoke(result);
@@ -187,10 +190,10 @@ namespace Forgelight
             ProgressBar(progress0, "Updating Actors List...");
 
             List<Asset> actors = AssetsByType[Asset.Types.ADR];
-            AvailableActors = new List<string>(actors.Count);
+            AvailableActors = new SortedDictionary<string, Adr>();
 
-            int actorsProcessed = 0;
-            string assetProcessing = "";
+            int assetsProcessed = 0;
+            string lastAssetProcessed = "";
             object listLock = new object();
 
             Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
@@ -202,22 +205,31 @@ namespace Forgelight
                     return;
                 }
 
-                lock (listLock)
+                string adrName = Path.GetFileNameWithoutExtension(asset.Name);
+
+                MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
+                Adr adr = Adr.LoadFromStream(adrName, memoryStream);
+
+                Interlocked.Increment(ref assetsProcessed);
+
+                if (adr == null)
                 {
-                    assetProcessing = asset.Name;
-                    AvailableActors.Add(asset.Name);
+                    return;
                 }
 
-                Interlocked.Increment(ref actorsProcessed);
+                lock (listLock)
+                {
+                    lastAssetProcessed = adrName;
+                    AvailableActors.Add(asset.Name, adr);
+                }
             }, null, null);
 
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.RemapProgress(actorsProcessed / (float)actors.Count, progress0, progress100), "Updating Actors List: " + assetProcessing);
+                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)actors.Count, progress0, progress100), "Updating Actors List: " + lastAssetProcessed);
             }
 
             parallelTask.EndInvoke(result);
-            AvailableActors.Sort();
         }
 
         public void UpdateZones(float progress0, float progress100)
@@ -225,7 +237,7 @@ namespace Forgelight
             ProgressBar(progress0, "Updating Zones...");
 
             List<Asset> zones = AssetsByType[Asset.Types.ZONE];
-            AvailableZones = new Dictionary<string, Zone>(zones.Count);
+            AvailableZones = new SortedDictionary<string, Zone>();
 
             int assetsProcessed = 0;
             string lastAssetProcessed = "";
@@ -245,21 +257,24 @@ namespace Forgelight
                 MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
                 Zone zone = Zone.LoadFromStream(asset.Name, memoryStream);
 
-                if (zone != null)
+                Interlocked.Increment(ref assetsProcessed);
+
+                if (zone == null)
                 {
-                    lock (listLock)
-                    {
-                        lastAssetProcessed = zoneName;
-                        zoneName = zoneName + " (" + asset.Pack.Name + ")";
-                        AvailableZones[zoneName] = zone;
-                    }
+                    return;
                 }
 
+                lock (listLock)
+                {
+                    lastAssetProcessed = zoneName;
+                    zoneName = zoneName + " (" + asset.Pack.Name + ")";
+                    AvailableZones[zoneName] = zone;
+                }
             }, null, null);
 
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)zones.Count, progress0, progress100), "Updating Zone: " + lastAssetProcessed);
+                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)zones.Count, progress0, progress100), "Updating Zone: " + lastAssetProcessed);
             }
 
             parallelTask.EndInvoke(result);
@@ -271,7 +286,7 @@ namespace Forgelight
 
             List<Asset> xmlFiles = AssetsByType[Asset.Types.XML];
 
-            AvailableAreaDefinitions = new Dictionary<string, Areas>();
+            AvailableAreaDefinitions = new SortedDictionary<string, Areas>();
 
             int assetsProcessed = 0;
             string lastAssetProcessed = "";
@@ -296,21 +311,24 @@ namespace Forgelight
                 MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
                 Areas areas = Areas.LoadFromStream(asset.Name, memoryStream);
 
-                if (areas != null)
+                Interlocked.Increment(ref assetsProcessed);
+
+                if (areas == null)
                 {
-                    lock (listLock)
-                    {
-                        lastAssetProcessed = areaDefinitionsXML;
-                        areaDefinitionsXML = areaDefinitionsXML + " (" + asset.Pack.Name + ")";
-                        AvailableAreaDefinitions[areaDefinitionsXML] = areas;
-                    }
+                    return;
                 }
 
+                lock (listLock)
+                {
+                    lastAssetProcessed = areaDefinitionsXML;
+                    areaDefinitionsXML = areaDefinitionsXML + " (" + asset.Pack.Name + ")";
+                    AvailableAreaDefinitions[areaDefinitionsXML] = areas;
+                }
             }, null, null);
 
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)xmlFiles.Count, progress0, progress100), "Loading Area Definitions: " + lastAssetProcessed);
+                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)xmlFiles.Count, progress0, progress100), "Loading Area Definitions: " + lastAssetProcessed);
             }
 
             parallelTask.EndInvoke(result);
@@ -333,8 +351,8 @@ namespace Forgelight
                     return;
                 }
 
-                //Ignore auto-generated LOD's and Don't export if the file already exists.
-                if (asset.Name.EndsWith("LOD0.dme", StringComparison.OrdinalIgnoreCase) && !File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
+                //Don't export if the file already exists.
+                if (!File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
                 {
                     lastAssetProcessed = asset.Name;
 
@@ -354,7 +372,7 @@ namespace Forgelight
 
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.RemapProgress(assetsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
+                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)modelAssets.Count, progress0, progress100), "Exporting Model: " + lastAssetProcessed);
             }
 
             parallelTask.EndInvoke(result);
@@ -396,7 +414,7 @@ namespace Forgelight
 
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.RemapProgress(chunksProcessed / ((float)terrainAssetsCnk0.Count), progress0, progress100), "Exporting Chunk: " + assetProcessing);
+                ProgressBar(MathUtils.Remap01(chunksProcessed / ((float)terrainAssetsCnk0.Count), progress0, progress100), "Exporting Chunk: " + assetProcessing);
             }
 
             chunksProcessed = 0;
@@ -444,13 +462,13 @@ namespace Forgelight
                     texturesProcessed++;
 
                     assetProcessing = asset.Name;
-                    ProgressBar(MathUtils.RemapProgress((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
+                    ProgressBar(MathUtils.Remap01((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
                 }
             }
 
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.RemapProgress((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
+                ProgressBar(MathUtils.Remap01((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
             }
 
             parallelTask.EndInvoke(result);

@@ -92,7 +92,7 @@ namespace Forgelight.Integration
                     child.gameObject.layer = layer;
                 }
 
-                EditorUtility.DisplayProgressBar("Loading Zone: " + zoneName, "Loading Lights: " + lightData.Name, MathUtils.RemapProgress((float) i/lights.Count, progressMin, progressMax));
+                EditorUtility.DisplayProgressBar("Loading Zone: " + zoneName, "Loading Lights: " + lightData.Name, MathUtils.Remap01((float) i/lights.Count, progressMin, progressMax));
             }
 
             //Forgelight -> Unity position fix.

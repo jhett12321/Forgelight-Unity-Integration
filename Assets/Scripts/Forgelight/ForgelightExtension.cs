@@ -1,13 +1,11 @@
 ﻿using Forgelight.Attributes;
 using Forgelight.Editor;
 using Forgelight.Formats.Zone;
-using Forgelight.Integration;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Object = UnityEngine.Object;
 
 namespace Forgelight
 {

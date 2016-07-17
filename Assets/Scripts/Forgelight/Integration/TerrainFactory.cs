@@ -65,7 +65,7 @@ namespace Forgelight.Integration
                 string chunkName = Path.GetFileNameWithoutExtension(resource);
                 currentChunk = chunkName;
 
-                EditorUtility.DisplayProgressBar("Loading Zone: " + contPrefix, "Loading Terrain: " + currentChunk, MathUtils.RemapProgress((float)totalResources / totalResources, progressMin, progressMax));
+                EditorUtility.DisplayProgressBar("Loading Zone: " + contPrefix, "Loading Terrain: " + currentChunk, MathUtils.Remap01((float)totalResources / totalResources, progressMin, progressMax));
 
                 CreateChunk(resourcePath + "/" + chunkName, Parent);
 

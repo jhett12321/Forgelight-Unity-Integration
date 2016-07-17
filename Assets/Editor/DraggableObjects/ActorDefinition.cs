@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using Forgelight.Formats.Adr;
+using UnityEngine;
 
 namespace Forgelight.Editor.DraggableObjects
 {
     public class ActorDefinition
     {
         public ForgelightGame forgelightGame;
-        public string actorDefinition;
+        public Adr actorDefinition;
 
         public GameObject instantiatedGameObject;
     }

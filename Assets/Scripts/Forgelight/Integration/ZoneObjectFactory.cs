@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Forgelight.Attributes;
+using Forgelight.Formats.Adr;
 using Forgelight.Formats.Zone;
 using Forgelight.Utils;
 using UnityEditor;
@@ -13,6 +13,8 @@ namespace Forgelight.Editor
 {
     public class ZoneObjectFactory
     {
+        private const float cullPower = 5.0f;
+
         private HashSet<long> usedIDs = new HashSet<long>();
 
         private Transform parent;
@@ -22,9 +24,16 @@ namespace Forgelight.Editor
             {
                 if (parent == null)
                 {
-                    parent = new GameObject("Forgelight Zone Objects").transform;
-                    parent.gameObject.layer = LayerMask.NameToLayer("ForgelightZoneObject");
-                    parent.gameObject.tag = "ForgelightZoneObjects";
+                    GameObject parentGo = GameObject.FindGameObjectWithTag("ForgelightZoneObjects");
+
+                    if (parentGo == null)
+                    {
+                        parentGo = new GameObject("Forgelight Zone Objects");
+                        parentGo.layer = LayerMask.NameToLayer("ForgelightZoneObject");
+                        parentGo.tag = "ForgelightZoneObjects";
+                    }
+
+                    parent = parentGo.transform;
                 }
 
                 return parent;
@@ -52,31 +61,39 @@ namespace Forgelight.Editor
             {
                 Object zoneObject = objects[i];
 
-                if (zoneObject.Instances.Any())
+                if (zoneObject.Instances.Count > 0)
                 {
+                    if (!forgelightGame.AvailableActors.ContainsKey(zoneObject.ActorDefinition))
+                    {
+                        Debug.LogWarning("Could not find Actor Definition: " + zoneObject.ActorDefinition + "!");
+                        continue;
+                    }
+
+                    Adr actorDef = forgelightGame.AvailableActors[zoneObject.ActorDefinition];
+
                     foreach (Object.Instance instance in zoneObject.Instances)
                     {
                         Matrix4x4 correctedTransform = MathUtils.InvertTransform(instance.Position, instance.Rotation, instance.Scale, true, RotationMode.Object);
 
-                        CreateForgelightObject(forgelightGame, zoneObject.ActorDefinition, correctedTransform.ExtractTranslationFromMatrix(), correctedTransform.ExtractRotationFromMatrix(), correctedTransform.ExtractScaleFromMatrix(), zoneObject.RenderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
+                        CreateForgelightObject(forgelightGame, actorDef, correctedTransform.ExtractTranslationFromMatrix(), correctedTransform.ExtractRotationFromMatrix(), correctedTransform.ExtractScaleFromMatrix(), zoneObject.RenderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
                     }
                 }
 
-                EditorUtility.DisplayProgressBar("Loading Zone: " + zoneName, "Loading Objects: " + zoneObject.ActorDefinition, MathUtils.RemapProgress((float)i/objects.Count, progressMin, progressMax));
+                EditorUtility.DisplayProgressBar("Loading Zone: " + zoneName, "Loading Objects: " + zoneObject.ActorDefinition, MathUtils.Remap01((float)i/objects.Count, progressMin, progressMax));
             }
 
             //Forgelight -> Unity position fix
             Parent.transform.localScale = new Vector3(-1, 1, 1);
         }
 
-        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation)
+        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, Adr actorDefinition, Vector3 position, Quaternion rotation)
         {
             uint randID = GenerateUID();
 
             return CreateForgelightObject(forgelightGame, actorDefinition, position, rotation, Vector3.one, 1000, 1.0f, false, randID);
         }
 
-        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, string actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, float renderDistance, float lodMultiplier, bool dontCastShadows, uint id)
+        public GameObject CreateForgelightObject(ForgelightGame forgelightGame, Adr actorDefinition, Vector3 position, Quaternion rotation, Vector3 scale, float renderDistance, float lodMultiplier, bool dontCastShadows, uint id)
         {
             GameObject instance = InitializeActor(forgelightGame, actorDefinition);
 
@@ -88,64 +105,113 @@ namespace Forgelight.Editor
             return instance;
         }
 
-        public GameObject GetForgelightObject(ForgelightGame forgelightGame, string actorDefinition)
+        public GameObject GetForgelightObject(ForgelightGame forgelightGame, string model)
         {
-            //By default, the actor definitions are appended with the .adr extension.
-            string modelName = Path.GetFileNameWithoutExtension(actorDefinition) + "_LOD0.obj";
+            //By default, models are appended with a .dme extension.
+            string modelName = Path.GetFileNameWithoutExtension(model) + ".obj";
             string baseModelDir = "Assets/Resources/" + forgelightGame.Name + "/Models";
             string modelPath = baseModelDir + "/" + modelName;
 
             return AssetDatabase.LoadAssetAtPath<GameObject>(modelPath);
         }
 
-        private GameObject InitializeActor(ForgelightGame forgelightGame, string actorDef)
+        private GameObject InstantiateModel(GameObject prefab)
         {
-            GameObject resourceObj = GetForgelightObject(forgelightGame, actorDef);
+            GameObject model = null;
+            Renderer[] modelRenderers;
 
-            GameObject actor = null;
-            Renderer[] baseActorRenderers;
-
-            if (resourceObj != null)
+            if (prefab != null)
             {
-                actor = (GameObject) PrefabUtility.InstantiatePrefab(resourceObj);
+                model = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
 
-                if (actor != null)
+                if (model != null)
                 {
-                    baseActorRenderers = actor.GetComponentsInChildren<Renderer>();
+                    modelRenderers = model.GetComponentsInChildren<Renderer>();
 
-                    if (baseActorRenderers == null)
+                    if (modelRenderers == null)
                     {
-                        UnityEngine.Object.DestroyImmediate(actor);
+                        UnityEngine.Object.DestroyImmediate(model);
 
-                        Debug.LogWarning("Warning: Forgelight Object " + actorDef + " Failed to instantiate. Ignoring object.");
+                        Debug.LogWarning("Warning: Forgelight Object Failed to instantiate. Ignoring object.");
 
-                        actor = null;
+                        model = null;
                     }
                 }
             }
 
-            if (actor == null)
+            if (model != null)
             {
-                //This model does not exist.
-                actor = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-                baseActorRenderers = actor.GetComponents<Renderer>();
-                baseActorRenderers[0].sharedMaterial.color = Color.magenta;
+                return model;
             }
+
+            //This model does not exist.
+            model = GameObject.CreatePrimitive(PrimitiveType.Cube);
+
+            modelRenderers = model.GetComponents<Renderer>();
+            modelRenderers[0].sharedMaterial.color = Color.magenta;
+
+            return model;
+        }
+
+        private GameObject InitializeActor(ForgelightGame forgelightGame, Adr actorDef)
+        {
+            GameObject basePrefab = GetForgelightObject(forgelightGame, actorDef.Base);
+            GameObject baseModel = InstantiateModel(basePrefab);
+
+            if (baseModel == null)
+            {
+                return null;
+            }
+
+            //LODs
+            //TODO Unity has a hard limit for LODs. Re-enable when fixed.
+            //LODGroup lodGroup = baseModel.AddComponent<LODGroup>();
+
+            ////This adds the base model, and the "culled" LOD.
+            //int levelsOfDetail = actorDef.Lods.Count + 2;
+            //float max = Mathf.Pow(levelsOfDetail, cullPower);
+
+            //List<LOD> unityLods = new List<LOD>(levelsOfDetail);
+
+            //LOD lod0 = new LOD();
+            //lod0.renderers = baseModel.GetComponentsInChildren<Renderer>();
+            //lod0.screenRelativeTransitionHeight = Mathf.Pow(levelsOfDetail - 1, cullPower).Remap(0, max, 0, 1.0f);
+
+            //unityLods.Add(lod0);
+
+            //for (int i = 0; i < actorDef.Lods.Count; i++)
+            //{
+            //    Lod lod = actorDef.Lods[i];
+            //    GameObject lodPrefab = GetForgelightObject(forgelightGame, lod.FileName);
+            //    GameObject lodModel = InstantiateModel(lodPrefab);
+
+            //    if (lodModel == null)
+            //    {
+            //        continue;
+            //    }
+
+            //    lodModel.transform.SetParent(baseModel.transform);
+
+            //    float cullDist = Mathf.Pow(levelsOfDetail - i - 2, cullPower).Remap(0, max, 0, 1.0f);
+
+            //    unityLods.Add(new LOD(cullDist, lodModel.GetComponentsInChildren<Renderer>()));
+            //}
+
+            //lodGroup.SetLODs(unityLods.ToArray());
 
             int layer = LayerMask.NameToLayer("ForgelightZoneObject");
 
-            actor.layer = layer;
+            baseModel.layer = layer;
 
-            foreach (Transform child in actor.transform)
+            foreach (Transform child in baseModel.transform)
             {
                 child.gameObject.layer = layer;
             }
 
-            return actor;
+            return baseModel;
         }
 
-        private void InitializeInstance(GameObject instance, Vector3 position, Quaternion rotation, Vector3 scale, string actorDef, float renderDistance, float lodBias, bool dontCastShadows, long id)
+        private void InitializeInstance(GameObject instance, Vector3 position, Quaternion rotation, Vector3 scale, Adr actorDef, float renderDistance, float lodBias, bool dontCastShadows, long id)
         {
             //Set our position, scale and rotation values to the ones defined in the zone file.
             instance.transform.position = position;
@@ -169,7 +235,7 @@ namespace Forgelight.Editor
                 instance.AddComponent<CullableObject>();
             }
 
-            zoneObject.actorDefinition = actorDef;
+            zoneObject.actorDefinition = actorDef.Name;
             zoneObject.renderDistance = renderDistance;
             zoneObject.lodMultiplier = lodBias;
             zoneObject.DontCastShadows = dontCastShadows;

@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Forgelight.Utils
 {
@@ -12,27 +11,17 @@ namespace Forgelight.Utils
 
     public static class MathUtils
     {
-        public static float RemapProgress(float val, float targetMin, float targetMax)
+        public static float Remap01(this float value, float targetMin, float targetMax)
         {
-            float retVal;
-            float oldRange = 1.0f;
-
-            if (Math.Abs(oldRange) < Mathf.Epsilon)
-            {
-                retVal = targetMin;
-            }
-
-            else
-            {
-                float newRange = (targetMax - targetMin);
-
-                retVal = (((val - 0.0f)*newRange)/oldRange) + targetMin;
-            }
-
-            return retVal;
+            return value.Remap(0, 1, targetMin, targetMax);
         }
 
-        private static Matrix4x4 GetInversionMatrix()
+        public static float Remap(this float value, float from1, float to1, float from2, float to2)
+        {
+            return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
+        }
+
+    private static Matrix4x4 GetInversionMatrix()
         {
             Matrix4x4 retval = new Matrix4x4();
             retval[0, 0] = -1;

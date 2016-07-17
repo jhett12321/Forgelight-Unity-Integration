@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Forgelight.Editor.DraggableObjects;
+using Forgelight.Formats.Adr;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -23,7 +24,6 @@ namespace Forgelight.Editor.Windows
         //Splitter
         private float splitterPos;
         private Rect splitterRect;
-        private Vector2 dragStartPos;
         private bool dragging;
         private float splitterWidth = 5;
 
@@ -98,7 +98,7 @@ namespace Forgelight.Editor.Windows
 
             if (forgelightGame != null)
             {
-                List<string> availableActors = forgelightGame.AvailableActors;
+                SortedDictionary<string, Adr>.KeyCollection availableActors = forgelightGame.AvailableActors.Keys;
 
                 foreach (string actor in availableActors)
                 {
@@ -110,9 +110,9 @@ namespace Forgelight.Editor.Windows
                         {
                             if (rect.Contains(Event.current.mousePosition))
                             {
-                                BeginDrag(forgelightGame, actor);
+                                BeginDrag(forgelightGame, forgelightGame.AvailableActors[actor]);
                                 DestroyImmediate(previewWindowEditor);
-                                selectedActor = ForgelightExtension.Instance.ZoneManager.ZoneObjectFactory.GetForgelightObject(forgelightGame, actor);
+                                selectedActor = ForgelightExtension.Instance.ZoneManager.ZoneObjectFactory.GetForgelightObject(forgelightGame, forgelightGame.AvailableActors[actor].Base);
                             }
                         }
 
@@ -251,7 +251,7 @@ namespace Forgelight.Editor.Windows
         /// </summary>
         /// <param name="forgelightGame">The forgelight game containing "actor"</param>
         /// <param name="actor">The selected actor</param>
-        private void BeginDrag(ForgelightGame forgelightGame, string actor)
+        private void BeginDrag(ForgelightGame forgelightGame, Adr actor)
         {
             ActorDefinition actorDefinition = new ActorDefinition
             {

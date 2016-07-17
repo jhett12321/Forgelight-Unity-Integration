@@ -148,7 +148,7 @@ namespace Forgelight.Integration
                     cachedMaterials[color] = renderer.sharedMaterial;
                 }
 
-                EditorUtility.DisplayProgressBar("Loading " + areasName, "Loading Area Definition: " + areaDefinition.Name, MathUtils.RemapProgress((float)i / areas.AreaDefinitions.Count, progressMin, progressMax));
+                EditorUtility.DisplayProgressBar("Loading " + areasName, "Loading Area Definition: " + areaDefinition.Name, MathUtils.Remap01((float)i / areas.AreaDefinitions.Count, progressMin, progressMax));
             }
 
             //Forgelight -> Unity position fix.

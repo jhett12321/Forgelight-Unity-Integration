@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Forgelight.Formats.Areas;
 using Forgelight.Utils;
 using UnityEditor;
@@ -38,9 +37,7 @@ namespace Forgelight.Editor.Windows
 
                     if (activeForgelightGame != null)
                     {
-                        List<string> areas = activeForgelightGame.AvailableAreaDefinitions.Keys.ToList();
-
-                        areas.Sort();
+                        SortedDictionary<string, Areas>.KeyCollection areas = activeForgelightGame.AvailableAreaDefinitions.Keys;
 
                         ShowAvailableAreaDefs(activeForgelightGame, areas);
                     }
@@ -50,7 +47,7 @@ namespace Forgelight.Editor.Windows
             EditorGUILayout.EndHorizontal();
         }
 
-        private void ShowAvailableAreaDefs(ForgelightGame forgelightGame, List<string> availableAreas)
+        private void ShowAvailableAreaDefs(ForgelightGame forgelightGame, SortedDictionary<string, Areas>.KeyCollection availableAreas)
         {
             foreach (string areaDef in availableAreas)
             {
