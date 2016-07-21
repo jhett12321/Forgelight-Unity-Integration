@@ -101,10 +101,13 @@ namespace Forgelight.Integration
             //This list may not be updated. We create a new one.
             usedIDs.Clear();
 
-            ZoneLight[] zoneLights = Object.FindObjectsOfType<ZoneLight>();
-
-            foreach (ZoneLight zoneLight in zoneLights)
+            foreach (ZoneLight zoneLight in Resources.FindObjectsOfTypeAll<ZoneLight>())
             {
+                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave)
+                {
+                    continue;
+                }
+
                 if (usedIDs.Contains(zoneLight.ID))
                 {
                     zoneLight.ID = GenerateUID();
@@ -134,8 +137,13 @@ namespace Forgelight.Integration
 
             zone.Lights.Clear();
 
-            foreach (ZoneLight zoneLight in Object.FindObjectsOfType<ZoneLight>())
+            foreach (ZoneLight zoneLight in Resources.FindObjectsOfTypeAll<ZoneLight>())
             {
+                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave)
+                {
+                    continue;
+                }
+
                 Light light = new Light();
 
                 TransformData correctedTransform = MathUtils.ConvertTransform(zoneLight.transform.position, zoneLight.transform.rotation.eulerAngles, Vector3.one, false, TransformMode.Light);

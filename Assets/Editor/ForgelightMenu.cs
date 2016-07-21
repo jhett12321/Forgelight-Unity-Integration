@@ -56,8 +56,13 @@ public class ForgelightMenu : Editor
         Vector3 cameraPos = ForgelightExtension.Instance.LastCameraPos;
         cameraPos.y = 0; //We ignore vertical position.
 
-        foreach (CullableObject cullableObject in FindObjectsOfType<CullableObject>())
+        foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
         {
+            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave)
+            {
+                continue;
+            }
+
             Vector3 objPos = cullableObject.transform.position;
             objPos.y = 0;
 
@@ -71,8 +76,13 @@ public class ForgelightMenu : Editor
     [MenuItem("Forgelight/Draw/Draw All", false, 10050)]
     public static void ResetCulling()
     {
-        foreach (CullableObject cullableObject in FindObjectsOfType<CullableObject>())
+        foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
         {
+            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave)
+            {
+                continue;
+            }
+
             cullableObject.Show();
         }
     }

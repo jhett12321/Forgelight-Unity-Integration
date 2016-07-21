@@ -9,7 +9,14 @@ namespace Forgelight.Attributes
     [ExecuteInEditMode]
     public abstract class CullableObject : MonoBehaviour
     {
-        public abstract void Hide();
-        public abstract void Show();
+        public void Hide()
+        {
+            gameObject.SetActive(false);
+        }
+
+        public void Show()
+        {
+            gameObject.SetActive(true);
+        }
     }
 }

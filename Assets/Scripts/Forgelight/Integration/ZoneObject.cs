@@ -34,8 +34,6 @@ namespace Forgelight.Editor
 
         private bool visible;
 
-        private List<GameObject> objectsToDestroy = new List<GameObject>();
-
         private ForgelightExtension forgelightExtension;
 
         private void OnEnable()
@@ -44,6 +42,37 @@ namespace Forgelight.Editor
         }
 
         public void OnValidate()
+        {
+            UpdateShadows();
+
+            //We call the render check function as we may have changed the render distance.
+            //TODO update other actors that are also using this prefab.
+            UpdateVisibility();
+        }
+
+        //private void OnRenderObject()
+        //{
+        //    if (forgelightExtension.cameraPosChanged)
+        //    {
+        //        target = Time.realtimeSinceStartup + gracePeriod;
+        //    }
+
+        //    if (Time.realtimeSinceStartup >= target)
+        //    {
+        //        CheckVisibility();
+        //    }
+
+        //    foreach (Transform child in transform)
+        //    {
+        //        //Check to see if the user has accidentally moved a child object and not the parent.
+        //        if (child.transform.localPosition != Vector3.zero)
+        //        {
+        //            child.transform.localPosition = Vector3.zero;
+        //        }
+        //    }
+        //}
+
+        private void UpdateShadows()
         {
             Renderer[] renderers = GetComponentsInChildren<Renderer>();
 
@@ -63,49 +92,9 @@ namespace Forgelight.Editor
                     renderer.shadowCastingMode = ShadowCastingMode.On;
                 }
             }
-
-            //We call the render check function as we may have changed the render distance.
-            //TODO update other actors that are also using this prefab.
-            CheckVisibility();
         }
 
-        private void OnRenderObject()
-        {
-            if (forgelightExtension.cameraPosChanged)
-            {
-                target = Time.realtimeSinceStartup + gracePeriod;
-            }
-
-            if (Time.realtimeSinceStartup >= target)
-            {
-                CheckVisibility();
-            }
-
-            foreach (Transform child in transform)
-            {
-                //Check to see if the user has accidentally moved a child object and not the parent.
-                if (child.transform.localPosition != Vector3.zero)
-                {
-                    child.transform.localPosition = Vector3.zero;
-                }
-            }
-
-            if (objectsToDestroy.Count <= 0)
-            {
-                return;
-            }
-
-            foreach (GameObject o in objectsToDestroy)
-            {
-                DestroyImmediate(o);
-            }
-
-            objectsToDestroy.Clear();
-
-            Resources.UnloadUnusedAssets();
-        }
-
-        private void CheckVisibility()
+        private void UpdateVisibility()
         {
             Vector3 offset = transform.position - ForgelightExtension.Instance.LastCameraPos;
 
@@ -119,43 +108,6 @@ namespace Forgelight.Editor
             {
                 Hide();
             }
-
-            target = float.MaxValue; //We don't need to update until we move again.
-        }
-
-        public override void Hide()
-        {
-            if (!visible)
-            {
-                return;
-            }
-
-            foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
-            {
-                renderer.enabled = false;
-            }
-
-            visible = false;
-        }
-
-        public override void Show()
-        {
-            if (visible)
-            {
-                return;
-            }
-
-            foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
-            {
-                renderer.enabled = true;
-            }
-
-            visible = true;
-        }
-
-        public void DestroyObject(GameObject objToDestroy)
-        {
-            objectsToDestroy.Add(objToDestroy);
         }
     }
 }

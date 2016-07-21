@@ -245,10 +245,13 @@ namespace Forgelight.Editor
             //This list may not be updated. We create a new one.
             usedIDs.Clear();
 
-            ZoneObject[] zoneObjects = UnityEngine.Object.FindObjectsOfType<ZoneObject>();
-
-            foreach (ZoneObject zoneObject in zoneObjects)
+            foreach (ZoneObject zoneObject in Resources.FindObjectsOfTypeAll<ZoneObject>())
             {
+                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave)
+                {
+                    continue;
+                }
+
                 if (usedIDs.Contains(zoneObject.ID))
                 {
                     zoneObject.ID = GenerateUID();
@@ -279,8 +282,13 @@ namespace Forgelight.Editor
             //Check to make sure we don't have duplicate ID's
             ValidateObjectUIDs();
 
-            foreach (ZoneObject zoneObject in UnityEngine.Object.FindObjectsOfType<ZoneObject>())
+            foreach (ZoneObject zoneObject in Resources.FindObjectsOfTypeAll<ZoneObject>())
             {
+                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave)
+                {
+                    continue;
+                }
+
                 string actorDef = zoneObject.actorDefinition;
                 if (!actorInstances.ContainsKey(actorDef))
                 {

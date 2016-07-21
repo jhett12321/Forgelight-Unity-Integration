@@ -58,14 +58,4 @@ public class ZoneLight : CullableObject
         lightObject.range = Range;
         lightObject.color = Color;
     }
-
-    public override void Hide()
-    {
-        lightObject.enabled = false;
-    }
-
-    public override void Show()
-    {
-        lightObject.enabled = true;
-    }
 }
