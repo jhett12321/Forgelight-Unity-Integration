@@ -1,9 +1,10 @@
-﻿using UnityEngine;
-using LightType = Forgelight.Formats.Zone.LightType;
+﻿using Forgelight.Attributes;
+using UnityEngine;
+using LightType = Forgelight.Assets.Zone.LightType;
 
 [ExecuteInEditMode]
 [SelectionBase]
-public class ZoneLight : MonoBehaviour
+public class ZoneLight : CullableObject
 {
     [HideInInspector]
     public Light lightObject;
@@ -56,5 +57,15 @@ public class ZoneLight : MonoBehaviour
 
         lightObject.range = Range;
         lightObject.color = Color;
+    }
+
+    public override void Hide()
+    {
+        lightObject.enabled = false;
+    }
+
+    public override void Show()
+    {
+        lightObject.enabled = true;
     }
 }

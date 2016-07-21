@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using Forgelight.Formats.Zone;
+using Forgelight.Assets;
+using Forgelight.Assets.Zone;
 using Forgelight.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace Forgelight.Editor.Windows
         private string searchString = "";
         private Vector2 scroll;
 
-        private string selectedZone;
+        private Zone selectedZone;
 
         public static void Init()
         {
@@ -37,7 +38,7 @@ namespace Forgelight.Editor.Windows
 
                     if (activeForgelightGame != null)
                     {
-                        SortedDictionary<string, Zone>.KeyCollection zones = activeForgelightGame.AvailableZones.Keys;
+                        List<Asset> zones = activeForgelightGame.AvailableZones;
 
                         ShowAvailableZones(activeForgelightGame, zones);
                     }
@@ -47,35 +48,39 @@ namespace Forgelight.Editor.Windows
             EditorGUILayout.EndHorizontal();
         }
 
-        private void ShowAvailableZones(ForgelightGame forgelightGame, SortedDictionary<string, Zone>.KeyCollection availableZones)
+        private void ShowAvailableZones(ForgelightGame forgelightGame, List<Asset> availableZones)
         {
-            foreach (string zone in availableZones)
+            foreach (Asset asset in availableZones)
             {
-                if (searchString == null || zone.ToLower().Contains(searchString.ToLower()))
+                if (searchString != null && !asset.DisplayName.ToLower().Contains(searchString.ToLower()))
                 {
-                    Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
-
-                    if (Event.current.type == EventType.MouseDown)
-                    {
-                        if (rect.Contains(Event.current.mousePosition))
-                        {
-                            if (selectedZone != null && selectedZone == zone)
-                            {
-                                OnZoneSelected(forgelightGame, forgelightGame.AvailableZones[zone]);
-                                selectedZone = null;
-                            }
-
-                            selectedZone = zone;
-                        }
-                    }
-
-                    GUIStyle style = EditorStyles.label;
-                    style.fixedWidth = 0;
-                    style.stretchWidth = true;
-                    style.clipping = TextClipping.Overflow;
-
-                    EditorGUI.Foldout(rect, false, zone, true, style);
+                    continue;
                 }
+
+                Zone zone = (Zone) asset;
+
+                Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
+
+                if (Event.current.type == EventType.MouseDown)
+                {
+                    if (rect.Contains(Event.current.mousePosition))
+                    {
+                        if (selectedZone != null && selectedZone == zone)
+                        {
+                            OnZoneSelected(forgelightGame, zone);
+                            selectedZone = null;
+                        }
+
+                        selectedZone = zone;
+                    }
+                }
+
+                GUIStyle style = EditorStyles.label;
+                style.fixedWidth = 0;
+                style.stretchWidth = true;
+                style.clipping = TextClipping.Overflow;
+
+                EditorGUI.Foldout(rect, false, asset.DisplayName, true, style);
             }
         }
 

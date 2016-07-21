@@ -3,14 +3,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using Forgelight.Formats.Adr;
-using Forgelight.Formats.Areas;
-using Forgelight.Formats.Cnk;
-using Forgelight.Formats.Dma;
-using Forgelight.Formats.Dme;
-using Forgelight.Formats.Zone;
+using Forgelight.Assets;
+using Forgelight.Assets.Adr;
+using Forgelight.Assets.Areas;
+using Forgelight.Assets.Cnk;
+using Forgelight.Assets.Dma;
+using Forgelight.Assets.Dme;
+using Forgelight.Assets.Zone;
 using Forgelight.Pack;
-using Forgelight.Utils;
 using UnityEditor;
 using Debug = UnityEngine.Debug;
 using MathUtils = Forgelight.Utils.MathUtils;
@@ -25,13 +25,13 @@ namespace Forgelight
         public string ResourceDirectory { get; private set; }
 
         //Available Assets
-        public SortedDictionary<string, Adr> AvailableActors { get; private set; }
-        public SortedDictionary<string, Zone> AvailableZones { get; private set; }
-        public SortedDictionary<string, Areas> AvailableAreaDefinitions { get; private set; }
+        public List<Asset> AvailableActors { get; private set; }
+        public List<Asset> AvailableZones { get; private set; }
+        public List<Asset> AvailableAreaDefinitions { get; private set; }
 
         //Data
         public List<Pack.Pack> Packs { get; private set; }
-        public ConcurrentDictionary<Asset.Types, List<Asset>> AssetsByType { get; private set; }
+        public ConcurrentDictionary<AssetRef.Types, List<AssetRef>> AssetsByType { get; private set; }
         public MaterialDefinitionManager MaterialDefinitionManager { get; private set; }
 
         // Internal cache to check whether a pack has already been loaded
@@ -40,6 +40,7 @@ namespace Forgelight
         //Progress
         private float lastProgress;
 
+        #region Constructor
         public ForgelightGame(string name, string packDirectory, string resourceDirectory)
         {
             Name = name;
@@ -47,111 +48,33 @@ namespace Forgelight
             ResourceDirectory = resourceDirectory;
 
             Packs = new List<Pack.Pack>();
-            AssetsByType = new ConcurrentDictionary<Asset.Types, List<Asset>>();
+            AssetsByType = new ConcurrentDictionary<AssetRef.Types, List<AssetRef>>();
 
-            foreach (Enum type in Enum.GetValues(typeof(Asset.Types)))
+            foreach (Enum type in Enum.GetValues(typeof(AssetRef.Types)))
             {
-                AssetsByType.TryAdd((Asset.Types) type, new List<Asset>());
+                AssetsByType.TryAdd((AssetRef.Types) type, new List<AssetRef>());
             }
         }
+        #endregion
 
-        public void LoadPack(string path)
+        #region Asset Getters
+        public Adr GetActorDefinition(string name)
         {
-            Pack.Pack pack;
-
-            if (!packLookupCache.TryGetValue(path, out pack))
-            {
-                pack = Pack.Pack.LoadBinary(path);
-
-                if (pack != null)
-                {
-                    packLookupCache.TryAdd(path, pack);
-                    Packs.Add(pack);
-
-                    foreach (Asset asset in pack.Assets)
-                    {
-                        AssetsByType[asset.Type].Add(asset);
-                    }
-                }
-            }
+            return (Adr) AvailableActors.Find(actor => actor.Name == name);
         }
 
-        public bool LoadZoneFromFile(string path)
+        public Zone GetZone(string name)
         {
-            try
-            {
-                using (FileStream fileStream = File.OpenRead(path))
-                {
-                    string zoneName = Path.GetFileNameWithoutExtension(path);
-                    Zone zone = Zone.LoadFromStream(Path.GetFileName(path), fileStream);
-
-                    if (zone != null)
-                    {
-                        zoneName = zoneName + " (" + path + ")";
-                        AvailableZones[zoneName] = zone;
-
-                        if (DialogUtils.DisplayCancelableDialog("Change Zones", "Would you like to load this zone now?"))
-                        {
-                            ForgelightExtension.Instance.ZoneManager.ChangeZone(ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame, zone);
-                        }
-
-                        return true;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("An error occurred while importing zone at: " + path + ". " + e.Message);
-            }
-
-            return false;
+            return (Zone) AvailableZones.Find(zone => zone.Name == name);
         }
 
-        public MemoryStream CreateAssetMemoryStreamByName(string name)
+        public Areas GetAreaDefinitions(string name)
         {
-            MemoryStream memoryStream = null;
-
-            if (name == null)
-            {
-                Debug.LogError("Asset Name is null");
-            }
-
-
-
-            foreach (Pack.Pack pack in Packs)
-            {
-                if (pack == null)
-                {
-                    Debug.LogError("Pack is null");
-                }
-
-                memoryStream = pack.CreateAssetMemoryStreamByName(name);
-
-                if (memoryStream != null)
-                {
-                    break;
-                }
-            }
-
-            return memoryStream;
+            return (Areas) AvailableAreaDefinitions.Find(areas => areas.Name == name);
         }
+        #endregion
 
-        private void ProgressBar(float progress, string currentTask)
-        {
-            if (progress == lastProgress)
-            {
-                return;
-            }
-
-            EditorUtility.DisplayProgressBar("Forgelight - " + Name, currentTask, progress);
-            lastProgress = progress;
-        }
-
-        public void OnLoadComplete()
-        {
-            EditorUtility.ClearProgressBar();
-        }
-
+        #region Pack Operations
         public void LoadPackFiles(float progress0, float progress100)
         {
             string[] files = Directory.GetFiles(PackDirectory, "*.pack");
@@ -180,194 +103,98 @@ namespace Forgelight
             parallelTask.EndInvoke(result);
         }
 
-        public void InitializeMaterialDefinitionManager()
+        public void LoadPack(string path)
         {
-            MaterialDefinitionManager = new MaterialDefinitionManager(this);
+            Pack.Pack pack;
+
+            if (!packLookupCache.TryGetValue(path, out pack))
+            {
+                pack = Pack.Pack.LoadBinary(path);
+
+                if (pack != null)
+                {
+                    packLookupCache.TryAdd(path, pack);
+                    Packs.Add(pack);
+
+                    foreach (AssetRef asset in pack.Assets)
+                    {
+                        AssetsByType[asset.Type].Add(asset);
+                    }
+                }
+            }
         }
 
-        public void UpdateActors(float progress0, float progress100)
+        public MemoryStream CreateAssetMemoryStreamByName(string name)
         {
-            ProgressBar(progress0, "Updating Actors List...");
+            MemoryStream memoryStream = null;
 
-            List<Asset> actors = AssetsByType[Asset.Types.ADR];
-            AvailableActors = new SortedDictionary<string, Adr>();
-
-            int assetsProcessed = 0;
-            string lastAssetProcessed = "";
-            object listLock = new object();
-
-            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
-
-            IAsyncResult result = parallelTask.BeginInvoke(actors, asset =>
+            if (name == null)
             {
-                if (asset == null)
-                {
-                    return;
-                }
-
-                string adrName = Path.GetFileNameWithoutExtension(asset.Name);
-
-                MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
-                Adr adr = Adr.LoadFromStream(adrName, memoryStream);
-
-                Interlocked.Increment(ref assetsProcessed);
-
-                if (adr == null)
-                {
-                    return;
-                }
-
-                lock (listLock)
-                {
-                    lastAssetProcessed = adrName;
-                    AvailableActors.Add(asset.Name, adr);
-                }
-            }, null, null);
-
-            while (!result.IsCompleted)
-            {
-                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)actors.Count, progress0, progress100), "Updating Actors List: " + lastAssetProcessed);
+                Debug.LogError("Asset Name is null");
             }
 
-            parallelTask.EndInvoke(result);
-        }
-
-        public void UpdateZones(float progress0, float progress100)
-        {
-            ProgressBar(progress0, "Updating Zones...");
-
-            List<Asset> zones = AssetsByType[Asset.Types.ZONE];
-            AvailableZones = new SortedDictionary<string, Zone>();
-
-            int assetsProcessed = 0;
-            string lastAssetProcessed = "";
-            object listLock = new object();
-
-            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
-
-            IAsyncResult result = parallelTask.BeginInvoke(zones, asset =>
+            foreach (Pack.Pack pack in Packs)
             {
-                if (asset == null)
+                if (pack == null)
                 {
-                    return;
+                    Debug.LogError("Pack is null");
                 }
 
-                string zoneName = Path.GetFileNameWithoutExtension(asset.Name);
+                memoryStream = pack.CreateAssetMemoryStreamByName(name);
 
-                MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
-                Zone zone = Zone.LoadFromStream(asset.Name, memoryStream);
-
-                Interlocked.Increment(ref assetsProcessed);
-
-                if (zone == null)
+                if (memoryStream != null)
                 {
-                    return;
+                    break;
                 }
-
-                lock (listLock)
-                {
-                    lastAssetProcessed = zoneName;
-                    zoneName = zoneName + " (" + asset.Pack.Name + ")";
-                    AvailableZones[zoneName] = zone;
-                }
-            }, null, null);
-
-            while (!result.IsCompleted)
-            {
-                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)zones.Count, progress0, progress100), "Updating Zone: " + lastAssetProcessed);
             }
 
-            parallelTask.EndInvoke(result);
+            return memoryStream;
         }
+        #endregion
 
-        public void UpdateAreas(float progress0, float progress100)
-        {
-            ProgressBar(progress0, "Loading Area Definitions");
-
-            List<Asset> xmlFiles = AssetsByType[Asset.Types.XML];
-
-            AvailableAreaDefinitions = new SortedDictionary<string, Areas>();
-
-            int assetsProcessed = 0;
-            string lastAssetProcessed = "";
-            object listLock = new object();
-
-            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
-
-            IAsyncResult result = parallelTask.BeginInvoke(xmlFiles, asset =>
-            {
-                if (asset == null)
-                {
-                    return;
-                }
-
-                string areaDefinitionsXML = Path.GetFileNameWithoutExtension(asset.Name);
-
-                if (!areaDefinitionsXML.EndsWith("Areas"))
-                {
-                    return;
-                }
-
-                MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name);
-                Areas areas = Areas.LoadFromStream(asset.Name, memoryStream);
-
-                Interlocked.Increment(ref assetsProcessed);
-
-                if (areas == null)
-                {
-                    return;
-                }
-
-                lock (listLock)
-                {
-                    lastAssetProcessed = areaDefinitionsXML;
-                    areaDefinitionsXML = areaDefinitionsXML + " (" + asset.Pack.Name + ")";
-                    AvailableAreaDefinitions[areaDefinitionsXML] = areas;
-                }
-            }, null, null);
-
-            while (!result.IsCompleted)
-            {
-                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)xmlFiles.Count, progress0, progress100), "Loading Area Definitions: " + lastAssetProcessed);
-            }
-
-            parallelTask.EndInvoke(result);
-        }
-
-        public void ExportModels(float progress0, float progress100)
+        #region Asset Import
+        public void ImportModels(float progress0, float progress100)
         {
             ProgressBar(progress0, "Exporting Models...");
 
-            List<Asset> modelAssets = AssetsByType[Asset.Types.DME];
+            List<AssetRef> modelAssets = AssetsByType[AssetRef.Types.DME];
             int assetsProcessed = 0;
             string lastAssetProcessed = "";
 
-            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+            Parallel.AsyncForEach<AssetRef> parallelTask = System.Threading.Tasks.Parallel.ForEach;
 
             IAsyncResult result = parallelTask.BeginInvoke(modelAssets, asset =>
             {
+                Interlocked.Increment(ref assetsProcessed);
+
                 if (asset == null)
                 {
                     return;
                 }
 
                 //Don't export if the file already exists.
-                if (!File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
+                if (File.Exists(ResourceDirectory + "/Models/" + Path.GetFileNameWithoutExtension(asset.Name) + ".obj"))
                 {
-                    lastAssetProcessed = asset.Name;
-
-                    using (MemoryStream modelMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
-                    {
-                        Model model = Model.LoadFromStream(asset.Name, modelMemoryStream);
-
-                        if (model != null)
-                        {
-                            ModelExporter.ExportModel(this, model, ResourceDirectory + "/Models");
-                        }
-                    }
+                    return;
                 }
 
-                Interlocked.Increment(ref assetsProcessed);
+                //Names
+                string assetName = asset.Name;
+                string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
+
+                //De-serialize
+                using (MemoryStream modelMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(assetName))
+                {
+                    Model model = Model.LoadFromStream(assetName, assetDisplayName, modelMemoryStream);
+
+                    if (model == null)
+                    {
+                        return;
+                    }
+
+                    ModelExporter.ExportModel(this, model, ResourceDirectory + "/Models");
+                    lastAssetProcessed = assetName;
+                }
             }, null, null);
 
             while (!result.IsCompleted)
@@ -380,88 +207,102 @@ namespace Forgelight
 
         //TODO Less Code Duplication.
         //TODO Update CNK0 Parsing. The current format seems to be incorrect.
-        public void ExportTerrain(float progress0, float progress100)
+        public void ImportTerrain(float progress0, float progress100)
         {
             int chunksProcessed = 0;
             int texturesProcessed = 0;
             string assetProcessing = "";
 
             //CNK0 (Geo)
-            List<Asset> terrainAssetsCnk0 = AssetsByType[Asset.Types.CNK0];
+            //List<AssetRef> terrainAssetsCnk0 = AssetsByType[AssetRef.Types.CNK0];
 
-            Parallel.AsyncForEach<Asset> parallelTask = System.Threading.Tasks.Parallel.ForEach;
-            IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk0, asset =>
-            {
-                if (asset == null)
-                {
-                    return;
-                }
+            //Parallel.AsyncForEach<AssetRef> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+            //IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk0, asset =>
+            //{
+            //    if (asset == null)
+            //    {
+            //        return;
+            //    }
 
-                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
-                {
-                    assetProcessing = asset.Name;
+            //    //Names
+            //    string assetName = asset.Name;
+            //    string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
 
-                    //Cnk0 chunk = Cnk0.LoadFromStream(asset.Name, terrainMemoryStream);
+            //    //De-serialize
+            //    using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+            //    {
+            //        Cnk0 chunk = Cnk0.LoadFromStream(assetName, assetDisplayName, terrainMemoryStream);
 
-                    //if (chunk != null)
-                    //{
-                    //    ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
-                    //}
+            //        if (chunk != null)
+            //        {
+            //            ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
+            //            assetProcessing = assetName;
+            //        }
 
-                    Interlocked.Increment(ref chunksProcessed);
-                }
-            }, null, null);
+            //        Interlocked.Increment(ref chunksProcessed);
+            //    }
+            //}, null, null);
 
-            while (!result.IsCompleted)
-            {
-                ProgressBar(MathUtils.Remap01(chunksProcessed / ((float)terrainAssetsCnk0.Count), progress0, progress100), "Exporting Chunk: " + assetProcessing);
-            }
+            //while (!result.IsCompleted)
+            //{
+            //    ProgressBar(MathUtils.Remap01(chunksProcessed / ((float)terrainAssetsCnk0.Count), progress0, progress100), "Exporting Chunk: " + assetProcessing);
+            //}
 
-            chunksProcessed = 0;
-            texturesProcessed = 0;
+            //chunksProcessed = 0;
+            //texturesProcessed = 0;
 
             //CNK1 (Geo)
-            List<Asset> terrainAssetsCnk1 = AssetsByType[Asset.Types.CNK1];
+            List<AssetRef> terrainAssetsCnk1 = AssetsByType[AssetRef.Types.CNK1];
 
-            parallelTask = System.Threading.Tasks.Parallel.ForEach;
-
-            result = parallelTask.BeginInvoke(terrainAssetsCnk1, asset =>
+            Parallel.AsyncForEach<AssetRef> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+            IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk1, asset =>
             {
+                Interlocked.Increment(ref chunksProcessed);
+
                 if (asset == null)
                 {
                     return;
                 }
 
-                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
-                {
-                    assetProcessing = asset.Name;
+                //Names
+                string assetName = asset.Name;
+                string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
 
-                    CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
+                //De-serialize
+                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(assetName))
+                {
+                    CnkLOD chunk = CnkLOD.LoadFromStream(assetName, assetDisplayName, terrainMemoryStream);
 
                     if (chunk != null)
                     {
                         ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
                     }
 
-                    Interlocked.Increment(ref chunksProcessed);
+                    assetProcessing = assetName;
                 }
             }, null, null);
 
             //CNK1 (Textures)
-            foreach (Asset asset in terrainAssetsCnk1)
+            foreach (AssetRef asset in terrainAssetsCnk1)
             {
-                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+                texturesProcessed++;
+
+                //Names
+                string assetName = asset.Name;
+                string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
+
+                //De-serialize
+                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(assetName))
                 {
-                    CnkLOD chunk = CnkLOD.LoadFromStream(asset.Name, terrainMemoryStream);
+                    CnkLOD chunk = CnkLOD.LoadFromStream(assetName, assetDisplayName, terrainMemoryStream);
 
                     if (chunk != null)
                     {
                         ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
                     }
 
-                    texturesProcessed++;
+                    assetProcessing = assetName;
 
-                    assetProcessing = asset.Name;
                     ProgressBar(MathUtils.Remap01((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
                 }
             }
@@ -505,5 +346,234 @@ namespace Forgelight
             //    //ProgressBar(MathUtils.RemapProgress((float)terrainAssetsCnk3Processed / (float)terrainAssetsCnk3.Count, progress0, progress100), "Exporting Chunk (LOD3): " + Path.GetFileName(asset.Name));
             //});
         }
+        #endregion
+
+        #region Runtime Import
+        public void InitializeMaterialDefinitionManager()
+        {
+            MaterialDefinitionManager = new MaterialDefinitionManager(this);
+        }
+
+        public void UpdateActors(float progress0, float progress100)
+        {
+            ProgressBar(progress0, "Updating Actors List...");
+
+            List<AssetRef> actors = AssetsByType[AssetRef.Types.ADR];
+            AvailableActors = new List<Asset>(actors.Count);
+
+            int assetsProcessed = 0;
+            string lastAssetProcessed = "";
+            object listLock = new object();
+
+            Parallel.AsyncForEach<AssetRef> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(actors, asset =>
+            {
+                Interlocked.Increment(ref assetsProcessed);
+
+                if (asset == null)
+                {
+                    return;
+                }
+
+                //Names
+                string assetName = asset.Name;
+                string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
+
+                //De-serialize
+                using (MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(assetName))
+                {
+                    Adr adr = Adr.LoadFromStream(assetName, assetDisplayName, memoryStream);
+
+                    if (adr == null)
+                    {
+                        return;
+                    }
+
+                    lock (listLock)
+                    {
+                        AvailableActors.Add(adr);
+                        lastAssetProcessed = assetName;
+                    }
+                }
+
+            }, null, null);
+
+            while (!result.IsCompleted)
+            {
+                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)actors.Count, progress0, progress100), "Updating Actors List: " + lastAssetProcessed);
+            }
+
+            parallelTask.EndInvoke(result);
+            AvailableActors.Sort();
+        }
+
+        public bool LoadZoneFromFile(string path)
+        {
+            try
+            {
+                using (FileStream fileStream = File.OpenRead(path))
+                {
+                    //Names
+                    string assetName = Path.GetFileName(path);
+                    string assetDisplayName = BuildAssetName(assetName, Path.GetDirectoryName(path));
+
+                    //De-serialize
+                    Zone zone = Zone.LoadFromStream(assetName, assetDisplayName, fileStream);
+
+                    if (zone != null)
+                    {
+                        AvailableZones.Add(zone);
+                        AvailableZones.Sort();
+
+                        ForgelightExtension.Instance.ZoneManager.ChangeZone(ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame, zone);
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("An error occurred while importing zone at: " + path + ". " + e.Message);
+            }
+
+            return false;
+        }
+
+        public void UpdateZones(float progress0, float progress100)
+        {
+            ProgressBar(progress0, "Updating Zones...");
+
+            List<AssetRef> zones = AssetsByType[AssetRef.Types.ZONE];
+            AvailableZones = new List<Asset>(zones.Count);
+
+            int assetsProcessed = 0;
+            string lastAssetProcessed = "";
+            object listLock = new object();
+
+            Parallel.AsyncForEach<AssetRef> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(zones, asset =>
+            {
+                Interlocked.Increment(ref assetsProcessed);
+
+                if (asset == null)
+                {
+                    return;
+                }
+
+                //Names
+                string assetName = asset.Name;
+                string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
+
+                //De-serialize
+                using (MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
+                {
+                    Zone zone = Zone.LoadFromStream(assetName, assetDisplayName, memoryStream);
+
+                    if (zone == null)
+                    {
+                        return;
+                    }
+
+                    lock (listLock)
+                    {
+                        AvailableZones.Add(zone);
+                        lastAssetProcessed = assetName;
+                    }
+                }
+            }, null, null);
+
+            while (!result.IsCompleted)
+            {
+                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)zones.Count, progress0, progress100), "Updating Zone: " + lastAssetProcessed);
+            }
+
+            parallelTask.EndInvoke(result);
+            AvailableZones.Sort();
+        }
+
+        public void UpdateAreas(float progress0, float progress100)
+        {
+            ProgressBar(progress0, "Loading Area Definitions");
+
+            List<AssetRef> xmlFiles = AssetsByType[AssetRef.Types.XML];
+
+            AvailableAreaDefinitions = new List<Asset>();
+
+            int assetsProcessed = 0;
+            string lastAssetProcessed = "";
+            object listLock = new object();
+
+            Parallel.AsyncForEach<AssetRef> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+
+            IAsyncResult result = parallelTask.BeginInvoke(xmlFiles, asset =>
+            {
+                Interlocked.Increment(ref assetsProcessed);
+
+                if (asset == null)
+                {
+                    return;
+                }
+
+                //Names
+                string assetName = asset.Name;
+                string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
+
+                if (!assetName.EndsWith("Areas.xml"))
+                {
+                    return;
+                }
+
+                //De-serialize
+                using (MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(assetName))
+                {
+                    Areas areas = Areas.LoadFromStream(assetName, assetDisplayName, memoryStream);
+
+                    if (areas == null)
+                    {
+                        return;
+                    }
+
+                    lock (listLock)
+                    {
+                        AvailableAreaDefinitions.Add(areas);
+                        lastAssetProcessed = assetName;
+                    }
+                }
+            }, null, null);
+
+            while (!result.IsCompleted)
+            {
+                ProgressBar(MathUtils.Remap01(assetsProcessed / (float)xmlFiles.Count, progress0, progress100), "Loading Area Definitions: " + lastAssetProcessed);
+            }
+
+            parallelTask.EndInvoke(result);
+            AvailableAreaDefinitions.Sort();
+        }
+        #endregion
+
+        #region Helpers
+        private void ProgressBar(float progress, string currentTask)
+        {
+            if (progress == lastProgress)
+            {
+                return;
+            }
+
+            EditorUtility.DisplayProgressBar("Forgelight - " + Name, currentTask, progress);
+            lastProgress = progress;
+        }
+
+        public void OnLoadComplete()
+        {
+            EditorUtility.ClearProgressBar();
+        }
+
+        public string BuildAssetName(string assetName, string packName)
+        {
+            return assetName + " (" + packName + ')';
+        }
+        #endregion
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Forgelight.Attributes;
 using UnityEditor;
 using UnityEngine;
 using MathUtils = Forgelight.Utils.MathUtils;
@@ -104,7 +103,7 @@ namespace Forgelight.Integration
                 instance.transform.SetParent(terrainParent);
 
                 //Used for cull purposes.
-                instance.AddComponent<CullableObject>();
+                instance.AddComponent<TerrainChunk>();
 
                 //instance.isStatic = true;
                 //foreach (Transform child in instance.transform)

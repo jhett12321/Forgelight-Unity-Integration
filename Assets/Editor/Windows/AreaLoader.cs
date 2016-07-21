@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using Forgelight.Formats.Areas;
+using Forgelight.Assets;
+using Forgelight.Assets.Areas;
 using Forgelight.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace Forgelight.Editor.Windows
         private string searchString = "";
         private Vector2 scroll;
 
-        private string selectedAreas;
+        private Asset selectedAreas;
 
         public static void Init()
         {
@@ -37,7 +38,7 @@ namespace Forgelight.Editor.Windows
 
                     if (activeForgelightGame != null)
                     {
-                        SortedDictionary<string, Areas>.KeyCollection areas = activeForgelightGame.AvailableAreaDefinitions.Keys;
+                        List<Asset> areas = activeForgelightGame.AvailableAreaDefinitions;
 
                         ShowAvailableAreaDefs(activeForgelightGame, areas);
                     }
@@ -47,35 +48,39 @@ namespace Forgelight.Editor.Windows
             EditorGUILayout.EndHorizontal();
         }
 
-        private void ShowAvailableAreaDefs(ForgelightGame forgelightGame, SortedDictionary<string, Areas>.KeyCollection availableAreas)
+        private void ShowAvailableAreaDefs(ForgelightGame forgelightGame, List<Asset> availableAreas)
         {
-            foreach (string areaDef in availableAreas)
+            foreach (Asset asset in availableAreas)
             {
-                if (searchString == null || areaDef.ToLower().Contains(searchString.ToLower()))
+                if (searchString != null && !asset.DisplayName.ToLower().Contains(searchString.ToLower()))
                 {
-                    Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
-
-                    if (Event.current.type == EventType.MouseDown)
-                    {
-                        if (rect.Contains(Event.current.mousePosition))
-                        {
-                            if (selectedAreas != null && selectedAreas == areaDef)
-                            {
-                                OnAreasSelected(forgelightGame.AvailableAreaDefinitions[areaDef]);
-                                selectedAreas = null;
-                            }
-
-                            selectedAreas = areaDef;
-                        }
-                    }
-
-                    GUIStyle style = EditorStyles.label;
-                    style.fixedWidth = 0;
-                    style.stretchWidth = true;
-                    style.clipping = TextClipping.Overflow;
-
-                    EditorGUI.Foldout(rect, false, areaDef, true, style);
+                    continue;
                 }
+
+                Areas areaDef = (Areas) asset;
+
+                Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
+
+                if (Event.current.type == EventType.MouseDown)
+                {
+                    if (rect.Contains(Event.current.mousePosition))
+                    {
+                        if (selectedAreas != null && selectedAreas == areaDef)
+                        {
+                            OnAreasSelected(areaDef);
+                            selectedAreas = null;
+                        }
+
+                        selectedAreas = areaDef;
+                    }
+                }
+
+                GUIStyle style = EditorStyles.label;
+                style.fixedWidth = 0;
+                style.stretchWidth = true;
+                style.clipping = TextClipping.Overflow;
+
+                EditorGUI.Foldout(rect, false, asset.DisplayName, true, style);
             }
         }
 

@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using Forgelight.Formats.Areas;
-using Forgelight.Formats.Zone;
+﻿using System.IO;
+using Forgelight.Assets;
+using Forgelight.Assets.Areas;
+using Forgelight.Assets.Zone;
 using Forgelight.Integration;
 using UnityEditor;
 using UnityEngine;
@@ -47,11 +47,11 @@ namespace Forgelight.Editor
             //Attempt to guess this zone's area definitions file.
             string areasName = Path.GetFileNameWithoutExtension(zone.Name) + "Areas.xml";
 
-            foreach (KeyValuePair<string, Areas> areaDefinition in forgelightGame.AvailableAreaDefinitions)
+            foreach (Asset areaDefinition in forgelightGame.AvailableAreaDefinitions)
             {
-                if (areaDefinition.Value.Name == areasName)
+                if (areaDefinition.Name == areasName)
                 {
-                    AreaObjectFactory.LoadAreaDefinitions(areaDefinition.Value, 0.9f, 1.0f);
+                    AreaObjectFactory.LoadAreaDefinitions((Areas) areaDefinition, 0.9f, 1.0f);
                     break;
                 }
             }

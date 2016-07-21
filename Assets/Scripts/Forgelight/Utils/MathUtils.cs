@@ -2,11 +2,25 @@
 
 namespace Forgelight.Utils
 {
-    public enum RotationMode
+    public enum TransformMode
     {
         Object,
         Light,
         Standard
+    }
+
+    public struct TransformData
+    {
+        public Vector3 Position;
+        public Vector3 Rotation;
+        public Vector3 Scale;
+
+        public TransformData(Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            Position = pos;
+            Rotation = rot;
+            Scale = scale;
+        }
     }
 
     public static class MathUtils
@@ -21,63 +35,55 @@ namespace Forgelight.Utils
             return (value - from1) / (to1 - from1) * (to2 - from2) + from2;
         }
 
-    private static Matrix4x4 GetInversionMatrix()
-        {
-            Matrix4x4 retval = new Matrix4x4();
-            retval[0, 0] = -1;
-            retval[0, 1] = 0;
-            retval[0, 2] = 0;
-            retval[0, 3] = 0;
-
-            retval[1, 0] = 0;
-            retval[1, 1] = 1;
-            retval[1, 2] = 0;
-            retval[1, 3] = 0;
-
-            retval[2, 0] = 0;
-            retval[2, 1] = 0;
-            retval[2, 2] = 1;
-            retval[2, 3] = 0;
-
-            retval[3, 0] = 0;
-            retval[3, 1] = 0;
-            retval[3, 2] = 0;
-            retval[3, 3] = 1;
-
-            return retval;
-        }
-
         public static Vector3 ToRadians(this Vector3 eulerAngles)
         {
             return new Vector3(eulerAngles.x * Mathf.Deg2Rad, eulerAngles.y * Mathf.Deg2Rad, eulerAngles.z * Mathf.Deg2Rad);
         }
 
-        public static Matrix4x4 InvertTransform(Vector3 pos, Vector3 rot, Vector3 scale, bool radians, RotationMode rotationMode)
+        public static TransformData ConvertTransform(Vector3 pos, Vector3 rot, Vector3 scale, bool fromForgelight, TransformMode transformMode)
         {
-            if (radians)
+            if (fromForgelight)
             {
                 rot.x *= Mathf.Rad2Deg;
                 rot.y *= Mathf.Rad2Deg;
                 rot.z *= Mathf.Rad2Deg;
             }
 
-            switch (rotationMode)
-            {
-                case RotationMode.Object:
-                {
-                    //X,Y are switched.
-                    float rotX = rot.y;
+            pos.x = -pos.x;
 
-                    rot.y = rot.x;
+            switch (transformMode)
+            {
+                case TransformMode.Object:
+                {
+                    float rotX = -rot.y;
+                    float rotY = -rot.x;
+                    float rotZ = -rot.z;
+
                     rot.x = rotX;
+                    rot.y = rotY;
+                    rot.z = rotZ;
+
+                    //scale.x = -scale.x;
                     break;
                 }
-                case RotationMode.Light:
+                case TransformMode.Light:
                 {
                     //x becomes z, y becomes x, z becomes y.
-                    float rotX = -rot.z;
-                    float rotY = -rot.x;
-                    float rotZ = -rot.y;
+                    float rotX;
+                    float rotY;
+
+                    if (fromForgelight)
+                    {
+                        rotX  = rot.y;
+                        rotY = -rot.x;
+                    }
+                    else
+                    {
+                        rotX = -rot.y;
+                        rotY = rot.x;
+                    }
+
+                    float rotZ = -rot.z;
 
                     rot.x = rotX;
                     rot.y = rotY;
@@ -85,109 +91,13 @@ namespace Forgelight.Utils
 
                     break;
                 }
+                case TransformMode.Standard:
+                {
+                    break;
+                }
             }
 
-            Quaternion rotation = Quaternion.Euler(rot);
-
-            Matrix4x4 m = Matrix4x4.TRS(pos, rotation, scale);
-            return m * GetInversionMatrix();
-        }
-
-        /// <summary>
-        /// Extract translation from transform matrix.
-        /// </summary>
-        /// <returns>
-        /// Translation offset.
-        /// </returns>
-        public static Vector3 ExtractTranslationFromMatrix(this Matrix4x4 matrix)
-        {
-            Vector3 translate;
-            translate.x = matrix.m03;
-            translate.y = matrix.m13;
-            translate.z = matrix.m23;
-            return translate;
-        }
-
-        /// <summary>
-        /// Extract rotation quaternion from transform matrix.
-        /// </summary>
-        /// <returns>
-        /// Quaternion representation of rotation transform.
-        /// </returns>
-        public static Quaternion ExtractRotationFromMatrix(this Matrix4x4 matrix)
-        {
-            Vector3 forward;
-            forward.x = matrix.m02;
-            forward.y = matrix.m12;
-            forward.z = matrix.m22;
-
-            Vector3 upwards;
-            upwards.x = matrix.m01;
-            upwards.y = matrix.m11;
-            upwards.z = matrix.m21;
-
-            return Quaternion.LookRotation(forward, upwards);
-        }
-
-        /// <summary>
-        /// Extract scale from transform matrix.
-        /// </summary>
-        /// <returns>
-        /// Scale vector.
-        /// </returns>
-        public static Vector3 ExtractScaleFromMatrix(this Matrix4x4 matrix)
-        {
-            Vector3 scale = new Vector3(
-                matrix.GetColumn(0).magnitude,
-                matrix.GetColumn(1).magnitude,
-                matrix.GetColumn(2).magnitude
-                );
-            if (Vector3.Cross(matrix.GetColumn(0), matrix.GetColumn(1)).normalized != (Vector3)matrix.GetColumn(2).normalized)
-            {
-                scale.x *= -1;
-            }
-
-            return scale;
-        }
-
-        /// <summary>
-        /// Extract position, rotation and scale from TRS matrix.
-        /// </summary>
-        /// <param name="localPosition">Output position.</param>
-        /// <param name="localRotation">Output rotation.</param>
-        /// <param name="localScale">Output scale.</param>
-        public static void DecomposeMatrix(this Matrix4x4 matrix, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale)
-        {
-            localPosition = matrix.ExtractTranslationFromMatrix();
-            localRotation = matrix.ExtractRotationFromMatrix();
-            localScale = matrix.ExtractScaleFromMatrix();
-        }
-
-        /// <summary>
-        /// Set transform component from TRS matrix.
-        /// </summary>
-        /// <param name="transform">Transform component.</param>
-        public static void ApplyToTransform(this Matrix4x4 matrix, Transform transform)
-        {
-            transform.localPosition = matrix.ExtractTranslationFromMatrix();
-            transform.localRotation = matrix.ExtractRotationFromMatrix();
-            transform.localScale = matrix.ExtractScaleFromMatrix();
-        }
-
-        /// <summary>
-        /// Get translation matrix.
-        /// </summary>
-        /// <param name="offset">Translation offset.</param>
-        /// <returns>
-        /// The translation transform matrix.
-        /// </returns>
-        public static Matrix4x4 TranslationMatrix(Vector3 offset)
-        {
-            Matrix4x4 matrix = Matrix4x4.identity;
-            matrix.m03 = offset.x;
-            matrix.m13 = offset.y;
-            matrix.m23 = offset.z;
-            return matrix;
+            return new TransformData(pos, rot, scale);
         }
     }
 }

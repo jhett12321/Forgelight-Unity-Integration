@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using Forgelight;
 using Forgelight.Attributes;
+using Forgelight.Editor;
+using Forgelight.Editor.Helper;
 using Forgelight.Editor.Windows;
 using Forgelight.Pack;
 using Forgelight.Utils;
@@ -36,6 +38,15 @@ public class ForgelightMenu : Editor
     }
     #endregion
 
+    #region Helpers
+
+    [MenuItem("Forgelight/Helpers/Parent Selected Entities")]
+    public static void ParentEntities()
+    {
+        EntityParenter.ParentSelection();
+    }
+    #endregion
+
     #region Draw
     [MenuItem("Forgelight/Draw/Cull World from Current Position", false, 10004)]
     public static void CullWorld()
@@ -45,17 +56,14 @@ public class ForgelightMenu : Editor
         Vector3 cameraPos = ForgelightExtension.Instance.LastCameraPos;
         cameraPos.y = 0; //We ignore vertical position.
 
-        foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
+        foreach (CullableObject cullableObject in FindObjectsOfType<CullableObject>())
         {
-            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave)
-                continue;
-
             Vector3 objPos = cullableObject.transform.position;
             objPos.y = 0;
 
             if (Vector3.Distance(objPos, cameraPos) > ForgelightPreferences.CullingDistance)
             {
-                cullableObject.gameObject.SetActive(false);
+                cullableObject.Hide();
             }
         }
     }
@@ -63,12 +71,9 @@ public class ForgelightMenu : Editor
     [MenuItem("Forgelight/Draw/Draw All", false, 10050)]
     public static void ResetCulling()
     {
-        foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
+        foreach (CullableObject cullableObject in FindObjectsOfType<CullableObject>())
         {
-            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave)
-                continue;
-
-            cullableObject.gameObject.SetActive(true);
+            cullableObject.Show();
         }
     }
 

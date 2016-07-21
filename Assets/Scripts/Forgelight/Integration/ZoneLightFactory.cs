@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using Forgelight.Formats.Zone;
+using Forgelight.Assets.Zone;
 using Forgelight.Utils;
 using UnityEditor;
 using UnityEngine;
-using Light = Forgelight.Formats.Zone.Light;
+using Light = Forgelight.Assets.Zone.Light;
 using MathUtils = Forgelight.Utils.MathUtils;
 using Object = UnityEngine.Object;
 
@@ -58,10 +58,10 @@ namespace Forgelight.Integration
                 instance.lightObject = lightComponent;
 
                 //Params
-                Matrix4x4 correctedTransform = MathUtils.InvertTransform(lightData.Position, lightData.Rotation, Vector3.one, true, RotationMode.Light);
+                TransformData correctedTransform = MathUtils.ConvertTransform(lightData.Position, lightData.Rotation, Vector3.one, true, TransformMode.Light);
 
-                instance.transform.position = correctedTransform.ExtractTranslationFromMatrix();
-                instance.transform.rotation = correctedTransform.ExtractRotationFromMatrix();
+                instance.transform.position = correctedTransform.Position;
+                instance.transform.rotation = Quaternion.Euler(correctedTransform.Rotation);
 
                 instance.Name = lightData.Name;
                 instance.ColorName = lightData.ColorName;
@@ -94,9 +94,6 @@ namespace Forgelight.Integration
 
                 EditorUtility.DisplayProgressBar("Loading Zone: " + zoneName, "Loading Lights: " + lightData.Name, MathUtils.Remap01((float) i/lights.Count, progressMin, progressMax));
             }
-
-            //Forgelight -> Unity position fix.
-            Parent.transform.localScale = new Vector3(-1, 1, 1);
         }
 
         public void ValidateObjectUIDs()
@@ -104,13 +101,10 @@ namespace Forgelight.Integration
             //This list may not be updated. We create a new one.
             usedIDs.Clear();
 
-            ZoneLight[] zoneLights = Resources.FindObjectsOfTypeAll<ZoneLight>();
+            ZoneLight[] zoneLights = Object.FindObjectsOfType<ZoneLight>();
 
             foreach (ZoneLight zoneLight in zoneLights)
             {
-                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave)
-                    continue;
-
                 if (usedIDs.Contains(zoneLight.ID))
                 {
                     zoneLight.ID = GenerateUID();
@@ -140,16 +134,14 @@ namespace Forgelight.Integration
 
             zone.Lights.Clear();
 
-            foreach (ZoneLight zoneLight in Resources.FindObjectsOfTypeAll<ZoneLight>())
+            foreach (ZoneLight zoneLight in Object.FindObjectsOfType<ZoneLight>())
             {
-                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave)
-                    continue;
-
                 Light light = new Light();
 
-                Matrix4x4 correctedTransform = MathUtils.InvertTransform(zoneLight.transform.position, zoneLight.transform.rotation.eulerAngles, Vector3.one, false, RotationMode.Light);
-                light.Position = correctedTransform.ExtractTranslationFromMatrix();
-                light.Rotation = correctedTransform.ExtractRotationFromMatrix().eulerAngles.ToRadians();
+                TransformData correctedTransform = MathUtils.ConvertTransform(zoneLight.transform.position, zoneLight.transform.rotation.eulerAngles, Vector3.one, false, TransformMode.Light);
+                light.Position = correctedTransform.Position;
+                Vector3 rotationData = correctedTransform.Rotation.ToRadians();
+                light.Rotation = new Vector4(rotationData.x, rotationData.y, rotationData.z, 1);
 
                 light.Name = zoneLight.Name;
                 light.ColorName = zoneLight.ColorName;

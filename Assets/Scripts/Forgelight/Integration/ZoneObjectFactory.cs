@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using Forgelight.Attributes;
-using Forgelight.Formats.Adr;
-using Forgelight.Formats.Zone;
+using Forgelight.Assets.Adr;
+using Forgelight.Assets.Zone;
 using Forgelight.Utils;
 using UnityEditor;
-using Object = Forgelight.Formats.Zone.Object;
+using Object = Forgelight.Assets.Zone.Object;
 using MathUtils = Forgelight.Utils.MathUtils;
 
 namespace Forgelight.Editor
@@ -63,27 +63,24 @@ namespace Forgelight.Editor
 
                 if (zoneObject.Instances.Count > 0)
                 {
-                    if (!forgelightGame.AvailableActors.ContainsKey(zoneObject.ActorDefinition))
+                    Adr actorDef = forgelightGame.GetActorDefinition(zoneObject.ActorDefinition);
+
+                    if (actorDef == null)
                     {
                         Debug.LogWarning("Could not find Actor Definition: " + zoneObject.ActorDefinition + "!");
                         continue;
                     }
 
-                    Adr actorDef = forgelightGame.AvailableActors[zoneObject.ActorDefinition];
-
                     foreach (Object.Instance instance in zoneObject.Instances)
                     {
-                        Matrix4x4 correctedTransform = MathUtils.InvertTransform(instance.Position, instance.Rotation, instance.Scale, true, RotationMode.Object);
+                        TransformData correctedTransform = MathUtils.ConvertTransform(instance.Position, instance.Rotation, instance.Scale, true, TransformMode.Object);
 
-                        CreateForgelightObject(forgelightGame, actorDef, correctedTransform.ExtractTranslationFromMatrix(), correctedTransform.ExtractRotationFromMatrix(), correctedTransform.ExtractScaleFromMatrix(), zoneObject.RenderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
+                        CreateForgelightObject(forgelightGame, actorDef, correctedTransform.Position, Quaternion.Euler(correctedTransform.Rotation), correctedTransform.Scale, zoneObject.RenderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
                     }
                 }
 
                 EditorUtility.DisplayProgressBar("Loading Zone: " + zoneName, "Loading Objects: " + zoneObject.ActorDefinition, MathUtils.Remap01((float)i/objects.Count, progressMin, progressMax));
             }
-
-            //Forgelight -> Unity position fix
-            Parent.transform.localScale = new Vector3(-1, 1, 1);
         }
 
         public GameObject CreateForgelightObject(ForgelightGame forgelightGame, Adr actorDefinition, Vector3 position, Quaternion rotation)
@@ -228,13 +225,6 @@ namespace Forgelight.Editor
                 zoneObject = instance.AddComponent<ZoneObject>();
             }
 
-            CullableObject cObject = instance.GetComponent<CullableObject>();
-
-            if (cObject == null)
-            {
-                instance.AddComponent<CullableObject>();
-            }
-
             zoneObject.actorDefinition = actorDef.Name;
             zoneObject.renderDistance = renderDistance;
             zoneObject.lodMultiplier = lodBias;
@@ -255,13 +245,10 @@ namespace Forgelight.Editor
             //This list may not be updated. We create a new one.
             usedIDs.Clear();
 
-            ZoneObject[] zoneObjects = Resources.FindObjectsOfTypeAll<ZoneObject>();
+            ZoneObject[] zoneObjects = UnityEngine.Object.FindObjectsOfType<ZoneObject>();
 
             foreach (ZoneObject zoneObject in zoneObjects)
             {
-                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave)
-                    continue;
-
                 if (usedIDs.Contains(zoneObject.ID))
                 {
                     zoneObject.ID = GenerateUID();
@@ -292,11 +279,8 @@ namespace Forgelight.Editor
             //Check to make sure we don't have duplicate ID's
             ValidateObjectUIDs();
 
-            foreach (ZoneObject zoneObject in Resources.FindObjectsOfTypeAll<ZoneObject>())
+            foreach (ZoneObject zoneObject in UnityEngine.Object.FindObjectsOfType<ZoneObject>())
             {
-                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave)
-                    continue;
-
                 string actorDef = zoneObject.actorDefinition;
                 if (!actorInstances.ContainsKey(actorDef))
                 {
@@ -320,11 +304,11 @@ namespace Forgelight.Editor
                 {
                     Object.Instance instance = new Object.Instance();
 
-                    Matrix4x4 correctedTransform = MathUtils.InvertTransform(zoneObject.transform.position, zoneObject.transform.rotation.eulerAngles, zoneObject.transform.localScale, false, RotationMode.Object);
+                    TransformData correctedTransform = MathUtils.ConvertTransform(zoneObject.transform.position, zoneObject.transform.rotation.eulerAngles, zoneObject.transform.localScale, false, TransformMode.Object);
 
-                    instance.Position = correctedTransform.ExtractTranslationFromMatrix();
-                    instance.Rotation = correctedTransform.ExtractRotationFromMatrix().eulerAngles.ToRadians();
-                    instance.Scale = correctedTransform.ExtractScaleFromMatrix();
+                    instance.Position = correctedTransform.Position;
+                    instance.Rotation = correctedTransform.Rotation.ToRadians();
+                    instance.Scale = correctedTransform.Scale;
 
                     instance.ID = (uint)zoneObject.ID;
                     instance.DontCastShadows = zoneObject.DontCastShadows;

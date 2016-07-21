@@ -4,7 +4,7 @@ using Forgelight.Attributes;
 
 namespace Forgelight.Integration
 {
-    public class AreaObject : MonoBehaviour
+    public class AreaObject : CullableObject
     {
         //Common
         [ReadOnly]
@@ -29,5 +29,21 @@ namespace Forgelight.Integration
         //Properties
         [ReadOnly]
         public List<string> Properties;
+
+        public override void Show()
+        {
+            foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = true;
+            }
+        }
+
+        public override void Hide()
+        {
+            foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = false;
+            }
+        }
     }
 }

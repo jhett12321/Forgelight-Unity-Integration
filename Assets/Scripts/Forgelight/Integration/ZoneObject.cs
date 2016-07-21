@@ -7,7 +7,7 @@ namespace Forgelight.Editor
 {
     [ExecuteInEditMode]
     [SelectionBase]
-    public class ZoneObject : MonoBehaviour
+    public class ZoneObject : CullableObject
     {
         [Header("Actor Settings (Global)")]
         public float renderDistance;
@@ -34,7 +34,6 @@ namespace Forgelight.Editor
 
         private bool visible;
 
-        private Renderer[] renderers;
         private List<GameObject> objectsToDestroy = new List<GameObject>();
 
         private ForgelightExtension forgelightExtension;
@@ -46,9 +45,11 @@ namespace Forgelight.Editor
 
         public void OnValidate()
         {
+            Renderer[] renderers = GetComponentsInChildren<Renderer>();
+
             if (renderers == null || renderers.Length == 0)
             {
-                renderers = GetComponentsInChildren<Renderer>();
+                return;
             }
 
             foreach (Renderer renderer in renderers)
@@ -89,17 +90,19 @@ namespace Forgelight.Editor
                 }
             }
 
-            if (objectsToDestroy.Count > 0)
+            if (objectsToDestroy.Count <= 0)
             {
-                foreach (GameObject o in objectsToDestroy)
-                {
-                    DestroyImmediate(o);
-                }
-
-                objectsToDestroy.Clear();
-
-                Resources.UnloadUnusedAssets();
+                return;
             }
+
+            foreach (GameObject o in objectsToDestroy)
+            {
+                DestroyImmediate(o);
+            }
+
+            objectsToDestroy.Clear();
+
+            Resources.UnloadUnusedAssets();
         }
 
         private void CheckVisibility()
@@ -120,30 +123,34 @@ namespace Forgelight.Editor
             target = float.MaxValue; //We don't need to update until we move again.
         }
 
-        public void Hide()
-        {
-            if (visible)
-            {
-                foreach (Transform child in transform)
-                {
-                    child.gameObject.SetActive(false);
-                }
-
-                visible = false;
-            }
-        }
-
-        public void Show()
+        public override void Hide()
         {
             if (!visible)
             {
-                foreach (Transform child in transform)
-                {
-                    child.gameObject.SetActive(true);
-                }
-
-                visible = true;
+                return;
             }
+
+            foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = false;
+            }
+
+            visible = false;
+        }
+
+        public override void Show()
+        {
+            if (visible)
+            {
+                return;
+            }
+
+            foreach (Renderer renderer in GetComponentsInChildren<Renderer>())
+            {
+                renderer.enabled = true;
+            }
+
+            visible = true;
         }
 
         public void DestroyObject(GameObject objToDestroy)

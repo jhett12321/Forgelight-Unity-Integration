@@ -1,6 +1,6 @@
 ﻿using Forgelight.Attributes;
 using Forgelight.Editor;
-using Forgelight.Formats.Zone;
+using Forgelight.Assets.Zone;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;

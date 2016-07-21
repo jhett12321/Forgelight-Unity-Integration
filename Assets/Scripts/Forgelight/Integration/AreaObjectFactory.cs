@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using Forgelight.Attributes;
-using Forgelight.Formats.Areas;
+using Forgelight.Assets.Areas;
 using Forgelight.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -60,11 +60,10 @@ namespace Forgelight.Integration
                     case "sphere":
                         instance = GameObject.CreatePrimitive(PrimitiveType.Sphere).AddComponent<AreaObject>();
 
-                        Matrix4x4 correctedSphereMatrix = MathUtils.InvertTransform(areaDefinition.Pos1, Vector4.zero, new Vector4(areaDefinition.Radius, areaDefinition.Radius, areaDefinition.Radius), false, RotationMode.Standard);
-                        correctedSphereMatrix.ApplyToTransform(instance.transform);
-
-                        //instance.transform.position = correctedSphereTransform.ExtractTranslationFromMatrix();
-                        //instance.transform.localScale = correctedSphereTransform.ExtractScaleFromMatrix();
+                        TransformData correctedSphereTransform = MathUtils.ConvertTransform(areaDefinition.Pos1, Vector4.zero, new Vector4(areaDefinition.Radius, areaDefinition.Radius, areaDefinition.Radius), false, TransformMode.Standard);
+                        instance.transform.position = correctedSphereTransform.Position;
+                        instance.transform.rotation = Quaternion.Euler(correctedSphereTransform.Rotation);
+                        instance.transform.localScale = correctedSphereTransform.Scale;
 
                         instance.Radius = areaDefinition.Radius;
                         break;
@@ -81,11 +80,10 @@ namespace Forgelight.Integration
                         Vector3 fPos = (pos1 + pos2) * 0.5f;
                         Vector4 fRot = areaDefinition.Rot;
 
-                        Matrix4x4 correctedBoxMatrix = MathUtils.InvertTransform(fPos, fRot, fScale, true, RotationMode.Standard);
-                        correctedBoxMatrix.ApplyToTransform(instance.transform);
-                        //instance.transform.position = correctedBoxTransform.ExtractTranslationFromMatrix();
-                        //instance.transform.rotation = correctedBoxTransform.ExtractRotationFromMatrix();
-                        //instance.transform.localScale = correctedBoxTransform.ExtractScaleFromMatrix();
+                        TransformData correctedBoxMatrix = MathUtils.ConvertTransform(fPos, fRot, fScale, true, TransformMode.Standard);
+                        instance.transform.position = correctedBoxMatrix.Position;
+                        instance.transform.rotation = Quaternion.Euler(correctedBoxMatrix.Rotation);
+                        instance.transform.localScale = correctedBoxMatrix.Scale;
 
                         instance.Pos2 = areaDefinition.Pos2;
                         instance.Rot = areaDefinition.Rot;
@@ -101,8 +99,6 @@ namespace Forgelight.Integration
                 {
                     child.gameObject.layer = layer;
                 }
-
-                instance.gameObject.AddComponent<CullableObject>();
 
                 instance.ID = areaDefinition.ID;
                 instance.Name = areaDefinition.Name;
@@ -150,9 +146,6 @@ namespace Forgelight.Integration
 
                 EditorUtility.DisplayProgressBar("Loading " + areasName, "Loading Area Definition: " + areaDefinition.Name, MathUtils.Remap01((float)i / areas.AreaDefinitions.Count, progressMin, progressMax));
             }
-
-            //Forgelight -> Unity position fix.
-            Parent.transform.localScale = new Vector3(-1, 1, 1);
         }
     }
 }

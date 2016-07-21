@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using Forgelight.Assets;
 using Forgelight.Editor.DraggableObjects;
-using Forgelight.Formats.Adr;
+using Forgelight.Assets.Adr;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -98,31 +99,35 @@ namespace Forgelight.Editor.Windows
 
             if (forgelightGame != null)
             {
-                SortedDictionary<string, Adr>.KeyCollection availableActors = forgelightGame.AvailableActors.Keys;
+                List<Asset> availableActors = forgelightGame.AvailableActors;
 
-                foreach (string actor in availableActors)
+                foreach (Asset asset in availableActors)
                 {
-                    if (searchString == null || actor.ToLower().Contains(searchString.ToLower()))
+                    if (searchString != null && !asset.DisplayName.ToLower().Contains(searchString.ToLower()))
                     {
-                        Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
-
-                        if (Event.current.type == EventType.MouseDown)
-                        {
-                            if (rect.Contains(Event.current.mousePosition))
-                            {
-                                BeginDrag(forgelightGame, forgelightGame.AvailableActors[actor]);
-                                DestroyImmediate(previewWindowEditor);
-                                selectedActor = ForgelightExtension.Instance.ZoneManager.ZoneObjectFactory.GetForgelightObject(forgelightGame, forgelightGame.AvailableActors[actor].Base);
-                            }
-                        }
-
-                        GUIStyle style = EditorStyles.label;
-                        style.fixedWidth = 0;
-                        style.stretchWidth = true;
-                        style.clipping = TextClipping.Overflow;
-
-                        EditorGUI.Foldout(rect, false, actor, true, style);
+                        continue;
                     }
+
+                    Adr actor = (Adr) asset;
+
+                    Rect rect = GUILayoutUtility.GetRect(40f, 40f, 16f, 16f, EditorStyles.label);
+
+                    if (Event.current.type == EventType.MouseDown)
+                    {
+                        if (rect.Contains(Event.current.mousePosition))
+                        {
+                            BeginDrag(forgelightGame, actor);
+                            DestroyImmediate(previewWindowEditor);
+                            selectedActor = ForgelightExtension.Instance.ZoneManager.ZoneObjectFactory.GetForgelightObject(forgelightGame, actor.Base);
+                        }
+                    }
+
+                    GUIStyle style = EditorStyles.label;
+                    style.fixedWidth = 0;
+                    style.stretchWidth = true;
+                    style.clipping = TextClipping.Overflow;
+
+                    EditorGUI.Foldout(rect, false, asset.DisplayName, true, style);
                 }
             }
 
