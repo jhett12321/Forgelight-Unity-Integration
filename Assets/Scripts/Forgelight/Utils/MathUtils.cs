@@ -4,9 +4,8 @@ namespace Forgelight.Utils
 {
     public enum TransformMode
     {
-        Object,
-        Light,
-        Standard
+        Standard,
+        Area
     }
 
     public struct TransformData
@@ -49,53 +48,40 @@ namespace Forgelight.Utils
                 rot.z *= Mathf.Rad2Deg;
             }
 
+            //Make sure we are within 360 degrees.
+            rot.x = Mathf.Repeat(rot.x, 360.0f);
+            rot.y = Mathf.Repeat(rot.y, 360.0f);
+            rot.z = Mathf.Repeat(rot.z, 360.0f);
+
+            //Flip our x axis.
             pos.x = -pos.x;
 
-            switch (transformMode)
+            //Don't perform any transform modifications to area definitions.
+            if (transformMode == TransformMode.Area)
             {
-                case TransformMode.Object:
-                {
-                    float rotX = -rot.y;
-                    float rotY = -rot.x;
-                    float rotZ = -rot.z;
-
-                    rot.x = rotX;
-                    rot.y = rotY;
-                    rot.z = rotZ;
-
-                    //scale.x = -scale.x;
-                    break;
-                }
-                case TransformMode.Light:
-                {
-                    //x becomes z, y becomes x, z becomes y.
-                    float rotX;
-                    float rotY;
-
-                    if (fromForgelight)
-                    {
-                        rotX  = rot.y;
-                        rotY = -rot.x;
-                    }
-                    else
-                    {
-                        rotX = -rot.y;
-                        rotY = rot.x;
-                    }
-
-                    float rotZ = -rot.z;
-
-                    rot.x = rotX;
-                    rot.y = rotY;
-                    rot.z = rotZ;
-
-                    break;
-                }
-                case TransformMode.Standard:
-                {
-                    break;
-                }
+                return new TransformData(pos, rot, scale);
             }
+
+            //x becomes y, y becomes x, z is inversed.
+            float rotX;
+            float rotY;
+
+            if (fromForgelight)
+            {
+                rotX = rot.y;
+                rotY = -rot.x;
+            }
+            else
+            {
+                rotX = -rot.y;
+                rotY = rot.x;
+            }
+
+            float rotZ = -rot.z;
+
+            rot.x = rotX;
+            rot.y = rotY;
+            rot.z = rotZ;
 
             return new TransformData(pos, rot, scale);
         }

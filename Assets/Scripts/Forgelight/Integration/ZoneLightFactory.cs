@@ -58,7 +58,7 @@ namespace Forgelight.Integration
                 instance.lightObject = lightComponent;
 
                 //Params
-                TransformData correctedTransform = MathUtils.ConvertTransform(lightData.Position, lightData.Rotation, Vector3.one, true, TransformMode.Light);
+                TransformData correctedTransform = MathUtils.ConvertTransform(lightData.Position, lightData.Rotation, Vector3.one, true, TransformMode.Standard);
 
                 instance.transform.position = correctedTransform.Position;
                 instance.transform.rotation = Quaternion.Euler(correctedTransform.Rotation);
@@ -103,7 +103,7 @@ namespace Forgelight.Integration
 
             foreach (ZoneLight zoneLight in Resources.FindObjectsOfTypeAll<ZoneLight>())
             {
-                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave)
+                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave || EditorUtility.IsPersistent(zoneLight))
                 {
                     continue;
                 }
@@ -139,14 +139,14 @@ namespace Forgelight.Integration
 
             foreach (ZoneLight zoneLight in Resources.FindObjectsOfTypeAll<ZoneLight>())
             {
-                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave)
+                if (zoneLight.hideFlags == HideFlags.NotEditable || zoneLight.hideFlags == HideFlags.HideAndDontSave || EditorUtility.IsPersistent(zoneLight))
                 {
                     continue;
                 }
 
                 Light light = new Light();
 
-                TransformData correctedTransform = MathUtils.ConvertTransform(zoneLight.transform.position, zoneLight.transform.rotation.eulerAngles, Vector3.one, false, TransformMode.Light);
+                TransformData correctedTransform = MathUtils.ConvertTransform(zoneLight.transform.position, zoneLight.transform.rotation.eulerAngles, Vector3.one, false, TransformMode.Standard);
                 light.Position = correctedTransform.Position;
                 Vector3 rotationData = correctedTransform.Rotation.ToRadians();
                 light.Rotation = new Vector4(rotationData.x, rotationData.y, rotationData.z, 1);

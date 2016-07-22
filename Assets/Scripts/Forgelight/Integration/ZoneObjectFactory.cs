@@ -73,7 +73,7 @@ namespace Forgelight.Editor
 
                     foreach (Object.Instance instance in zoneObject.Instances)
                     {
-                        TransformData correctedTransform = MathUtils.ConvertTransform(instance.Position, instance.Rotation, instance.Scale, true, TransformMode.Object);
+                        TransformData correctedTransform = MathUtils.ConvertTransform(instance.Position, instance.Rotation, instance.Scale, true, TransformMode.Standard);
 
                         CreateForgelightObject(forgelightGame, actorDef, correctedTransform.Position, Quaternion.Euler(correctedTransform.Rotation), correctedTransform.Scale, zoneObject.RenderDistance, instance.LODMultiplier, instance.DontCastShadows, instance.ID);
                     }
@@ -247,7 +247,7 @@ namespace Forgelight.Editor
 
             foreach (ZoneObject zoneObject in Resources.FindObjectsOfTypeAll<ZoneObject>())
             {
-                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave)
+                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave || EditorUtility.IsPersistent(zoneObject))
                 {
                     continue;
                 }
@@ -284,7 +284,7 @@ namespace Forgelight.Editor
 
             foreach (ZoneObject zoneObject in Resources.FindObjectsOfTypeAll<ZoneObject>())
             {
-                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave)
+                if (zoneObject.hideFlags == HideFlags.NotEditable || zoneObject.hideFlags == HideFlags.HideAndDontSave || EditorUtility.IsPersistent(zoneObject))
                 {
                     continue;
                 }
@@ -312,7 +312,7 @@ namespace Forgelight.Editor
                 {
                     Object.Instance instance = new Object.Instance();
 
-                    TransformData correctedTransform = MathUtils.ConvertTransform(zoneObject.transform.position, zoneObject.transform.rotation.eulerAngles, zoneObject.transform.localScale, false, TransformMode.Object);
+                    TransformData correctedTransform = MathUtils.ConvertTransform(zoneObject.transform.position, zoneObject.transform.rotation.eulerAngles, zoneObject.transform.localScale, false, TransformMode.Standard);
 
                     instance.Position = correctedTransform.Position;
                     instance.Rotation = correctedTransform.Rotation.ToRadians();

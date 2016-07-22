@@ -60,7 +60,7 @@ namespace Forgelight.Integration
                     case "sphere":
                         instance = GameObject.CreatePrimitive(PrimitiveType.Sphere).AddComponent<AreaObject>();
 
-                        TransformData correctedSphereTransform = MathUtils.ConvertTransform(areaDefinition.Pos1, Vector4.zero, new Vector4(areaDefinition.Radius, areaDefinition.Radius, areaDefinition.Radius), false, TransformMode.Standard);
+                        TransformData correctedSphereTransform = MathUtils.ConvertTransform(areaDefinition.Pos1, Vector4.zero, new Vector4(areaDefinition.Radius, areaDefinition.Radius, areaDefinition.Radius), false, TransformMode.Area);
                         instance.transform.position = correctedSphereTransform.Position;
                         instance.transform.rotation = Quaternion.Euler(correctedSphereTransform.Rotation);
                         instance.transform.localScale = correctedSphereTransform.Scale;
@@ -80,7 +80,7 @@ namespace Forgelight.Integration
                         Vector3 fPos = (pos1 + pos2) * 0.5f;
                         Vector4 fRot = areaDefinition.Rot;
 
-                        TransformData correctedBoxMatrix = MathUtils.ConvertTransform(fPos, fRot, fScale, true, TransformMode.Standard);
+                        TransformData correctedBoxMatrix = MathUtils.ConvertTransform(fPos, fRot, fScale, true, TransformMode.Area);
                         instance.transform.position = correctedBoxMatrix.Position;
                         instance.transform.rotation = Quaternion.Euler(correctedBoxMatrix.Rotation);
                         instance.transform.localScale = correctedBoxMatrix.Scale;

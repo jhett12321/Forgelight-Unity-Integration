@@ -49,22 +49,45 @@ namespace Forgelight.Editor.Helper
                 return;
             }
 
-            if (lightCount == 0)
+            Vector3? lightParentPos = null;
+            Vector3? objectParentPos = null;
+
+            if (lightCount > 0)
+            {
+                lightParentPos = lightCentroid / lightCount;
+                lightParent.transform.position = lightParentPos.Value;
+            }
+            else
             {
                 Object.DestroyImmediate(lightParent);
             }
 
-            if (objectCount == 0)
+            if (objectCount > 0)
+            {
+                objectParentPos = objectCentroid / objectCount;
+                objectParent.transform.position = objectParentPos.Value;
+            }
+            else
             {
                 Object.DestroyImmediate(objectParent);
             }
 
-            Vector3 lightParentPos = lightCentroid / lightCount;
-            Vector3 objectParentPos = objectCentroid/objectCount;
+            Vector3 parentCentroid = new Vector3();
+            int parentCount = 0;
 
-            lightParent.transform.position = lightParentPos;
-            objectParent.transform.position = objectParentPos;
-            mainParent.transform.position = (lightParentPos + objectParentPos) / 2;
+            if (lightParentPos.HasValue)
+            {
+                parentCentroid += lightParentPos.Value;
+                parentCount++;
+            }
+
+            if (objectParentPos != null)
+            {
+                parentCentroid += objectParentPos.Value;
+                parentCount++;
+            }
+
+            mainParent.transform.position = parentCentroid / parentCount;
 
             foreach (GameObject o in Selection.gameObjects)
             {

@@ -58,7 +58,7 @@ public class ForgelightMenu : Editor
 
         foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
         {
-            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave)
+            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave || EditorUtility.IsPersistent(cullableObject))
             {
                 continue;
             }
@@ -78,7 +78,7 @@ public class ForgelightMenu : Editor
     {
         foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
         {
-            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave)
+            if (cullableObject.hideFlags == HideFlags.NotEditable || cullableObject.hideFlags == HideFlags.HideAndDontSave || EditorUtility.IsPersistent(cullableObject))
             {
                 continue;
             }

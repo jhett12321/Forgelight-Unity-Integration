@@ -469,6 +469,7 @@ namespace Forgelight
                 //De-serialize
                 using (MemoryStream memoryStream = asset.Pack.CreateAssetMemoryStreamByName(asset.Name))
                 {
+                    lastAssetProcessed = assetName;
                     Zone zone = Zone.LoadFromStream(assetName, assetDisplayName, memoryStream);
 
                     if (zone == null)
@@ -479,7 +480,6 @@ namespace Forgelight
                     lock (listLock)
                     {
                         AvailableZones.Add(zone);
-                        lastAssetProcessed = assetName;
                     }
                 }
             }, null, null);
