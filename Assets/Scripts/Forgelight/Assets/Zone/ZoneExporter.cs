@@ -9,18 +9,22 @@ namespace Forgelight.Assets.Zone
         {
             if (ForgelightExtension.Instance.ZoneManager.LoadedZone != null)
             {
-                var path = DialogUtils.SaveFile(
+                string path = DialogUtils.SaveFile(
                     "Save zone file",
                     ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame.PackDirectory,
                     Path.GetFileNameWithoutExtension(ForgelightExtension.Instance.ZoneManager.LoadedZone.Name),
                     "zone");
 
+                if (path == null)
+                {
+                    return;
+                }
+
                 SaveZone(path);
             }
             else
             {
-                DialogUtils.DisplayDialog("Cannot save zone",
-                    "An existing zone file needs to be loaded first. Please import a zone file, then try again");
+                DialogUtils.DisplayDialog("Cannot save zone", "An existing zone file needs to be loaded first. Please import a zone file, then try again");
             }
         }
 

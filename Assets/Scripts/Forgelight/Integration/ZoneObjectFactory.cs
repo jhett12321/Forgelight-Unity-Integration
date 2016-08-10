@@ -310,6 +310,13 @@ namespace Forgelight.Editor
 
                 foreach (ZoneObject zoneObject in actorInstanceList.Value)
                 {
+                    //Make sure we don't have a parent.
+                    Transform objectParent = zoneObject.transform.parent;
+                    if (objectParent != null)
+                    {
+                        zoneObject.transform.SetParent(null);
+                    }
+
                     Object.Instance instance = new Object.Instance();
 
                     TransformData correctedTransform = MathUtils.ConvertTransform(zoneObject.transform.position, zoneObject.transform.rotation.eulerAngles, zoneObject.transform.localScale, false, TransformMode.Standard);
@@ -323,6 +330,13 @@ namespace Forgelight.Editor
                     instance.LODMultiplier = zoneObject.lodMultiplier;
 
                     zoneObj.Instances.Add(instance);
+
+                    //If we had a parent, reset our parent to the original.
+
+                    if (objectParent != null)
+                    {
+                        zoneObject.transform.SetParent(objectParent);
+                    }
                 }
 
                 zone.Objects.Add(zoneObj);

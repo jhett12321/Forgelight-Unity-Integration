@@ -73,11 +73,13 @@ namespace Forgelight.Editor.Windows
 
         private void OnGameSelected(string gameName)
         {
-            if (DialogUtils.DisplayCancelableDialog("Change Forgelight Game", "You have selected a new Forgelight game. Changing games will DESTROY all objects and terrain in the current scene, and you will lose any unsaved changes. Are you sure you wish to continue?"))
+            if (!DialogUtils.DisplayCancelableDialog("Change Forgelight Game", "You have selected a new Forgelight game. Changing games will DESTROY all objects and terrain in the current scene, and you will lose any unsaved changes. Are you sure you wish to continue?"))
             {
-                //TODO reset scene.
-                ForgelightExtension.Instance.ForgelightGameFactory.ChangeActiveForgelightGame(gameName);
+                return;
             }
+
+            ForgelightExtension.Instance.ZoneManager.DestroyActiveZone();
+            ForgelightExtension.Instance.ForgelightGameFactory.ChangeActiveForgelightGame(gameName);
         }
     }
 }
