@@ -40,6 +40,8 @@ namespace Forgelight.Editor
             }
         }
 
+        private Dictionary<string, Transform> actorParents = new Dictionary<string, Transform>();
+
         public void DestroyAllObjects()
         {
             if (parent != null)
@@ -215,8 +217,17 @@ namespace Forgelight.Editor
             instance.transform.rotation = rotation;
             instance.transform.localScale = scale;
 
+            //We attach ourselves to a common parent to improve undo performance.
+            if (!actorParents.ContainsKey(actorDef.Name))
+            {
+                GameObject actorParent = new GameObject(actorDef.Name);
+                actorParent.transform.SetParent(Parent, false);
+
+                actorParents[actorDef.Name] = actorParent.transform;
+            }
+
             //Attach ourselves to the master object parent.
-            instance.transform.parent = Parent;
+            instance.transform.parent = actorParents[actorDef.Name];
 
             //Attach our ZoneObject script, and update its variables
             ZoneObject zoneObject = instance.GetComponent<ZoneObject>();
