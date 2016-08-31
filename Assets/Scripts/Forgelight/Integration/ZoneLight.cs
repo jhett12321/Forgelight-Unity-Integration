@@ -37,7 +37,7 @@ public class ZoneLight : CullableObject
     {
         if (lightObject == null)
         {
-            return;
+            lightObject = GetComponent<Light>() ?? gameObject.AddComponent<Light>();
         }
 
         switch (Type)
@@ -48,11 +48,6 @@ public class ZoneLight : CullableObject
             case LightType.Spotlight:
                 lightObject.type = UnityEngine.LightType.Spot;
                 break;
-        }
-
-        if (lightObject == null)
-        {
-            return;
         }
 
         lightObject.range = Range;

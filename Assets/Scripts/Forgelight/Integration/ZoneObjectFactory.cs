@@ -47,11 +47,15 @@ namespace Forgelight.Editor
             if (parent != null)
             {
                 UnityEngine.Object.DestroyImmediate(parent.gameObject);
+                parent = null;
             }
             else
             {
                 UnityEngine.Object.DestroyImmediate(GameObject.FindGameObjectWithTag("ForgelightZoneObjects"));
             }
+
+            //Cleanup any null references we may hold to old actor parents.
+            actorParents.Clear();
         }
 
         public void LoadZoneObjects(ForgelightGame forgelightGame, string zoneName, List<Object> objects, float progressMin, float progressMax)

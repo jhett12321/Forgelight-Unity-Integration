@@ -13,25 +13,25 @@ using UnityEngine;
 public class ForgelightMenu : Editor
 {
     #region Windows
-    [MenuItem("Forgelight/Windows/Create", false, 10000)]
+    [MenuItem("Forgelight/Windows/Create %&c", false, 10000)]
     public static void CreateWindow()
     {
         Create.Init();
     }
 
-    [MenuItem("Forgelight/Windows/Games", false, 10001)]
+    [MenuItem("Forgelight/Windows/Games %&g", false, 10001)]
     public static void GamesWindow()
     {
         ForgelightGameSelect.Init();
     }
 
-    [MenuItem("Forgelight/Windows/Zones", false, 10002)]
+    [MenuItem("Forgelight/Windows/Zones %&z", false, 10002)]
     public static void ZonesWindow()
     {
         ZoneLoader.Init();
     }
 
-    [MenuItem("Forgelight/Windows/Areas", false, 10003)]
+    [MenuItem("Forgelight/Windows/Areas %&a", false, 10003)]
     public static void AreasWindow()
     {
         AreaLoader.Init();
@@ -48,7 +48,7 @@ public class ForgelightMenu : Editor
     #endregion
 
     #region Draw
-    [MenuItem("Forgelight/Draw/Cull World from Current Position", false, 10004)]
+    [MenuItem("Forgelight/Draw/Cull World from Current Position %g", false, 10004)]
     public static void CullWorld()
     {
         ResetCulling(); //Make sure we have not already culled the world.
@@ -73,7 +73,7 @@ public class ForgelightMenu : Editor
         }
     }
 
-    [MenuItem("Forgelight/Draw/Draw All", false, 10050)]
+    [MenuItem("Forgelight/Draw/Draw All %#g", false, 10050)]
     public static void ResetCulling()
     {
         foreach (CullableObject cullableObject in Resources.FindObjectsOfTypeAll<CullableObject>())
@@ -87,17 +87,17 @@ public class ForgelightMenu : Editor
         }
     }
 
-    [MenuItem("Forgelight/Draw/Hide Terrain", false, 10051)]
-    public static void HideTerrain()
-    {
+    //[MenuItem("Forgelight/Draw/Hide Terrain", false, 10051)]
+    //public static void HideTerrain()
+    //{
 
-    }
+    //}
 
-    [MenuItem("Forgelight/Draw/Hide Objects", false, 10052)]
-    public static void HideObjects()
-    {
+    //[MenuItem("Forgelight/Draw/Hide Objects", false, 10052)]
+    //public static void HideObjects()
+    //{
 
-    }
+    //}
 
     [MenuItem("Forgelight/Draw/Cull Settings", false, 10100)]
     public static void CullSettings()
