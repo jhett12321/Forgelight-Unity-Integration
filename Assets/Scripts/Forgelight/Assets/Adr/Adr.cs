@@ -2,6 +2,7 @@
 using System.IO;
 using System.Xml;
 using System.Xml.Linq;
+using UnityEngine;
 
 namespace Forgelight.Assets.Adr
 {
@@ -57,7 +58,15 @@ namespace Forgelight.Assets.Adr
             {
                 if (child.Name == "Base")
                 {
-                    adr.Base = child.Attribute("fileName").Value;
+                    XAttribute attribute = child.Attribute("fileName");
+
+                    if (attribute == null)
+                    {
+                        Debug.LogWarning("Actor " + adr.Name + " has an invalid Base definition. This actor may not display correctly.");
+                        continue;
+                    }
+
+                    adr.Base = attribute.Value;
                 }
 
                 else if (child.Name == "Lods")

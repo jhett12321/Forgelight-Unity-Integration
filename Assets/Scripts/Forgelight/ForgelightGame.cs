@@ -210,7 +210,6 @@ namespace Forgelight
         public void ImportTerrain(float progress0, float progress100)
         {
             int chunksProcessed = 0;
-            int texturesProcessed = 0;
             string assetProcessing = "";
 
             //CNK0 (Geo)
@@ -254,6 +253,8 @@ namespace Forgelight
             //CNK1 (Geo)
             List<AssetRef> terrainAssetsCnk1 = AssetsByType[AssetRef.Types.CNK1];
 
+            object texLock = new object();
+
             Parallel.AsyncForEach<AssetRef> parallelTask = System.Threading.Tasks.Parallel.ForEach;
             IAsyncResult result = parallelTask.BeginInvoke(terrainAssetsCnk1, asset =>
             {
@@ -276,40 +277,20 @@ namespace Forgelight
                     if (chunk != null)
                     {
                         ChunkExporter.ExportChunk(this, chunk, ResourceDirectory + "/Terrain");
+
+                        lock (texLock)
+                        {
+                            ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
+                        }
                     }
 
                     assetProcessing = assetName;
                 }
             }, null, null);
 
-            //CNK1 (Textures)
-            foreach (AssetRef asset in terrainAssetsCnk1)
-            {
-                texturesProcessed++;
-
-                //Names
-                string assetName = asset.Name;
-                string assetDisplayName = BuildAssetName(assetName, asset.Pack.Name);
-
-                //De-serialize
-                using (MemoryStream terrainMemoryStream = asset.Pack.CreateAssetMemoryStreamByName(assetName))
-                {
-                    CnkLOD chunk = CnkLOD.LoadFromStream(assetName, assetDisplayName, terrainMemoryStream);
-
-                    if (chunk != null)
-                    {
-                        ChunkExporter.ExportTextures(this, chunk, ResourceDirectory + "/Terrain");
-                    }
-
-                    assetProcessing = assetName;
-
-                    ProgressBar(MathUtils.Remap01((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
-                }
-            }
-
             while (!result.IsCompleted)
             {
-                ProgressBar(MathUtils.Remap01((texturesProcessed + chunksProcessed) / ((float)terrainAssetsCnk1.Count * 2), progress0, progress100), "Exporting Chunk: " + assetProcessing);
+                ProgressBar(MathUtils.Remap01((float)chunksProcessed / terrainAssetsCnk1.Count, progress0, progress100), "Exporting Chunk: " + assetProcessing);
             }
 
             parallelTask.EndInvoke(result);

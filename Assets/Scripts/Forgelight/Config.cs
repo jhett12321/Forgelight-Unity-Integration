@@ -79,6 +79,15 @@ namespace Forgelight
             WriteStateToDisk();
         }
 
+        public void DeleteForgelightGame(ForgelightGame forgelightGame)
+        {
+            CheckExtensionState();
+
+            extensionState["forgelight_games"][forgelightGame.Name].Remove();
+
+            WriteStateToDisk();
+        }
+
         public void UpdateForgelightGame(ForgelightGame forgelightGame, bool isActive)
         {
             CheckExtensionState();

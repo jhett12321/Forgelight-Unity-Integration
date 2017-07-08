@@ -68,6 +68,13 @@ namespace Forgelight
 
             ForgelightGame forgelightGame = new ForgelightGame(name, packDirectory, resourceDirectory);
 
+            if (!Directory.Exists(resourceDirectory))
+            {
+                Debug.LogError("Could not find directory for game " + name + "!\n" +
+                               "Please update Assets/Forgelight/state.json to the correct path, or remove the game from the file if it no-longer exists.");
+                return;
+            }
+
             forgelightGame.LoadPackFiles(0.0f, 0.7f);
             forgelightGame.InitializeMaterialDefinitionManager();
             forgelightGame.UpdateActors(0.7f, 0.8f);
