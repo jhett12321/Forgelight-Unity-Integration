@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Xml.XPath;
-using Forgelight.Utils.Cryptography;
-
-namespace Forgelight.Assets.Dma
+﻿namespace ForgelightUnity.Forgelight.Assets.Dma
 {
+    using System.Collections.Generic;
+    using System.Xml.XPath;
+    using Utils.Cryptography;
+
     public class MaterialDefinition
     {
         #region Structure

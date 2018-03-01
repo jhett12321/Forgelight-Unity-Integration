@@ -1,22 +1,23 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using Forgelight.Assets;
-using Forgelight.Assets.Adr;
-using Forgelight.Assets.Areas;
-using Forgelight.Assets.Cnk;
-using Forgelight.Assets.Dma;
-using Forgelight.Assets.Dme;
-using Forgelight.Assets.Zone;
-using Forgelight.Pack;
-using UnityEditor;
-using Debug = UnityEngine.Debug;
-using MathUtils = Forgelight.Utils.MathUtils;
-
-namespace Forgelight
+﻿namespace ForgelightUnity.Forgelight
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Threading;
+    using Assets;
+    using Assets.Adr;
+    using Assets.Areas;
+    using Assets.Cnk;
+    using Assets.Dma;
+    using Assets.Dme;
+    using Assets.Pack;
+    using Assets.Zone;
+    using UnityEditor;
+    using UnityEngine;
+    using Utils;
+    using MathUtils = Utils.MathUtils;
+
     public class ForgelightGame
     {
         //Info
@@ -30,12 +31,12 @@ namespace Forgelight
         public List<Asset> AvailableAreaDefinitions { get; private set; }
 
         //Data
-        public List<Pack.Pack> Packs { get; private set; }
+        public List<Pack> Packs { get; private set; }
         public ConcurrentDictionary<AssetRef.Types, List<AssetRef>> AssetsByType { get; private set; }
         public MaterialDefinitionManager MaterialDefinitionManager { get; private set; }
 
         // Internal cache to check whether a pack has already been loaded
-        private ConcurrentDictionary<string, Pack.Pack> packLookupCache = new ConcurrentDictionary<string, Pack.Pack>();
+        private ConcurrentDictionary<string, Pack> packLookupCache = new ConcurrentDictionary<string, Pack>();
 
         //Progress
         private float lastProgress;
@@ -47,7 +48,7 @@ namespace Forgelight
             PackDirectory = packDirectory;
             ResourceDirectory = resourceDirectory;
 
-            Packs = new List<Pack.Pack>();
+            Packs = new List<Pack>();
             AssetsByType = new ConcurrentDictionary<AssetRef.Types, List<AssetRef>>();
 
             foreach (Enum type in Enum.GetValues(typeof(AssetRef.Types)))
@@ -105,11 +106,11 @@ namespace Forgelight
 
         public void LoadPack(string path)
         {
-            Pack.Pack pack;
+            Pack pack;
 
             if (!packLookupCache.TryGetValue(path, out pack))
             {
-                pack = Pack.Pack.LoadBinary(path);
+                pack = Pack.LoadBinary(path);
 
                 if (pack != null)
                 {
@@ -133,7 +134,7 @@ namespace Forgelight
                 Debug.LogError("Asset Name is null");
             }
 
-            foreach (Pack.Pack pack in Packs)
+            foreach (Pack pack in Packs)
             {
                 if (pack == null)
                 {

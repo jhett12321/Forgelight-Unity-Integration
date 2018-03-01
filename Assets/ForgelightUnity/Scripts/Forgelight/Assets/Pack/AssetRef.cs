@@ -1,10 +1,10 @@
-﻿using System;
-using System.IO;
-using Forgelight.Utils;
-using UnityEngine;
-
-namespace Forgelight.Pack
+﻿namespace ForgelightUnity.Forgelight.Assets.Pack
 {
+    using System;
+    using System.IO;
+    using UnityEngine;
+    using Utils;
+
     public class AssetRef
     {
         public enum Types

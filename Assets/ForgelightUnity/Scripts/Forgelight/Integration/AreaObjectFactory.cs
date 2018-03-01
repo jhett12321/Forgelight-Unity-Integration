@@ -1,17 +1,16 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-using Forgelight.Attributes;
-using Forgelight.Assets.Areas;
-using Forgelight.Utils;
-using UnityEditor;
-using UnityEngine;
-using UnityEngine.Rendering;
-using MathUtils = Forgelight.Utils.MathUtils;
-
-namespace Forgelight.Integration
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Security.Cryptography;
+    using System.Text;
+    using Assets.Areas;
+    using UnityEditor;
+    using UnityEngine;
+    using UnityEngine.Rendering;
+    using Utils;
+    using MathUtils = Utils.MathUtils;
+
     public class AreaObjectFactory
     {
         private Dictionary<Color, Material> cachedMaterials = new Dictionary<Color, Material>();

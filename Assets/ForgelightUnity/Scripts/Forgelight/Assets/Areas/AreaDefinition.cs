@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-
-namespace Forgelight.Assets.Areas
+﻿namespace ForgelightUnity.Forgelight.Assets.Areas
 {
+    using System.Collections.Generic;
+    using UnityEngine;
+
     public class AreaDefinition
     {
         //Common

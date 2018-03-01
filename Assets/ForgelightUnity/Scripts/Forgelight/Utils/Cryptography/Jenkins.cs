@@ -1,4 +1,4 @@
-﻿namespace Forgelight.Utils.Cryptography
+﻿namespace ForgelightUnity.Forgelight.Utils.Cryptography
 {
     public class Jenkins
     {

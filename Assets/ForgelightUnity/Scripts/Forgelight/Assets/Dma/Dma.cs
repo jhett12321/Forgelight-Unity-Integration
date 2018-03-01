@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
-
-namespace Forgelight.Assets.Dma
+﻿namespace ForgelightUnity.Forgelight.Assets.Dma
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using UnityEngine;
+
     public static class Dma
     {
         public static void LoadFromStream(Stream stream, ICollection<string> textures, ICollection<Material> materials)

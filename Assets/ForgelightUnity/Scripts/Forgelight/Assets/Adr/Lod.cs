@@ -1,4 +1,4 @@
-﻿namespace Forgelight.Assets.Adr
+﻿namespace ForgelightUnity.Forgelight.Assets.Adr
 {
     public struct Lod
     {

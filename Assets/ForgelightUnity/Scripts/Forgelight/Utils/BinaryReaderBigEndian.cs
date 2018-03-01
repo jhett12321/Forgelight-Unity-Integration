@@ -1,8 +1,8 @@
-﻿using System;
-using System.IO;
-
-namespace Forgelight.Utils
+﻿namespace ForgelightUnity.Forgelight.Utils
 {
+    using System;
+    using System.IO;
+
     public class BinaryReaderBigEndian : BinaryReader
     {
         public BinaryReaderBigEndian(Stream stream)

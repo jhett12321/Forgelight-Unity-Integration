@@ -1,4 +1,4 @@
-﻿namespace Forgelight.Assets.Dme
+﻿namespace ForgelightUnity.Forgelight.Assets.Dme
 {
     public enum ModelType
     {

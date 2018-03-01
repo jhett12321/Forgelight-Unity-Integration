@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.XPath;
-using Forgelight.Utils.Cryptography;
-
-namespace Forgelight.Assets.Dme
+﻿namespace ForgelightUnity.Forgelight.Assets.Dme
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Xml.XPath;
+    using Utils.Cryptography;
+
     public class VertexLayout
     {
         public class Entry

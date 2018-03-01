@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using ImageMagick;
-using UnityEngine;
-
-namespace Forgelight.Assets.Cnk
+﻿namespace ForgelightUnity.Forgelight.Assets.Cnk
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using ImageMagick;
+    using UnityEngine;
+
     public class ChunkExporter
     {
         public static void ExportChunk(ForgelightGame forgelightGame, CnkLOD chunk, string directory)

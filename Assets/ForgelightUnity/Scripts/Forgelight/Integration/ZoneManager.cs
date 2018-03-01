@@ -1,13 +1,12 @@
-﻿using System.IO;
-using Forgelight.Assets;
-using Forgelight.Assets.Areas;
-using Forgelight.Assets.Zone;
-using Forgelight.Integration;
-using UnityEditor;
-using UnityEngine;
-
-namespace Forgelight.Editor
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using System.IO;
+    using Assets;
+    using Assets.Areas;
+    using Assets.Zone;
+    using UnityEditor;
+    using UnityEngine;
+
     public class ZoneManager
     {
         public Zone LoadedZone { get; private set; }

@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-
-namespace Forgelight.Utils
+﻿namespace ForgelightUnity.Forgelight.Utils
 {
+    using UnityEngine;
+
     public enum TransformMode
     {
         Standard,

@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using Forgelight.Assets.Dma;
-using UnityEngine;
-
-namespace Forgelight.Assets.Dme
+﻿namespace ForgelightUnity.Forgelight.Assets.Dme
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.IO;
+    using Dma;
+    using UnityEngine;
+
     public class ModelExporter
     {
         public static void ExportModel(ForgelightGame forgelightGame, Model model, string directory)

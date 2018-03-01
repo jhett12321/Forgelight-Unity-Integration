@@ -1,16 +1,15 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
-using System.IO;
-using Forgelight.Attributes;
-using Forgelight.Assets.Adr;
-using Forgelight.Assets.Zone;
-using Forgelight.Utils;
-using UnityEditor;
-using Object = Forgelight.Assets.Zone.Object;
-using MathUtils = Forgelight.Utils.MathUtils;
-
-namespace Forgelight.Editor
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using Assets.Adr;
+    using Assets.Zone;
+    using UnityEditor;
+    using UnityEngine;
+    using Utils;
+    using MathUtils = Utils.MathUtils;
+    using Object = Assets.Zone.Object;
+
     public class ZoneObjectFactory
     {
         private const float cullPower = 5.0f;

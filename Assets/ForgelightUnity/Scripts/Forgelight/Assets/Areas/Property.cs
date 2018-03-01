@@ -1,7 +1,7 @@
-﻿using System.Xml.Linq;
-
-namespace Forgelight.Assets.Areas
+﻿namespace ForgelightUnity.Forgelight.Assets.Areas
 {
+    using System.Xml.Linq;
+
     public class Property
     {
         public string ID;

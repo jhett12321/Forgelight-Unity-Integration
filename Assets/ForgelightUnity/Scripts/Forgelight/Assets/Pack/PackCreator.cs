@@ -3,17 +3,17 @@
 *  Copyright (c) 2015 psemu                                                   *
 ******************************************************************************/
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Forgelight.Utils;
-using Forgelight.Utils.Cryptography;
-using MiscUtil.Conversion;
-using MiscUtil.IO;
-
-namespace Forgelight.Pack
+namespace ForgelightUnity.Forgelight.Assets.Pack
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Text;
+    using MiscUtil.Conversion;
+    using MiscUtil.IO;
+    using Utils;
+    using Utils.Cryptography;
+
     public class PackCreator
     {
         private class FileHeader

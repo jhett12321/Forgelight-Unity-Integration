@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
-using Forgelight.Assets;
-using Forgelight.Assets.Zone;
-using Forgelight.Utils;
-using UnityEditor;
-using UnityEngine;
-
-namespace Forgelight.Editor.Windows
+﻿namespace ForgelightUnity.Editor.Windows
 {
+    using System.Collections.Generic;
+    using Forgelight;
+    using Forgelight.Assets;
+    using Forgelight.Assets.Zone;
+    using Forgelight.Utils;
+    using UnityEditor;
+    using UnityEngine;
+
     public class ZoneLoader : EditorWindow
     {
         private string searchString = "";

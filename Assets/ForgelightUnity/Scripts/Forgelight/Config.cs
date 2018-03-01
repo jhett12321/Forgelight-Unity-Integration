@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Newtonsoft.Json.Linq;
-using UnityEngine;
-
-namespace Forgelight
+﻿namespace ForgelightUnity.Forgelight
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using Newtonsoft.Json.Linq;
+    using UnityEngine;
+
     public class Config
     {
         public static string StatePath

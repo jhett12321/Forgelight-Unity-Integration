@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Assets.Scripts.Forgelight.Utils;
-using UnityEngine;
-
-namespace Forgelight.Assets.Zone
+﻿namespace ForgelightUnity.Forgelight.Assets.Zone
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using UnityEngine;
+    using Utils;
+
     public class Eco
     {
         #region Structure

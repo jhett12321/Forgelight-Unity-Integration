@@ -1,4 +1,4 @@
-﻿namespace Forgelight.Assets.Cnk
+﻿namespace ForgelightUnity.Forgelight.Assets.Cnk
 {
     public enum ChunkType
     {

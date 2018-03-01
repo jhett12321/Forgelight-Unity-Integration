@@ -1,7 +1,7 @@
-﻿using System.IO;
-
-namespace Forgelight.Assets.Dme
+﻿namespace ForgelightUnity.Forgelight.Assets.Dme
 {
+    using System.IO;
+
     public class BoneMapEntry
     {
         #region Structure

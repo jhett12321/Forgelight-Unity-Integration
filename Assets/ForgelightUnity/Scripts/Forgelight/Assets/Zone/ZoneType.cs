@@ -1,4 +1,4 @@
-﻿namespace Forgelight.Assets.Zone
+﻿namespace ForgelightUnity.Forgelight.Assets.Zone
 {
     public enum ZoneType
     {

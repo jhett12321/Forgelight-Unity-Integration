@@ -1,14 +1,14 @@
-﻿using Forgelight.Attributes;
-using Forgelight.Editor;
-using Forgelight.Assets.Zone;
-using Newtonsoft.Json.Linq;
-using UnityEditor;
-using UnityEditor.SceneManagement;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-
-namespace Forgelight
+﻿namespace ForgelightUnity.Forgelight
 {
+    using Assets.Zone;
+    using Attributes;
+    using Integration;
+    using Newtonsoft.Json.Linq;
+    using UnityEditor;
+    using UnityEditor.SceneManagement;
+    using UnityEngine;
+    using UnityEngine.SceneManagement;
+
     [InitializeOnLoad]
     public class ForgelightExtension
     {

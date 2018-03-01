@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Xml;
-using System.Xml.Linq;
-using UnityEngine;
-
-namespace Forgelight.Assets.Adr
+﻿namespace ForgelightUnity.Forgelight.Assets.Adr
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Xml;
+    using System.Xml.Linq;
+    using UnityEngine;
+
     public class Adr : Asset
     {
         /// <summary>

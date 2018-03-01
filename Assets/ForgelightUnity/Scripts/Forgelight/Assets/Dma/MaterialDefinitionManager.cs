@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Xml.XPath;
-using Forgelight.Assets.Dme;
-
-namespace Forgelight.Assets.Dma
+﻿namespace ForgelightUnity.Forgelight.Assets.Dma
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Xml.XPath;
+    using Dme;
+
     public class MaterialDefinitionManager
     {
         public Dictionary<uint, MaterialDefinition> MaterialDefinitions { get; private set; }

@@ -1,9 +1,9 @@
-﻿using System.IO;
-using Assets.Scripts.Forgelight.Utils;
-using UnityEngine;
-
-namespace Forgelight.Assets.Zone
+﻿namespace ForgelightUnity.Forgelight.Assets.Zone
 {
+    using System.IO;
+    using UnityEngine;
+    using Utils;
+
     public enum LightType
     {
         Pointlight = 1,

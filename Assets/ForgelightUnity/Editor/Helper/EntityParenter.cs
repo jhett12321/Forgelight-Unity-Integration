@@ -1,8 +1,9 @@
-﻿using UnityEditor;
-using UnityEngine;
-
-namespace Forgelight.Editor.Helper
+﻿namespace ForgelightUnity.Editor.Helper
 {
+    using Forgelight.Integration;
+    using UnityEditor;
+    using UnityEngine;
+
     public class EntityParenter
     {
         private EntityParenter() {}

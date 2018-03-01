@@ -1,7 +1,7 @@
-﻿using UnityEngine;
-
-namespace Forgelight.Attributes
+﻿namespace ForgelightUnity.Forgelight.Attributes
 {
+    using UnityEngine;
+
     /// <summary>
     /// A component added to terrain, and zone objects to indicate they are cullable.
     /// </summary>

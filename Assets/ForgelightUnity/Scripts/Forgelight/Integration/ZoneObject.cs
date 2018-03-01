@@ -1,10 +1,9 @@
-﻿using System.Collections.Generic;
-using Forgelight.Attributes;
-using UnityEngine;
-using UnityEngine.Rendering;
-
-namespace Forgelight.Editor
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using Attributes;
+    using UnityEngine;
+    using UnityEngine.Rendering;
+
     [ExecuteInEditMode]
     [SelectionBase]
     public class ZoneObject : CullableObject

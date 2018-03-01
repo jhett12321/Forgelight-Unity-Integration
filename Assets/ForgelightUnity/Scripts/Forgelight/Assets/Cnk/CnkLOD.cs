@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using LzhamWrapper;
-using UnityEngine;
-
-namespace Forgelight.Assets.Cnk
+﻿namespace ForgelightUnity.Forgelight.Assets.Cnk
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using LzhamWrapper;
+    using UnityEngine;
+
     public class CnkLOD : Asset
     {
         public override string Name { get; protected set; }

@@ -1,8 +1,8 @@
-﻿using System.IO;
-using UnityEditor;
-
-namespace Forgelight.Utils
+﻿namespace ForgelightUnity.Forgelight.Utils
 {
+    using System.IO;
+    using UnityEditor;
+
     public class ValidationResult
     {
         public bool result;

@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
-using Forgelight.Utils;
-using UnityEditor;
-using UnityEngine;
-
-namespace Forgelight.Editor.Windows
+﻿namespace ForgelightUnity.Editor.Windows
 {
+    using System.Collections.Generic;
+    using Forgelight;
+    using Forgelight.Utils;
+    using UnityEditor;
+    using UnityEngine;
+
     public class ForgelightGameSelect : EditorWindow
     {
         private string selectedGame;

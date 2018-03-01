@@ -1,8 +1,8 @@
-﻿using System.Xml.XPath;
-using Forgelight.Utils.Cryptography;
-
-namespace Forgelight.Assets.Dma
+﻿namespace ForgelightUnity.Forgelight.Assets.Dma
 {
+    using System.Xml.XPath;
+    using Utils.Cryptography;
+
     public class DrawStyle
     {
         #region Structure

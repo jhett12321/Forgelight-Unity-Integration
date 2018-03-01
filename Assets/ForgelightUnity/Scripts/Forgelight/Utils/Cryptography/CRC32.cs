@@ -3,10 +3,10 @@
 *  Copyright (c) 2015 psemu                                                   *
 ******************************************************************************/
 
-using System.Security.Cryptography;
-
-namespace Forgelight.Utils.Cryptography
+namespace ForgelightUnity.Forgelight.Utils.Cryptography
 {
+    using System.Security.Cryptography;
+
     public class Crc32 : HashAlgorithm
     {
         public const uint DefaultPolynomial = 0xedb88320;

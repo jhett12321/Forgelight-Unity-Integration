@@ -1,93 +1,96 @@
-﻿using System.IO;
-using UnityEditor;
-using UnityEngine;
-
-public class ObjectImportSettingsOverride : AssetPostprocessor
+﻿namespace ForgelightUnity.Editor
 {
-    private const string bumpMatch = "bump ";
-    private const string specMatch = "map_Ns ";
+    using System.IO;
+    using UnityEditor;
+    using UnityEngine;
 
-    public void OnPostprocessModel(GameObject gameObject)
+    public class ObjectImportSettingsOverride : AssetPostprocessor
     {
-        //Forgelight Models
-        if (assetPath.Contains("Models"))
+        private const string bumpMatch = "bump ";
+        private const string specMatch = "map_Ns ";
+
+        public void OnPostprocessModel(GameObject gameObject)
         {
-            foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
+            //Forgelight Models
+            if (assetPath.Contains("Models"))
             {
-                Material sharedMaterial = renderer.sharedMaterial;
-                sharedMaterial.shader = Shader.Find("Custom/ForgelightModel");
-
-                if (assetPath == null || sharedMaterial.mainTexture == null)
+                foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
                 {
-                    return;
-                }
+                    Material sharedMaterial = renderer.sharedMaterial;
+                    sharedMaterial.shader = Shader.Find("Custom/ForgelightModel");
 
-                string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(sharedMaterial.mainTexture.name) + ".mtl");
-
-                if (File.Exists(mtlFilePath))
-                {
-                    string[] mtlDefs = File.ReadAllLines(mtlFilePath);
-
-                    foreach (string mtlDef in mtlDefs)
+                    if (assetPath == null || sharedMaterial.mainTexture == null)
                     {
-                        ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
+                        return;
+                    }
+
+                    string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(sharedMaterial.mainTexture.name) + ".mtl");
+
+                    if (File.Exists(mtlFilePath))
+                    {
+                        string[] mtlDefs = File.ReadAllLines(mtlFilePath);
+
+                        foreach (string mtlDef in mtlDefs)
+                        {
+                            ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
+                        }
+                    }
+                }
+            }
+
+            else if (assetPath.Contains("Terrain"))
+            {
+                foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
+                {
+                    Material sharedMaterial = renderer.sharedMaterial;
+                    sharedMaterial.shader = Shader.Find("Custom/ForgelightTerrain");
+
+                    if (assetPath == null || sharedMaterial.mainTexture == null)
+                    {
+                        return;
+                    }
+
+                    string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(assetPath) + ".mtl");
+
+                    if (File.Exists(mtlFilePath))
+                    {
+                        string[] mtlDefs = File.ReadAllLines(mtlFilePath);
+
+                        foreach (string mtlDef in mtlDefs)
+                        {
+                            ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
+                        }
                     }
                 }
             }
         }
 
-        else if (assetPath.Contains("Terrain"))
+        private void ProcessMaterialDef(string basePath, Material sharedMaterial, string mtlDef)
         {
-            foreach (Renderer renderer in gameObject.GetComponentsInChildren<Renderer>())
+            if (mtlDef.Contains(bumpMatch))
             {
-                Material sharedMaterial = renderer.sharedMaterial;
-                sharedMaterial.shader = Shader.Find("Custom/ForgelightTerrain");
+                string bumpMap = mtlDef.Replace(bumpMatch, "");
+                string path = basePath + bumpMap;
 
-                if (assetPath == null || sharedMaterial.mainTexture == null)
+                Texture texture = (Texture)AssetDatabase.LoadAssetAtPath(path, typeof(Texture));
+
+                if (texture != null)
                 {
-                    return;
-                }
-
-                string mtlFilePath = Path.GetFullPath(Directory.GetParent(assetPath).FullName + "/" + Path.GetFileNameWithoutExtension(assetPath) + ".mtl");
-
-                if (File.Exists(mtlFilePath))
-                {
-                    string[] mtlDefs = File.ReadAllLines(mtlFilePath);
-
-                    foreach (string mtlDef in mtlDefs)
-                    {
-                        ProcessMaterialDef(Path.GetDirectoryName(AssetDatabase.GetAssetPath(sharedMaterial.mainTexture)) + "/", sharedMaterial, mtlDef);
-                    }
+                    sharedMaterial.SetTexture("_BumpMap", texture);
                 }
             }
-        }
-    }
 
-    private void ProcessMaterialDef(string basePath, Material sharedMaterial, string mtlDef)
-    {
-        if (mtlDef.Contains(bumpMatch))
-        {
-            string bumpMap = mtlDef.Replace(bumpMatch, "");
-            string path = basePath + bumpMap;
-
-            Texture texture = (Texture)AssetDatabase.LoadAssetAtPath(path, typeof(Texture));
-
-            if (texture != null)
+            else if (mtlDef.Contains(specMatch))
             {
-                sharedMaterial.SetTexture("_BumpMap", texture);
-            }
-        }
+                string packedSpec = mtlDef.Replace(specMatch, "");
+                string path = basePath + packedSpec;
 
-        else if (mtlDef.Contains(specMatch))
-        {
-            string packedSpec = mtlDef.Replace(specMatch, "");
-            string path = basePath + packedSpec;
+                Texture texture = (Texture)AssetDatabase.LoadAssetAtPath(path, typeof(Texture));
 
-            Texture texture = (Texture)AssetDatabase.LoadAssetAtPath(path, typeof(Texture));
-
-            if (texture != null)
-            {
-                sharedMaterial.SetTexture("_PackedSpecular", texture);
+                if (texture != null)
+                {
+                    sharedMaterial.SetTexture("_PackedSpecular", texture);
+                }
             }
         }
     }

@@ -1,8 +1,8 @@
-﻿using System.IO;
-using System.Text;
-
-namespace Assets.Scripts.Forgelight.Utils
+﻿namespace ForgelightUnity.Forgelight.Utils
 {
+    using System.IO;
+    using System.Text;
+
     public static class BinaryReaderUtils
     {
         public static string ReadNullTerminatedString(this BinaryReader binaryReader)

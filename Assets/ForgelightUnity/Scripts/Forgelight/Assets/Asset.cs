@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace Forgelight.Assets
+﻿namespace ForgelightUnity.Forgelight.Assets
 {
+    using System;
+
     public abstract class Asset : IComparable
     {
         /// <summary>

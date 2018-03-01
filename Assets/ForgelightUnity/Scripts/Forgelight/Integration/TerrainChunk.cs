@@ -1,8 +1,7 @@
-﻿using Forgelight.Attributes;
-using UnityEngine;
-
-namespace Forgelight.Integration
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using Attributes;
+
     public class TerrainChunk : CullableObject
     {}
 }

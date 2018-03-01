@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using Forgelight.Utils;
-
-namespace Forgelight.Pack
+﻿namespace ForgelightUnity.Forgelight.Assets.Pack
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using Utils;
+
     public class Pack
     {
         public string Path { get; private set; }

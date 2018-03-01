@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-
-public class Parallel
+﻿namespace ForgelightUnity.Forgelight.Utils
 {
-    public static int NumberOfParallelTasks;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
-    static Parallel()
+    public class Parallel
     {
-        NumberOfParallelTasks = Environment.ProcessorCount;
+        public static int NumberOfParallelTasks;
+
+        static Parallel()
+        {
+            NumberOfParallelTasks = Environment.ProcessorCount;
+        }
+
+
+
+        public delegate ParallelLoopResult AsyncForEach<T>(IEnumerable<T> enumerable, Action<T> action);
     }
-
-
-
-    public delegate System.Threading.Tasks.ParallelLoopResult AsyncForEach<T>(IEnumerable<T> enumerable, Action<T> action);
 }

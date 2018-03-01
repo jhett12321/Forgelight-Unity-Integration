@@ -1,14 +1,14 @@
-﻿using System.Collections.Generic;
-using Forgelight.Assets.Zone;
-using Forgelight.Utils;
-using UnityEditor;
-using UnityEngine;
-using Light = Forgelight.Assets.Zone.Light;
-using MathUtils = Forgelight.Utils.MathUtils;
-using Object = UnityEngine.Object;
-
-namespace Forgelight.Integration
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using System.Collections.Generic;
+    using Assets.Zone;
+    using UnityEditor;
+    using UnityEngine;
+    using Utils;
+    using Light = Assets.Zone.Light;
+    using MathUtils = Utils.MathUtils;
+    using Object = UnityEngine.Object;
+
     public class ZoneLightFactory
     {
         private HashSet<long> usedIDs = new HashSet<long>();

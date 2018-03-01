@@ -1,10 +1,10 @@
-﻿using System.IO;
-using Forgelight.Utils;
-using Newtonsoft.Json.Linq;
-using UnityEngine;
-
-namespace Forgelight
+﻿namespace ForgelightUnity.Forgelight
 {
+    using System.IO;
+    using Newtonsoft.Json.Linq;
+    using UnityEngine;
+    using Utils;
+
     public class ForgelightGameFactory
     {
         //Active Forgelight Game

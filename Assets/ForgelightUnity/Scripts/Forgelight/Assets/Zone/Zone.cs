@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using UnityEngine;
-
-namespace Forgelight.Assets.Zone
+﻿namespace ForgelightUnity.Forgelight.Assets.Zone
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using UnityEngine;
+
     public class Zone : Asset
     {
         public override string Name { get; protected set; }

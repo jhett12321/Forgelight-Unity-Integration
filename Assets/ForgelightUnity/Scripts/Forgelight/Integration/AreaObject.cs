@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
-using Forgelight.Attributes;
-
-namespace Forgelight.Integration
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using System.Collections.Generic;
+    using Attributes;
+    using UnityEngine;
+
     public class AreaObject : CullableObject
     {
         //Common

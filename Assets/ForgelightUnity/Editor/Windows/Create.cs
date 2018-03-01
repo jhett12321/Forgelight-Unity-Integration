@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
-using Forgelight.Assets;
-using Forgelight.Editor.DraggableObjects;
-using Forgelight.Assets.Adr;
-using UnityEditor;
-using UnityEngine;
-using Object = UnityEngine.Object;
-
-namespace Forgelight.Editor.Windows
+﻿namespace ForgelightUnity.Editor.Windows
 {
+    using System.Collections.Generic;
+    using DraggableObjects;
+    using Forgelight;
+    using Forgelight.Assets;
+    using Forgelight.Assets.Adr;
+    using UnityEditor;
+    using UnityEngine;
+
     /// <summary>
     /// The Create Window. Shows all available actors, and can create Unity GameObjects through drag and drop.
     /// </summary>
@@ -20,7 +20,7 @@ namespace Forgelight.Editor.Windows
         private Vector2 scrollBottom;
 
         private GameObject selectedActor;
-        private UnityEditor.Editor previewWindowEditor;
+        private Editor previewWindowEditor;
 
         //Splitter
         private float splitterPos;
@@ -157,7 +157,7 @@ namespace Forgelight.Editor.Windows
             {
                 if (previewWindowEditor == null)
                 {
-                    previewWindowEditor = UnityEditor.Editor.CreateEditor(selectedActor);
+                    previewWindowEditor = Editor.CreateEditor(selectedActor);
                 }
 
                 Rect rect = GUILayoutUtility.GetRect(1.0f, 1.0f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));

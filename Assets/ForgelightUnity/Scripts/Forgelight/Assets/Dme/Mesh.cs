@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using Forgelight.Assets.Dma;
-
-namespace Forgelight.Assets.Dme
+﻿namespace ForgelightUnity.Forgelight.Assets.Dme
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using Dma;
+
     public class Mesh
     {
         //The diffuse map. Forgelight Ref: BaseDiffuse, baseDiffuse

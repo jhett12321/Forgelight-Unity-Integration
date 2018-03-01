@@ -1,56 +1,59 @@
-﻿using Forgelight.Attributes;
-using UnityEngine;
-using LightType = Forgelight.Assets.Zone.LightType;
-
-[ExecuteInEditMode]
-[SelectionBase]
-public class ZoneLight : CullableObject
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
-    [HideInInspector]
-    public Light lightObject;
+    using Attributes;
+    using UnityEngine;
+    using LightType = Assets.Zone.LightType;
 
-    public string Name;
-
-    #region Representable Parameters
-    [Header("Representable Parameters")]
-    public LightType Type;
-    public float Range;
-    public Color Color;
-
-    [Header("Other Parameters")]
-    public string ColorName;
-    public float UnknownFloat1;
-    //public Vector4 Position { get; private set; }
-    //public Vector4 Rotation { get; private set; }
-    public float InnerRange;
-    public byte UnknownByte1;
-    public byte UnknownByte2;
-    public byte UnknownByte3;
-    public byte UnknownByte4;
-    public byte UnknownByte5;
-    public Vector4 UnknownVector1;
-    public string UnknownString1;
-    public uint ID;
-    #endregion
-
-    public void OnValidate()
+    [ExecuteInEditMode]
+    [SelectionBase]
+    public class ZoneLight : CullableObject
     {
-        if (lightObject == null)
-        {
-            lightObject = GetComponent<Light>() ?? gameObject.AddComponent<Light>();
-        }
+        [HideInInspector]
+        public Light lightObject;
 
-        switch (Type)
-        {
-            case LightType.Pointlight:
-                lightObject.type = UnityEngine.LightType.Point;
-                break;
-            case LightType.Spotlight:
-                lightObject.type = UnityEngine.LightType.Spot;
-                break;
-        }
+        public string Name;
 
-        lightObject.range = Range;
-        lightObject.color = Color;
+        #region Representable Parameters
+        [Header("Representable Parameters")]
+        public LightType Type;
+        public float Range;
+        public Color Color;
+
+        [Header("Other Parameters")]
+        public string ColorName;
+        public float UnknownFloat1;
+        //public Vector4 Position { get; private set; }
+        //public Vector4 Rotation { get; private set; }
+        public float InnerRange;
+        public byte UnknownByte1;
+        public byte UnknownByte2;
+        public byte UnknownByte3;
+        public byte UnknownByte4;
+        public byte UnknownByte5;
+        public Vector4 UnknownVector1;
+        public string UnknownString1;
+        public uint ID;
+        #endregion
+
+        public void OnValidate()
+        {
+            if (lightObject == null)
+            {
+                lightObject = GetComponent<Light>() ?? gameObject.AddComponent<Light>();
+            }
+
+            switch (Type)
+            {
+                case LightType.Pointlight:
+                    lightObject.type = UnityEngine.LightType.Point;
+                    break;
+                case LightType.Spotlight:
+                    lightObject.type = UnityEngine.LightType.Spot;
+                    break;
+            }
+
+            lightObject.range = Range;
+            lightObject.color = Color;
+        }
     }
 }

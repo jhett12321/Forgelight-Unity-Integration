@@ -1,9 +1,9 @@
-﻿using Forgelight.Attributes;
-using UnityEditor;
-using UnityEngine;
-
-namespace Forgelight.Editor.AttributeDrawers
+﻿namespace ForgelightUnity.Editor.AttributeDrawers
 {
+    using Forgelight.Attributes;
+    using UnityEditor;
+    using UnityEngine;
+
     [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
     public class ReadOnlyAttributeDrawer : PropertyDrawer
     {

@@ -1,8 +1,8 @@
-﻿using System.IO;
-using Assets.Scripts.Forgelight.Utils;
-
-namespace Forgelight.Assets.Zone
+﻿namespace ForgelightUnity.Forgelight.Assets.Zone
 {
+    using System.IO;
+    using Utils;
+
     public class Flora
     {
         #region Structure

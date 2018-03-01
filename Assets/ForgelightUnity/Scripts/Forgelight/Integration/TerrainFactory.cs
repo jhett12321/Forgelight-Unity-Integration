@@ -1,12 +1,12 @@
-﻿using System;
-using System.IO;
-using UnityEditor;
-using UnityEngine;
-using MathUtils = Forgelight.Utils.MathUtils;
-using Object = UnityEngine.Object;
-
-namespace Forgelight.Integration
+﻿namespace ForgelightUnity.Forgelight.Integration
 {
+    using System;
+    using System.IO;
+    using UnityEditor;
+    using UnityEngine;
+    using MathUtils = Utils.MathUtils;
+    using Object = UnityEngine.Object;
+
     public class TerrainFactory
     {
         private const int chunkPosOffset = 32;

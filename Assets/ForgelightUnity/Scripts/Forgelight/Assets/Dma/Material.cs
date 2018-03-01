@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-
-namespace Forgelight.Assets.Dma
+﻿namespace ForgelightUnity.Forgelight.Assets.Dma
 {
+    using System.Collections.Generic;
+    using System.IO;
+
     public class Material
     {
         #region Structure

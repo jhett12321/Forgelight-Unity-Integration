@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using LzhamWrapper;
-using UnityEngine;
-
-namespace Forgelight.Assets.Cnk
+﻿namespace ForgelightUnity.Forgelight.Assets.Cnk
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using LzhamWrapper;
+    using UnityEngine;
+
     public class Cnk0 : Asset
     {
         public override string Name { get; protected set; }
@@ -275,11 +275,11 @@ namespace Forgelight.Assets.Cnk
                 {
                     //Render Batches
                     uint renderBatchCount = binaryReader.ReadUInt32();
-                    chunk.RenderBatches = new List<Cnk0.RenderBatch>((int)renderBatchCount);
+                    chunk.RenderBatches = new List<RenderBatch>((int)renderBatchCount);
 
                     for (int i = 0; i < renderBatchCount; i++)
                     {
-                        Cnk0.RenderBatch renderBatch = new Cnk0.RenderBatch();
+                        RenderBatch renderBatch = new RenderBatch();
 
                         if (chunk.ChunkType == ChunkType.H1Z1_Planetside2V2)
                         {

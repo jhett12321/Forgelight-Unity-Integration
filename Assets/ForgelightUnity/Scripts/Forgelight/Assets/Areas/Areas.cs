@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-using UnityEngine;
-
-namespace Forgelight.Assets.Areas
+﻿namespace ForgelightUnity.Forgelight.Assets.Areas
 {
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Xml;
+    using System.Xml.Linq;
+    using UnityEngine;
+
     public class Areas : Asset
     {
         public List<AreaDefinition> AreaDefinitions = new List<AreaDefinition>();

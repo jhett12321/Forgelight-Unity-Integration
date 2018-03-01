@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Forgelight.Utils.Cryptography;
-using UnityEngine;
-using Material = Forgelight.Assets.Dma.Material;
-
-namespace Forgelight.Assets.Dme
+﻿namespace ForgelightUnity.Forgelight.Assets.Dme
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using Dma;
+    using UnityEngine;
+    using Utils.Cryptography;
+    using Material = Dma.Material;
+
     public class Model : Asset
     {
         public override string Name { get; protected set; }
@@ -78,7 +79,7 @@ namespace Forgelight.Assets.Dme
             //DMA
             model.TextureStrings = new List<string>();
             model.Materials = new List<Material>();
-            Assets.Dma.Dma.LoadFromStream(binaryReader.BaseStream, model.TextureStrings, model.Materials);
+            Dma.LoadFromStream(binaryReader.BaseStream, model.TextureStrings, model.Materials);
 
             //Bounding Box
             model.Min = new Vector3(binaryReader.ReadSingle(), binaryReader.ReadSingle(), binaryReader.ReadSingle());

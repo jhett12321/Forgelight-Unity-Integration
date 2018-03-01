@@ -1,8 +1,9 @@
-﻿using Forgelight.Assets.Adr;
-using UnityEngine;
-
-namespace Forgelight.Editor.DraggableObjects
+﻿namespace ForgelightUnity.Editor.DraggableObjects
 {
+    using Forgelight;
+    using Forgelight.Assets.Adr;
+    using UnityEngine;
+
     public class ActorDefinition
     {
         public ForgelightGame forgelightGame;
