@@ -1,6 +1,6 @@
 ﻿namespace ForgelightUnity.Editor.AttributeDrawers
 {
-    using Forgelight.Attributes;
+    using Attributes;
     using UnityEditor;
     using UnityEngine;
 

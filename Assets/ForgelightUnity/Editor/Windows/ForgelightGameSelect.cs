@@ -1,6 +1,5 @@
 ﻿namespace ForgelightUnity.Editor.Windows
 {
-    using System.Collections.Generic;
     using Forgelight;
     using Forgelight.Utils;
     using UnityEditor;
@@ -40,7 +39,7 @@
             EditorGUILayout.EndHorizontal();
         }
 
-        private void ShowAvailableForgelightGames(List<string> availableGames)
+        private void ShowAvailableForgelightGames(string[] availableGames)
         {
             foreach (string gameName in availableGames)
             {
