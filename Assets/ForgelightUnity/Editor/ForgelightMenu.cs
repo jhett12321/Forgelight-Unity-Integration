@@ -137,7 +137,7 @@
                 return;
             }
 
-            string path = DialogUtils.OpenFile("Load Zone File", "", "zone");
+            string path = EditorUtility.OpenFilePanel("Load Zone File", "", "zone");
 
             if (path != null)
             {

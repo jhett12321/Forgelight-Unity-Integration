@@ -3,9 +3,9 @@
     using System;
     using System.IO;
     using UnityEngine;
-    using Utils;
+    using Syroot.BinaryData;
 
-    public partial class AssetRef
+    public class AssetRef
     {
         public Pack Pack { get; private set; }
 
@@ -31,31 +31,35 @@
 
         public static AssetRef LoadBinary(Pack pack, Stream stream)
         {
-            BinaryReaderBigEndian reader = new BinaryReaderBigEndian(stream);
+            AssetRef assetRef;
 
-            AssetRef assetRef = new AssetRef(pack);
-
-            uint count = reader.ReadUInt32();
-            assetRef.Name = new string(reader.ReadChars((int) count));
-            assetRef.DisplayName = assetRef.Name + " (" + pack.Name + ')';
-            assetRef.AbsoluteOffset = reader.ReadUInt32();
-            assetRef.Size = reader.ReadUInt32();
-            assetRef.Crc32 = reader.ReadUInt32();
-
-            // Set the type of the asset based on the extension
+            using (BinaryDataReader reader = new BinaryDataReader(stream, true))
             {
-                // First get the extension without the leading '.'
-                string extension = Path.GetExtension(assetRef.Name).Substring(1);
+                reader.ByteOrder = ByteOrder.BigEndian;
+                assetRef = new AssetRef(pack);
 
-                try
+                uint count = reader.ReadUInt32();
+                assetRef.Name = new string(reader.ReadChars((int) count));
+                assetRef.DisplayName = assetRef.Name + " (" + pack.Name + ')';
+                assetRef.AbsoluteOffset = reader.ReadUInt32();
+                assetRef.Size = reader.ReadUInt32();
+                assetRef.Crc32 = reader.ReadUInt32();
+
+                // Set the type of the asset based on the extension
                 {
-                    assetRef.AssetType = (AssetType) Enum.Parse(typeof (AssetType), extension, true);
-                }
-                catch (ArgumentException)
-                {
-                    // This extension isn't mapped in the enum
-                    Debug.LogWarning("Unknown Forgelight File Type: " + extension);
-                    assetRef.AssetType = AssetType.Unknown;
+                    // First get the extension without the leading '.'
+                    string extension = Path.GetExtension(assetRef.Name).Substring(1);
+
+                    try
+                    {
+                        assetRef.AssetType = (AssetType) Enum.Parse(typeof (AssetType), extension, true);
+                    }
+                    catch (ArgumentException)
+                    {
+                        // This extension isn't mapped in the enum
+                        Debug.LogWarning("Unknown Forgelight File Type: " + extension);
+                        assetRef.AssetType = AssetType.Unknown;
+                    }
                 }
             }
 

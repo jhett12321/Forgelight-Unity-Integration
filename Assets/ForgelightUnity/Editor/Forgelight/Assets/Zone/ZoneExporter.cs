@@ -1,6 +1,7 @@
 ﻿namespace ForgelightUnity.Editor.Forgelight.Assets.Zone
 {
     using System.IO;
+    using UnityEditor;
     using Utils;
 
     public class ZoneExporter
@@ -9,7 +10,7 @@
         {
             if (ForgelightExtension.Instance.ZoneManager.LoadedZone != null)
             {
-                string path = DialogUtils.SaveFile(
+                string path = EditorUtility.SaveFilePanel(
                     "Save zone file",
                     ForgelightExtension.Instance.ForgelightGameFactory.ActiveForgelightGame.GameInfo.PackDirectory,
                     Path.GetFileNameWithoutExtension(ForgelightExtension.Instance.ZoneManager.LoadedZone.Name),

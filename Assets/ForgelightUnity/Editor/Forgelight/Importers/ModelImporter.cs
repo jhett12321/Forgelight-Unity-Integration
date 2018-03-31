@@ -15,8 +15,8 @@
     {
         public class ThreadData
         {
-            public StringBuilder StringBuilder;
-            public byte[] TextureBuffer;
+            public StringBuilder StringBuilder = new StringBuilder();
+            public byte[] TextureBuffer = new byte[0];
         }
 
         private const int MODEL_POOL_SIZE = 1000;

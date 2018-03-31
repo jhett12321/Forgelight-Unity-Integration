@@ -13,8 +13,6 @@
             NumberOfParallelTasks = Environment.ProcessorCount;
         }
 
-
-
         public delegate ParallelLoopResult AsyncForEach<T>(IEnumerable<T> enumerable, Action<T> action);
     }
 }

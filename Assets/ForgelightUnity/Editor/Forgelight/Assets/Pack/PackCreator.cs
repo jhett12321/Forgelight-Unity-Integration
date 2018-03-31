@@ -9,8 +9,8 @@ namespace ForgelightUnity.Editor.Forgelight.Assets.Pack
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
-    using MiscUtil.Conversion;
-    using MiscUtil.IO;
+    using Syroot.BinaryData;
+    using UnityEditor;
     using Utils;
     using Utils.Cryptography;
 
@@ -26,14 +26,22 @@ namespace ForgelightUnity.Editor.Forgelight.Assets.Pack
 
             public byte[] Encode()
             {
-                EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, new MemoryStream());
-                wr.Write(name_len);
-                wr.Write(name);
-                wr.Write(offset);
-                wr.Write(length);
-                wr.Write(crc32);
+                byte[] data;
 
-                return ((MemoryStream)wr.BaseStream).ToArray();
+                using (BinaryDataWriter wr = new BinaryDataWriter(new MemoryStream()))
+                {
+                    wr.ByteOrder = ByteOrder.BigEndian;
+
+                    wr.Write(name_len);
+                    wr.Write(name);
+                    wr.Write(offset);
+                    wr.Write(length);
+                    wr.Write(crc32);
+
+                    data = ((MemoryStream)wr.BaseStream).ToArray();
+                }
+
+                return data;
             }
         }
 
@@ -48,44 +56,62 @@ namespace ForgelightUnity.Editor.Forgelight.Assets.Pack
 
             public byte[] Encode()
             {
-                EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, new MemoryStream());
-                wr.Write(NextChunkOffset);
-                wr.Write(FileCount);
+                byte[] data;
 
-                foreach (FileHeader h in files)
+                using (BinaryDataWriter wr = new BinaryDataWriter(new MemoryStream()))
                 {
-                    wr.Write(h.Encode());
+                    wr.ByteOrder = ByteOrder.BigEndian;
+
+                    wr.Write(NextChunkOffset);
+                    wr.Write(FileCount);
+
+                    foreach (FileHeader h in files)
+                    {
+                        wr.Write(h.Encode());
+                    }
+
+                    data = ((MemoryStream)wr.BaseStream).ToArray();
                 }
 
-                return ((MemoryStream)wr.BaseStream).ToArray();
+                return data;
             }
         }
 
         public static void CreatePackFromDirectory()
         {
-            string sourceFolder = DialogUtils.OpenDirectory(
-                "Select folder that contains the assets you wish to pack",
-                "",
-                "", DialogUtils.DirectoryIsEmpty);
+            string sourceFolder = EditorUtility.OpenFolderPanel("Select folder that contains the assets you wish to pack", "", "");
 
             if (sourceFolder == null)
             {
                 return;
             }
 
+            if (DialogUtils.DirectoryIsEmpty(sourceFolder))
+            {
+                bool dialog = DialogUtils.DisplayCancelableDialog("Invalid Directory", "Please select a directory that contains files.");
+                if (dialog)
+                {
+                    CreatePackFromDirectory();
+                }
+
+                return;
+            }
+
             string[] files = Directory.GetFiles(sourceFolder);
 
-            var destinationFile = DialogUtils.SaveFile(
+            var destinationFile = EditorUtility.SaveFilePanel(
                 "Select destination to save created pack file",
                 sourceFolder,
                 "Assets_256",
                 "pack");
 
-            if (destinationFile != null)
+            if (destinationFile == null)
             {
-                CreatePackFromFiles(files, destinationFile);
-                DialogUtils.DisplayDialog("Export Successful", "Successfully packed and saved " + files.Length + " assets to " + destinationFile);
+                return;
             }
+
+            CreatePackFromFiles(files, destinationFile);
+            DialogUtils.DisplayDialog("Export Successful", "Successfully packed and saved " + files.Length + " assets to " + destinationFile);
         }
 
         private static void CreatePackFromFiles(string[] files, string savePath)
@@ -176,8 +202,10 @@ namespace ForgelightUnity.Editor.Forgelight.Assets.Pack
             }
 
             //Write the chunks to a file
-            using (EndianBinaryWriter wr = new EndianBinaryWriter(EndianBitConverter.Big, File.Open(savePath, FileMode.OpenOrCreate)))
+            using (BinaryDataWriter wr = new BinaryDataWriter(File.Open(savePath, FileMode.OpenOrCreate)))
             {
+                wr.ByteOrder = ByteOrder.BigEndian;
+
                 foreach (Chunk chunki in chunks)
                 {
                     byte[] ph = chunki.Encode();
@@ -189,7 +217,6 @@ namespace ForgelightUnity.Editor.Forgelight.Assets.Pack
                     }
                 }
             }
-
         }
     }
 }

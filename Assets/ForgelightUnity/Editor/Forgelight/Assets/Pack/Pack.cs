@@ -2,7 +2,7 @@
 {
     using System.Collections.Generic;
     using System.IO;
-    using Utils;
+    using Syroot.BinaryData;
 
     public class Pack
     {
@@ -28,26 +28,28 @@
 
             using (FileStream fileStream = File.OpenRead(path))
             {
-                BinaryReaderBigEndian binaryReader = new BinaryReaderBigEndian(fileStream);
-
-                uint nextChunkAbsoluteOffset = 0;
-
-                do
+                using (BinaryDataReader binaryReader = new BinaryDataReader(fileStream, true))
                 {
-                    fileStream.Seek(nextChunkAbsoluteOffset, SeekOrigin.Begin);
+                    binaryReader.ByteOrder = ByteOrder.BigEndian;
+                    uint nextChunkAbsoluteOffset = 0;
 
-                    nextChunkAbsoluteOffset = binaryReader.ReadUInt32();
-                    uint fileCount = binaryReader.ReadUInt32();
-
-                    for (uint i = 0; i < fileCount; ++i)
+                    do
                     {
-                        AssetRef file = AssetRef.LoadBinary(pack, binaryReader.BaseStream);
+                        fileStream.Seek(nextChunkAbsoluteOffset, SeekOrigin.Begin);
 
-                        pack.assetLookupCache[file.Name] = file;
+                        nextChunkAbsoluteOffset = binaryReader.ReadUInt32();
+                        uint fileCount = binaryReader.ReadUInt32();
 
-                        pack.Assets.Add(file);
-                    }
-                } while (nextChunkAbsoluteOffset != 0);
+                        for (uint i = 0; i < fileCount; ++i)
+                        {
+                            AssetRef file = AssetRef.LoadBinary(pack, fileStream);
+
+                            pack.assetLookupCache[file.Name] = file;
+
+                            pack.Assets.Add(file);
+                        }
+                    } while (nextChunkAbsoluteOffset != 0);
+                }
 
                 return pack;
             }

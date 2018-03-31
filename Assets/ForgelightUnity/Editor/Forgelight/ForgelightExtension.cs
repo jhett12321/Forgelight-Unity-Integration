@@ -84,7 +84,7 @@
             ForgelightGameInfo activeGameInfo = null;
 
             //The data saved to the current scene.
-            if (ForgelightMonoBehaviour.Instance.ForgelightGame != null)
+            if (!string.IsNullOrEmpty(ForgelightMonoBehaviour.Instance.ForgelightGame))
             {
                 activeGame = ForgelightMonoBehaviour.Instance.ForgelightGame;
             }
@@ -99,7 +99,7 @@
                 activeGameInfo = Config.ForgelightEditorPrefs.ActiveForgelightGame;
             }
 
-            if (activeGameInfo != null)
+            if (!string.IsNullOrEmpty(activeGameInfo?.Name) && !string.IsNullOrEmpty(activeGameInfo.RelativeResourceDirectory) && !string.IsNullOrEmpty(activeGameInfo.PackDirectory))
             {
                 ForgelightGameFactory.ChangeActiveForgelightGame(activeGame);
             }

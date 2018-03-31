@@ -1,12 +1,13 @@
 ﻿namespace ForgelightUnity.Editor.Forgelight
 {
     using System.IO;
+    using System.Linq;
+    using UnityEditor;
     using UnityEngine;
     using Utils;
 
     public class ForgelightGameFactory
     {
-        //Active Forgelight Game
         private ForgelightGame activeForgelightGame;
 
         public ForgelightGame ActiveForgelightGame
@@ -21,15 +22,34 @@
 
         public void OpenForgelightGameFolder()
         {
-            string path = DialogUtils.OpenDirectory(
-            "Select folder containing Forgelight game files.",
-            "",
-            "", CheckGivenAssetDirectory);
+            string path = EditorUtility.OpenFolderPanel("Select Forgelight Game Folder", "", "");
 
-            if (path != null)
+            if (string.IsNullOrEmpty(path))
             {
-                LoadNewForgelightGame(path);
+                return;
             }
+
+            if (path.EndsWith("Resources"))
+            {
+                path += "/Assets";
+            }
+            else if(!path.EndsWith("/Resources/Assets"))
+            {
+                path += "/Resources/Assets";
+            }
+
+            if (!IsAssetDirectory(path))
+            {
+                bool dialog = DialogUtils.DisplayCancelableDialog("Invalid Asset Directory", "The directory provided is not a valid Forgelight game. Please make sure to select the root game directory (not the asset folder) and try again.");
+                if (dialog)
+                {
+                    OpenForgelightGameFolder();
+                }
+
+                return;
+            }
+
+            LoadNewForgelightGame(path);
         }
 
         /// <summary>
@@ -97,29 +117,6 @@
             ForgelightMonoBehaviour.Instance.ForgelightGame = newGame.GameInfo.Name;
         }
 
-        private static ValidationResult CheckGivenAssetDirectory(string path)
-        {
-            ValidationResult validationResult = new ValidationResult();
-
-            path += "/Resources/Assets";
-
-            string[] files = Directory.GetFiles(path);
-
-            foreach (string fileName in files)
-            {
-                if (fileName.EndsWith(".pack"))
-                {
-                    validationResult.result = true;
-                    validationResult.path = path;
-                    return validationResult;
-                }
-            }
-
-            validationResult.result = false;
-            validationResult.errorTitle = "Invalid Asset Directory";
-            validationResult.errorDesc = "The directory provided is not a valid Forgelight game. Please make sure to select the root game directory (not the asset folder) and try again.";
-
-            return validationResult;
-        }
+        private bool IsAssetDirectory(string path) => Directory.Exists(path) && Directory.GetFiles(path).Any(fileName => fileName.EndsWith(".pack"));
     }
 }

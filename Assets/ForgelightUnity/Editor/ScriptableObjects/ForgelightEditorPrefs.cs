@@ -11,6 +11,7 @@
     [DefaultAssetPath("Assets/Forgelight")]
     public class ForgelightEditorPrefs : ScriptableObject
     {
+        [HideInInspector]
         public ForgelightGameInfo ActiveForgelightGame;
         public List<ForgelightGameInfo> ForgelightGames = new List<ForgelightGameInfo>();
     }
