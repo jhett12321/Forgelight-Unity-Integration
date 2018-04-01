@@ -71,8 +71,15 @@
 
             forgelightGame.LoadPackFiles(0.0f, 0.05f);
             forgelightGame.InitializeMaterialDefinitionManager();
-            forgelightGame.ImportModels(0.05f, 0.6f);
-            forgelightGame.ImportTerrain(0.6f, 0.9f);
+            if (!forgelightGame.ImportModels(0.05f, 0.6f))
+            {
+                return;
+            }
+
+            if (!forgelightGame.ImportTerrain(0.6f, 0.9f))
+            {
+                return;
+            }
             forgelightGame.UpdateActors(0.9f, 0.93f);
             forgelightGame.UpdateZones(0.93f, 0.97f);
             forgelightGame.UpdateAreas(0.97f, 1.0f);

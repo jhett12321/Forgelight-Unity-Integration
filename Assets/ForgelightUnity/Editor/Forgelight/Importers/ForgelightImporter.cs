@@ -5,7 +5,9 @@
     using System.Collections.Generic;
     using System.Threading;
     using Assets.Pack;
+    using UnityEditor;
     using Utils;
+    using MathUtils = Utils.MathUtils;
     using Parallel = Utils.Parallel;
 
     public abstract class ForgelightImporter<T1,T2> where T1 : IPoolable, new()
@@ -35,7 +37,7 @@
             ObjectPool = new ObjectPool<T1>(objectPoolSize, objectPoolSize);
         }
 
-        public void RunImport(ForgelightGame forgelightGame, float progress0, float progress100)
+        public bool RunImport(ForgelightGame forgelightGame, float progress0, float progress100)
         {
             ForgelightGame = forgelightGame;
             ResourceDir = forgelightGame.GameInfo.FullResourceDirectory;
@@ -49,6 +51,7 @@
             assetsToProcess = new ConcurrentQueue<AssetRef>(forgelightGame.AssetsByType[AssetType]);
             int totalAssetCount = assetsToProcess.Count;
             Parallel.AsyncForEach<bool> parallelTask = System.Threading.Tasks.Parallel.ForEach;
+            bool cancel = false;
 
             IAsyncResult result = parallelTask.BeginInvoke(WorkComplete(), job =>
             {
@@ -56,7 +59,7 @@
                 T2 threadData = new T2();
 
                 // Process all available jobs.
-                while (JobsAvailable())
+                while (!cancel && JobsAvailable())
                 {
                     AssetRef currentJob;
                     assetsToProcess.TryDequeue(out currentJob);
@@ -74,10 +77,16 @@
 
             while (!RunBackgroundTasks() || !result.IsCompleted)
             {
-                forgelightGame.ProgressBar(MathUtils.Remap01(AssetsProcessed / (float) totalAssetCount, progress0, progress100), ProgressItemPrefix + LastAssetProcessed);
+                cancel = EditorUtility.DisplayCancelableProgressBar("Forgelight - " + forgelightGame.GameInfo.Name, ProgressItemPrefix + LastAssetProcessed, MathUtils.Remap01(AssetsProcessed / (float) totalAssetCount, progress0, progress100));
             }
 
             parallelTask.EndInvoke(result);
+
+            if (cancel)
+            {
+                EditorUtility.ClearProgressBar();
+            }
+            return !cancel;
         }
 
         protected virtual bool RunBackgroundTasks()
@@ -86,7 +95,7 @@
         }
 
         /// <summary>
-        /// Handles thread
+        /// Ensures threads remaining running while jobs are available.
         /// </summary>
         /// <returns></returns>
         private IEnumerable<bool> WorkComplete()

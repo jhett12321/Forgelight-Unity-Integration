@@ -154,14 +154,14 @@
 
         #region Asset Import
 
-        public void ImportModels(float progress0, float progress100)
+        public bool ImportModels(float progress0, float progress100)
         {
-            modelImporter.RunImport(this, progress0, progress100);
+            return modelImporter.RunImport(this, progress0, progress100);
         }
 
-        public void ImportTerrain(float progress0, float progress100)
+        public bool ImportTerrain(float progress0, float progress100)
         {
-            terrainLodImporter.RunImport(this, progress0, progress100);
+            return terrainLodImporter.RunImport(this, progress0, progress100);
         }
         #endregion
 
@@ -378,6 +378,7 @@
             {
                 return;
             }
+
 
             EditorUtility.DisplayProgressBar("Forgelight - " + GameInfo.Name, currentTask, progress);
             lastProgress = progress;
